@@ -19,15 +19,7 @@ This project is an insurance-domain Retrieval-Augmented Generation (RAG) system.
 
 ## Commit Conventions
 
-<!-- TODO: Fill in commit conventions.
-     Example prompts to consider:
-     - Prefix style: feat/fix/chore/docs/refactor?
-     - Scope tagging: feat(ingestion): ..., fix(retrieval): ...?
-     - Max subject line length?
-     - Co-authored-by or sign-off requirements?
--->
-
-_Commit conventions to be defined. Update this section before the first collaborative commit._
+- Never add `Co-Authored-By` or any Claude attribution trailer to commit messages. All commits should be authored as the user only.
 
 ---
 
