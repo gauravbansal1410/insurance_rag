@@ -61,7 +61,8 @@ _Build and run commands to be documented. Update this section once the dev envir
 insurance_rag/
 ├── docs/                  # Architecture and infra docs (read first)
 │   ├── architecture.md
-│   └── infra-baseline.md
+│   ├── infra-baseline.md
+│   └── progress/          # Daily session progress logs (YYYYMMDD-progress.md)
 ├── raw_pdfs/              # Source policy documents (do not modify manually)
 ├── CLAUDE.md              # This file
 └── README.md
