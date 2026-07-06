@@ -49,6 +49,7 @@ _Build and run commands to be documented. Update this section once the dev envir
 ## Key Conventions
 
 - Do not hardcode API keys or credentials anywhere in the codebase. Use environment variables or a secrets manager.
+- **Never suggest embedding credentials or tokens directly in git remote URLs** (e.g. `https://<token>@github.com/...`). If a push fails due to missing credentials, instruct the user to authenticate via `osxkeychain` credential helper or interactively — never via a token-in-URL workaround.
 - All document ingestion changes must be validated against the baseline chunking and embedding strategy described in `docs/architecture.md`.
 - Do not modify retrieval logic or prompt templates without first reviewing how they interact with the evaluation suite (if one exists).
 
@@ -61,7 +62,7 @@ insurance_rag/
 ├── docs/                  # Architecture and infra docs (read first)
 │   ├── architecture.md
 │   └── infra-baseline.md
-├── raw_docs/              # Source policy documents (do not modify manually)
+├── raw_pdfs/              # Source policy documents (do not modify manually)
 ├── CLAUDE.md              # This file
 └── README.md
 ```
