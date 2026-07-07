@@ -2,12 +2,13 @@
 
 ## Required Reading Before Starting Any Work
 
-**Always read these two documents first**, before making any changes, answering questions, or planning implementations:
+**Always read these documents first**, before making any changes, answering questions, or planning implementations:
 
 1. [`docs/architecture.md`](docs/architecture.md) — System design, component relationships, data flow, and key design decisions.
 2. [`docs/infra-baseline.md`](docs/infra-baseline.md) — Infrastructure baseline: services, environments, deployment topology, and operational constraints.
+3. [`docs/schema.md`](docs/schema.md) — Layer 1 (category-specific extraction) and Layer 2 (normalized decision layer) schemas, document merge rule, and extraction-rule caveats. Required reading before any ingestion or extraction work.
 
-If either file is missing or empty, ask the user before proceeding — the architecture and infra context are prerequisites for working safely in this codebase.
+If any of these files is missing or empty, ask the user before proceeding — the architecture, infra, and schema context are prerequisites for working safely in this codebase.
 
 ---
 
@@ -51,9 +52,10 @@ _Build and run commands to be documented. Update this section once the dev envir
 
 ```
 insurance_rag/
-├── docs/                  # Architecture and infra docs (read first)
+├── docs/                  # Architecture, infra, and schema docs (read first)
 │   ├── architecture.md
 │   ├── infra-baseline.md
+│   ├── schema.md
 │   └── progress/          # Daily session progress logs (YYYYMMDD-progress.md)
 ├── raw_pdfs/              # Source policy documents (do not modify manually)
 ├── CLAUDE.md              # This file
@@ -65,5 +67,5 @@ insurance_rag/
 ## Notes for Future Claude Code Sessions
 
 - This file is the entry point for all AI-assisted work. Keep it up to date as the project evolves.
-- If `docs/architecture.md` or `docs/infra-baseline.md` have been updated since your last session, re-read them fully before continuing.
+- If `docs/architecture.md`, `docs/infra-baseline.md`, or `docs/schema.md` have been updated since your last session, re-read them fully before continuing.
 - Prefer small, reviewable commits over large sweeping changes.
