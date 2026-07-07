@@ -5,19 +5,21 @@ Not Insurance-RAG-specific. This is the general infrastructure and environment c
 
 ## Oracle Cloud VM (primary automation backend)
 - Oracle Cloud Always Free VM, Ubuntu, Mumbai region, ARM (Ampere)
+- Confirmed specs: Ampere shape, 11Gi total RAM, 10Gi available at idle (verified 2026-07-07)
 - n8n self-hosted via Docker, exposed via DuckDNS domain: `gaurav-n8n.duckdns.org`
 - nginx reverse proxy with Let's Encrypt SSL - HTTPS fully configured
 - SSH access via private key at `~/Desktop/claude/personal/`
 - n8n version: 2.23.3
 - Docker run command:
   ```
-  docker run -d --name n8n --env-file ~/n8n.env -p 5678:5678 -v n8n_data:/home/node/.n8n n8nio/n8n
+  docker run -d --name n8n --restart unless-stopped --env-file ~/n8n.env -p 5678:5678 -v n8n_data:/home/node/.n8n n8nio/n8n
   ```
 - Env var changes require the full stop-remove-run sequence, not a restart:
   ```
-  docker stop n8n && docker rm n8n && docker run -d --name n8n --env-file ~/n8n.env -p 5678:5678 -v n8n_data:/home/node/.n8n n8nio/n8n
+  docker stop n8n && docker rm n8n && docker run -d --name n8n --restart unless-stopped --env-file ~/n8n.env -p 5678:5678 -v n8n_data:/home/node/.n8n n8nio/n8n
   ```
 - `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` required in `~/n8n.env` for `$env` access inside nodes (n8n's Variables UI is a paid feature; this env-file approach is the free-tier workaround)
+- Containers created without a restart policy will not survive a VM reboot and require manual `docker start <name>` - always set `--restart unless-stopped` on new containers on this VM.
 
 ## Secondary infra (not actively used)
 - GCP e2-micro VM (Iowa region) - backup, currently stopped

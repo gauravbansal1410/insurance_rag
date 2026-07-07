@@ -74,9 +74,9 @@ Qdrant, chosen for self-hosting fit and native n8n integration — not a rigorou
 - Automated PDF scraping for policy updates: current ingestion is manual/admin-triggered; the scraper will call the same GitHub-upload step later.
 
 ## Verify before building (things that shift over time or weren't confirmed)
-- Current Gemini 3.1 Pro pricing and rate limits.
-- Current Voyage model names for `voyage-law-2` and `rerank-2.5-lite`, and their free-tier ceilings.
-- Actual free RAM available on the Oracle VM shape currently in use.
+- ~~Current Gemini 3.1 Pro pricing and rate limits.~~ Resolved 2026-07-07: Gemini 3.1 Pro lost free-tier API access April 1, 2026. Now $2/$12 per 1M tokens up to 200K context, $4/$18 above. No impact on cost target - Pro is scoped to one-time extraction only, already budgeted as paid.
+- ~~Current Voyage model names for `voyage-law-2` and `rerank-2.5-lite`, and their free-tier ceilings.~~ Resolved 2026-07-07: both confirmed current, not deprecated.
+- ~~Actual free RAM available on the Oracle VM shape currently in use.~~ Resolved 2026-07-07: confirmed adequate, see infra-baseline.md.
 - Whether to persist the BYOK key locally for personal-only mode, or keep it session-memory-only always.
 
 ## Glossary
