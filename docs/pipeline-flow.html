@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>insurance_rag — pipeline flow</title>
+<style>
+  :root {
+    --bg: #FAFAF8;
+    --card: #FFFFFF;
+    --text: #201F1D;
+    --text-muted: #6B6A64;
+    --border: #E4E2DA;
+    --you-fill: #FCEFE8; --you-border: #C96A3E; --you-text: #7A3A1D;
+    --claude-fill: #EFEDFC; --claude-border: #7C71D6; --claude-text: #3A3390;
+    --gemini-fill: #EAF4E1; --gemini-border: #5C9A3B; --gemini-text: #2E5A1B;
+    --system-fill: #E7F0FA; --system-border: #3E7CBE; --system-text: #1E4C7A;
+    --focus-ring: #E8A93A;
+    --arrow: #B7B5AC;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1B1B19;
+      --card: #232320;
+      --text: #EDEBE4;
+      --text-muted: #A6A49B;
+      --border: #37362F;
+      --you-fill: #34241C; --you-border: #D98259; --you-text: #F0B896;
+      --claude-fill: #26234A; --claude-border: #9A90E6; --claude-text: #C9C2F7;
+      --gemini-fill: #1F2E18; --gemini-border: #7BB856; --gemini-text: #BFE39F;
+      --system-fill: #182839; --system-border: #5C9BDE; --system-text: #B8D8F5;
+      --focus-ring: #F0C05F;
+      --arrow: #55534A;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Inter", "Segoe UI", Helvetica, Arial, sans-serif;
+    padding: 40px 32px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1400px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  .source-note { font-size: 13px; color: var(--text-muted); margin: 0 0 36px; }
+  .source-note code { background: var(--border); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+  h2 { font-size: 15px; font-weight: 600; margin: 0 0 14px; }
+  section { margin-bottom: 48px; }
+
+  .legend {
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+    font-size: 12.5px; color: var(--text-muted);
+    margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .dot.you { background: var(--you-border); }
+  .dot.claude { background: var(--claude-border); }
+  .dot.gemini { background: var(--gemini-border); }
+  .dot.system { background: var(--system-border); }
+  .swatch { width: 20px; height: 10px; border-radius: 3px; flex-shrink: 0; border: 1.5px solid var(--text-muted); }
+  .swatch.dashed { border-style: dashed; }
+  .swatch.focus { border: 2px solid var(--focus-ring); }
+
+  .row {
+    display: flex; align-items: stretch; gap: 0;
+    overflow-x: auto; padding: 8px 4px 20px;
+  }
+  .card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    min-width: 168px; max-width: 200px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .card .title { font-size: 13.5px; font-weight: 600; line-height: 1.35; margin-bottom: 4px; }
+  .card .subtitle { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+  .card.you { background: var(--you-fill); border-color: var(--you-border); }
+  .card.you .title { color: var(--you-text); }
+  .card.claude { background: var(--claude-fill); border-color: var(--claude-border); }
+  .card.claude .title { color: var(--claude-text); }
+  .card.gemini { background: var(--gemini-fill); border-color: var(--gemini-border); }
+  .card.gemini .title { color: var(--gemini-text); }
+  .card.system { background: var(--system-fill); border-color: var(--system-border); }
+  .card.system .title { color: var(--system-text); }
+
+  .card.not-built { border-style: dashed; }
+  .card.focus { box-shadow: 0 0 0 2.5px var(--focus-ring); }
+
+  .arrow {
+    display: flex; align-items: center; justify-content: center;
+    min-width: 34px; flex-shrink: 0; color: var(--arrow); font-size: 18px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>insurance_rag — pipeline flow</h1>
+  <p class="source-note">Source of truth: <code>docs/architecture.md</code>. Edit the <code>steps</code> arrays in the script below when a step ships or architecture changes — layout regenerates automatically.</p>
+
+  <section>
+    <h2>Ingestion pipeline — one-time / admin-triggered</h2>
+    <div class="legend">
+      <span class="legend-item"><span class="dot you"></span>You</span>
+      <span class="legend-item"><span class="dot claude"></span>Claude Code</span>
+      <span class="legend-item"><span class="dot gemini"></span>Gemini</span>
+      <span class="legend-item"><span class="dot system"></span>System</span>
+      <span class="legend-item"><span class="swatch"></span>Built</span>
+      <span class="legend-item"><span class="swatch dashed"></span>Not built</span>
+      <span class="legend-item"><span class="swatch focus"></span>Today's focus</span>
+    </div>
+    <div class="row" id="ingestion-row"></div>
+  </section>
+
+  <section>
+    <h2>Query pipeline — recurring, user-facing</h2>
+    <div class="legend">
+      <span class="legend-item"><span class="dot you"></span>You</span>
+      <span class="legend-item"><span class="dot claude"></span>Claude Code</span>
+      <span class="legend-item"><span class="dot gemini"></span>Gemini</span>
+      <span class="legend-item"><span class="dot system"></span>System</span>
+      <span class="legend-item"><span class="swatch"></span>Built</span>
+      <span class="legend-item"><span class="swatch dashed"></span>Not built</span>
+      <span class="legend-item"><span class="swatch focus"></span>Today's focus</span>
+    </div>
+    <div class="row" id="query-row"></div>
+  </section>
+
+  <section>
+    <h2>Evaluation</h2>
+    <div class="legend">
+      <span class="legend-item"><span class="dot you"></span>You</span>
+      <span class="legend-item"><span class="dot system"></span>System</span>
+      <span class="legend-item"><span class="swatch dashed"></span>Not built</span>
+    </div>
+    <div class="row" id="eval-row"></div>
+  </section>
+</div>
+
+<script>
+// Edit these arrays as steps ship or architecture changes.
+// actor: 'you' | 'claude' | 'gemini' | 'system'
+// built: true | false — solid border vs dashed
+// focus: true | false — gold ring, independent of built status
+
+const ingestionSteps = [
+  { title: '1. Upload PDFs to GitHub', subtitle: '', actor: 'you', built: true, focus: false },
+  { title: '2. Extraction — Gemini 3.1 Pro', subtitle: 'raw PDF → Layer 1 JSON', actor: 'gemini', built: false, focus: true },
+  { title: '2b. Layer 2 derivation', subtitle: 'same call, 2nd reasoning pass', actor: 'gemini', built: false, focus: true },
+  { title: '3. Chunking', subtitle: 'structure-aware, PART/section headers', actor: 'claude', built: false, focus: false },
+  { title: '4. Embedding', subtitle: 'Voyage voyage-law-2', actor: 'system', built: false, focus: false },
+  { title: '5. Load into Qdrant', subtitle: 'Layer 1+2 payload, Layer 3 vectors', actor: 'system', built: false, focus: false },
+];
+
+const queryOtherSteps = [
+  { title: '1. Collect profile', subtitle: 'age, cover, budget + concerns', actor: 'you', built: false, focus: false },
+  { title: '2. Session handler', subtitle: 'turn-based slot-filling', actor: 'system', built: false, focus: false },
+  { title: '3. Eligibility filter', subtitle: 'Group C facts + concern OR-pass', actor: 'system', built: false, focus: false },
+  { title: '4. Fallback', subtitle: 'relax SA/age/term if <3 matches, budget not relaxed', actor: 'system', built: false, focus: false },
+  { title: '5. Premium interpolation', subtitle: '+ budget filter — quality unvalidated', actor: 'gemini', built: false, focus: false },
+  { title: '6. Narrative retrieval', subtitle: 'restricted to surviving policy_ids', actor: 'system', built: false, focus: false },
+  { title: '7. Rerank + sort', subtitle: 'tolerance band uncalibrated (0.05 placeholder)', actor: 'system', built: false, focus: false },
+  { title: '8. Narrative generation', subtitle: 'Gemini flash-lite, top 3 combos', actor: 'gemini', built: false, focus: false },
+  { title: '9. Trace log write', subtitle: 'async, never blocks response', actor: 'system', built: false, focus: false },
+  { title: '10. BYOK check', subtitle: 'governs key use in steps 5 & 8', actor: 'system', built: false, focus: false },
+];
+
+const evalSteps = [
+  { title: 'Golden set', subtitle: '15-30 hand-verified pairs', actor: 'you', built: false, focus: false },
+  { title: 'Trace log', subtitle: 'from query step 9', actor: 'system', built: false, focus: false },
+  { title: 'LLM judge', subtitle: 'offline batch, deferred', actor: 'system', built: false, focus: false },
+];
+
+function statusClass(step) {
+  return [step.built ? '' : 'not-built', step.focus ? 'focus' : ''].filter(Boolean).join(' ');
+}
+
+function renderRow(containerId, steps, arrowsBetweenAll = true) {
+  const container = document.getElementById(containerId);
+  steps.forEach((step, i) => {
+    const card = document.createElement('div');
+    card.className = `card ${step.actor} ${statusClass(step)}`;
+    card.innerHTML = `<div class="title">${step.title}</div>` +
+      (step.subtitle ? `<div class="subtitle">${step.subtitle}</div>` : '');
+    container.appendChild(card);
+    if (i < steps.length - 1 && arrowsBetweenAll) {
+      const arrow = document.createElement('div');
+      arrow.className = 'arrow';
+      arrow.textContent = '→';
+      container.appendChild(arrow);
+    }
+  });
+}
+
+renderRow('ingestion-row', ingestionSteps);
+renderRow('query-row', queryOtherSteps);
+renderRow('eval-row', evalSteps);
+</script>
+</body>
+</html>
