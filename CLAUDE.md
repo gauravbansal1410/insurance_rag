@@ -26,16 +26,15 @@ This project is an insurance-domain Retrieval-Augmented Generation (RAG) system.
 
 ## Build & Run Commands
 
-<!-- TODO: Fill in build and run commands.
-     Example sections to add:
-     - Install dependencies: `pip install -r requirements.txt` or `uv sync`
-     - Run ingestion pipeline: ...
-     - Start API server: ...
-     - Run tests: ...
-     - Lint/format: ...
--->
-
-_Build and run commands to be documented. Update this section once the dev environment is confirmed._
+- Install dependencies: `pip install google-genai --break-system-packages`
+- Run the Layer 1 + Layer 2 ingestion pipeline for one policy:
+  ```
+  export GEMINI_API_KEY="..."
+  extraction_test/run_pipeline.sh <policy_id> <policy_doc.pdf> <brochure.pdf> <model> [output_dir]
+  ```
+  Runs Layer 1 extraction (`docs/prompts/prompt_a_pdf.txt`, PDF-native), verifies the output is valid JSON, then runs Layer 2 derivation (`docs/prompts/prompt_b.txt`, JSON-only, no source docs) from it. See `docs/architecture.md`'s "Ingestion" section for the full pipeline design and validation notes behind these choices.
+- To run either stage individually: `extraction_test/run_layer1_extraction.py` or `extraction_test/run_layer2_derivation.py` (each takes `prompt_path out_path model [args...]` — see the usage comment at the top of each file).
+- API server, tests, lint/format: not yet built.
 
 ---
 
