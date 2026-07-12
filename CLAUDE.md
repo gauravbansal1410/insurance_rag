@@ -4,9 +4,11 @@
 
 **Always read these documents first**, before making any changes, answering questions, or planning implementations:
 
-1. [`docs/architecture.md`](docs/architecture.md) — System design, component relationships, data flow, and key design decisions.
+1. [`docs/architecture.md`](docs/architecture.md) — System design, component relationships, data flow, and key design decisions. Links out to the other docs below, which have the pipeline-stage detail.
 2. [`docs/infra-baseline.md`](docs/infra-baseline.md) — Infrastructure baseline: services, environments, deployment topology, and operational constraints.
 3. [`docs/schema.md`](docs/schema.md) — Layer 1 (category-specific extraction) and Layer 2 (normalized decision layer) schemas, document merge rule, and extraction-rule caveats. Required reading before any ingestion or extraction work.
+4. [`docs/ingestion.md`](docs/ingestion.md) — Extraction pipeline detail. Required reading before ingestion work specifically.
+5. [`docs/query.md`](docs/query.md) — Query/retrieval pipeline detail. Required reading before query-pipeline work specifically.
 
 If any of these files is missing or empty, ask the user before proceeding — the architecture, infra, and schema context are prerequisites for working safely in this codebase.
 
@@ -44,8 +46,8 @@ This project is an insurance-domain Retrieval-Augmented Generation (RAG) system.
 
 - Do not hardcode API keys or credentials anywhere in the codebase. Use environment variables or a secrets manager.
 - **Never suggest embedding credentials or tokens directly in git remote URLs** (e.g. `https://<token>@github.com/...`). If a push fails due to missing credentials, instruct the user to authenticate via `osxkeychain` credential helper or interactively — never via a token-in-URL workaround.
-- All document ingestion changes must be validated against the baseline chunking and embedding strategy described in `docs/architecture.md`.
-- Do not modify retrieval logic or prompt templates without first reviewing how they interact with the evaluation suite (if one exists).
+- All document ingestion changes must be validated against the baseline chunking and embedding strategy described in `docs/ingestion.md`.
+- Do not modify retrieval logic or prompt templates without first reviewing how they interact with the evaluation suite described in `docs/evaluation.md` (if one exists yet).
 
 ---
 
@@ -55,10 +57,15 @@ This project is an insurance-domain Retrieval-Augmented Generation (RAG) system.
 insurance_rag/
 ├── docs/                  # Architecture, infra, and schema docs (read first)
 │   ├── architecture.md
+│   ├── ingestion.md
+│   ├── query.md
+│   ├── evaluation.md
 │   ├── infra-baseline.md
 │   ├── schema.md
+│   ├── prompts/           # Production extraction/derivation prompts (+ appendix/ deprecated variants)
 │   └── progress/          # Daily session progress logs (YYYYMMDD-progress.md)
 ├── raw_pdfs/              # Source policy documents (do not modify manually)
+├── extraction_test/       # Ingestion pipeline scripts + test outputs
 ├── CLAUDE.md              # This file
 └── README.md
 ```

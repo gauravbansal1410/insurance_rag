@@ -36,8 +36,12 @@ See `CLAUDE.md`'s "Build & Run Commands" section for full details, including how
 
 ## Documentation 📚
 
-- [`docs/architecture.md`](docs/architecture.md) — system design, pipeline stages, and the reasoning behind key decisions (including validated findings from testing, not just the original plan).
+- [`docs/architecture.md`](docs/architecture.md) — stable system design: goal, constraints, corpus, data layers, and key decisions. Start here.
+- [`docs/ingestion.md`](docs/ingestion.md) — extraction pipeline detail (built and validated for term assurance).
+- [`docs/query.md`](docs/query.md) — query/retrieval pipeline detail (designed, not yet built).
+- [`docs/evaluation.md`](docs/evaluation.md) — golden set, trace log, LLM judge (not yet built).
 - [`docs/schema.md`](docs/schema.md) — Layer 1 / Layer 2 field schemas and the extraction-rule caveats found so far (worth reading before touching extraction prompts — several are non-obvious document-formatting traps).
 - [`docs/infra-baseline.md`](docs/infra-baseline.md) — infrastructure/deployment baseline.
 - [`docs/prompts/`](docs/prompts/) — the production extraction/derivation prompts, plus an `appendix/` of deprecated variants kept for reference.
+- [`docs/progress/`](docs/progress/) — dated session logs with testing detail behind the decisions in the docs above.
 - [`CLAUDE.md`](CLAUDE.md) — instructions for AI-assisted work on this repo (Claude Code entry point).
