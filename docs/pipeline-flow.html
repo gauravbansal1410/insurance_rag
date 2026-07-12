@@ -110,11 +110,11 @@
 <body>
 <div class="wrap">
   <h1>insurance_rag — pipeline flow</h1>
-  <p class="source-note">Source of truth: <code>docs/architecture.md</code>. Edit the <code>steps</code> arrays in the script below when a step ships or architecture changes — layout regenerates automatically.</p>
+  <p class="source-note">Source of truth: <code>README.md</code>, <code>docs/ingestion_architecture.md</code>, <code>docs/query_architecture.md</code>, <code>docs/evaluation_architecture.md</code>. Edit the <code>steps</code> arrays in the script below when a step ships or architecture changes — layout regenerates automatically.</p>
 
   <section>
     <h2>Ingestion pipeline — one-time / admin-triggered</h2>
-    <p class="source-note" style="margin-bottom: 14px;">Running example: the <strong>New Tech Term</strong> policy doc.</p>
+    <p class="source-note" style="margin-bottom: 14px;">Running example: the <strong>Saral Jeevan Bima (859)</strong> policy doc — one of the 2 policies validated end-to-end so far.</p>
     <div class="legend">
       <span class="legend-item"><span class="dot you"></span>You</span>
       <span class="legend-item"><span class="dot claude"></span>Claude Code</span>
@@ -159,11 +159,11 @@
 // built: true | false — solid border vs dashed
 
 const ingestionSteps = [
-  { title: '1. Upload PDFs to GitHub', subtitle: '', example: 'New_Tech_Term_policy_doc.pdf → raw_pdfs/term_assurance_plans/', actor: 'you', built: true },
-  { title: '2. Extraction — Gemini 3.1 Pro', subtitle: 'raw PDF → Layer 1 JSON', example: 'policy doc → L1 tags: sum_assured_max "no limit", age_entry 18–65, death_benefit_formula', actor: 'gemini', built: false },
-  { title: '2b. Layer 2 derivation', subtitle: 'same call, 2nd reasoning pass', example: 'L1 tags → concern_tags: [income_replacement, debt_linked_cover], cover_basis: fixed', actor: 'gemini', built: false },
+  { title: '1. Upload PDFs to GitHub', subtitle: '', example: 'policy_doc_859_LIC_saral_jeevan_bima.pdf → raw_pdfs/term_assurance_plans/', actor: 'you', built: true },
+  { title: '2. Extraction — Gemini flash-lite', subtitle: 'PDF-native input → Layer 1 JSON', example: 'policy_doc + brochure PDFs (attached, not pdftotext) → policy_id "859", sum_assured_max, death_benefit_formula', actor: 'gemini', built: true },
+  { title: '2b. Layer 2 derivation', subtitle: 'separate call, Layer 1 JSON only — no source docs', example: 'L1 JSON → concern_tags: [income_replacement, debt_linked_cover], cover_basis: fixed', actor: 'gemini', built: true },
   { title: '3. Chunking', subtitle: 'structure-aware, PART/section headers', example: 'same doc → 64 section-level chunks (Definitions, Death Benefit, Riders...)', actor: 'claude', built: false },
-  { title: '4. Embedding', subtitle: 'Voyage voyage-law-2', example: '64 chunks → 64 vectors, tagged policy_id=new_tech_term', actor: 'system', built: false },
+  { title: '4. Embedding', subtitle: 'Voyage voyage-law-2', example: '64 chunks → 64 vectors, tagged policy_id=859', actor: 'system', built: false },
   { title: '5. Load into Qdrant', subtitle: 'Layer 1+2 payload, Layer 3 vectors', example: 'L1+L2 JSON as filterable payload, L3 vectors for semantic search', actor: 'system', built: false },
 ];
 
