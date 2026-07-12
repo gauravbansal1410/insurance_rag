@@ -34,11 +34,8 @@ Any extraction-note field reference (`low_confidence_fields`, `field_specific_no
 
 ## Layer 1 — term assurance (built first; locked for this category, other categories not yet scoped at this depth)
 
-    policy_id                            // numeric Plan Number from the brochure
-                                          // cover page (e.g. "859"), NOT plan_name
-                                          // and NOT the UIN — see extraction-rule
-                                          // caveats above. Falls back to UIN only
-                                          // if genuinely not found on either doc.
+    policy_id                            // brochure's Plan Number, not plan_name
+                                          // or UIN — see extraction-rule caveats above
     plan_name, uin, plan_category: "term_assurance"
 
     premium_payment_options: ["single" | "regular" | "limited"]
