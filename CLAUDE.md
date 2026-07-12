@@ -4,11 +4,11 @@
 
 **Always read these documents first**, before making any changes, answering questions, or planning implementations:
 
-1. [`docs/architecture.md`](docs/architecture.md) — Thin index into the docs below. Project goal/constraints/corpus are in `README.md`.
+1. [`README.md`](README.md) — Project goal, constraints, corpus, and an index into the docs below.
 2. [`docs/infra-baseline.md`](docs/infra-baseline.md) — Infrastructure baseline: services, environments, deployment topology, and operational constraints.
-3. [`docs/schema.md`](docs/schema.md) — Layer 1 (category-specific extraction) and Layer 2 (normalized decision layer) schemas, document merge rule, and extraction-rule caveats. Required reading before any ingestion or extraction work.
-4. [`docs/ingestion.md`](docs/ingestion.md) — Extraction pipeline detail. Required reading before ingestion work specifically.
-5. [`docs/query.md`](docs/query.md) — Query/retrieval pipeline detail. Required reading before query-pipeline work specifically.
+3. [`docs/schema.md`](docs/schema.md) — Data layer model (Layer 1/2/3), Layer 1/2 field schemas, document merge rule, and extraction-rule caveats. Required reading before any ingestion or extraction work.
+4. [`docs/ingestion_architecture.md`](docs/ingestion_architecture.md) — Extraction pipeline detail. Required reading before ingestion work specifically.
+5. [`docs/query_architecture.md`](docs/query_architecture.md) — Query/retrieval pipeline detail. Required reading before query-pipeline work specifically.
 
 If any of these files is missing or empty, ask the user before proceeding — the architecture, infra, and schema context are prerequisites for working safely in this codebase.
 
@@ -29,12 +29,12 @@ This project is an insurance-domain Retrieval-Augmented Generation (RAG) system.
 ## Build & Run Commands
 
 - Install dependencies: `pip install google-genai --break-system-packages`
-- One-time setup: `cp .env.example .env`, then fill in your real `GEMINI_API_KEY` (`.env` is gitignored — never commit it). `MODEL` in `.env` defaults to `gemini-flash-lite-latest`, the validated free-tier choice — see `docs/ingestion.md` step 2 for why.
+- One-time setup: `cp .env.example .env`, then fill in your real `GEMINI_API_KEY` (`.env` is gitignored — never commit it). `MODEL` in `.env` defaults to `gemini-flash-lite-latest`, the validated free-tier choice — see `docs/ingestion_architecture.md` step 2 for why.
 - Run the Layer 1 + Layer 2 ingestion pipeline for one policy:
   ```
   extraction_test/run_pipeline.sh <policy_id> <policy_doc.pdf> <brochure.pdf> [model] [output_dir]
   ```
-  Reads `GEMINI_API_KEY`/`MODEL` from `.env` automatically; `[model]` only needs to be passed to override it. Runs Layer 1 extraction (`docs/prompts/prompt_a_pdf.txt`, PDF-native), verifies the output is valid JSON, then runs Layer 2 derivation (`docs/prompts/prompt_b.txt`, JSON-only, no source docs) from it. See `docs/ingestion.md` for the full pipeline design and validation notes behind these choices.
+  Reads `GEMINI_API_KEY`/`MODEL` from `.env` automatically; `[model]` only needs to be passed to override it. Runs Layer 1 extraction (`docs/prompts/prompt_a_pdf.txt`, PDF-native), verifies the output is valid JSON, then runs Layer 2 derivation (`docs/prompts/prompt_b.txt`, JSON-only, no source docs) from it. See `docs/ingestion_architecture.md` for the full pipeline design and validation notes behind these choices.
 - To run either stage individually: `extraction_test/run_layer1_extraction.py` or `extraction_test/run_layer2_derivation.py` (each takes `prompt_path out_path model [args...]` — see the usage comment at the top of each file). These read `GEMINI_API_KEY` from the environment directly, not from `.env` — run `set -a && source .env && set +a` first if running them standalone outside `run_pipeline.sh`.
 - API server, tests, lint/format: not yet built.
 
@@ -46,8 +46,8 @@ This project is an insurance-domain Retrieval-Augmented Generation (RAG) system.
 
 - Do not hardcode API keys or credentials anywhere in the codebase. Use environment variables or a secrets manager.
 - **Never suggest embedding credentials or tokens directly in git remote URLs** (e.g. `https://<token>@github.com/...`). If a push fails due to missing credentials, instruct the user to authenticate via `osxkeychain` credential helper or interactively — never via a token-in-URL workaround.
-- All document ingestion changes must be validated against the baseline chunking and embedding strategy described in `docs/ingestion.md`.
-- Do not modify retrieval logic or prompt templates without first reviewing how they interact with the evaluation suite described in `docs/evaluation.md` (if one exists yet).
+- All document ingestion changes must be validated against the baseline chunking and embedding strategy described in `docs/ingestion_architecture.md`.
+- Do not modify retrieval logic or prompt templates without first reviewing how they interact with the evaluation suite described in `docs/evaluation_architecture.md` (if one exists yet).
 
 ---
 
@@ -56,10 +56,9 @@ This project is an insurance-domain Retrieval-Augmented Generation (RAG) system.
 ```
 insurance_rag/
 ├── docs/                  # Architecture, infra, and schema docs (read first)
-│   ├── architecture.md
-│   ├── ingestion.md
-│   ├── query.md
-│   ├── evaluation.md
+│   ├── ingestion_architecture.md
+│   ├── query_architecture.md
+│   ├── evaluation_architecture.md
 │   ├── infra-baseline.md
 │   ├── schema.md
 │   ├── prompts/           # Production extraction/derivation prompts (+ appendix/ deprecated variants)
@@ -67,7 +66,7 @@ insurance_rag/
 ├── raw_pdfs/              # Source policy documents (do not modify manually)
 ├── extraction_test/       # Ingestion pipeline scripts + test outputs
 ├── CLAUDE.md              # This file
-└── README.md
+└── README.md              # Project goal, constraints, corpus, and docs index
 ```
 
 ---
