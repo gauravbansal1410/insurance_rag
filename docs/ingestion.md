@@ -1,6 +1,6 @@
 # Insurance RAG — Ingestion pipeline
 
-One-time / occasional, admin-triggered, not user-facing. See `docs/architecture.md`'s "Data layers" section for what Layer 1, Layer 2, and Layer 3 are and how they relate; `docs/schema.md` for full field schemas and extraction-rule caveats.
+One-time / occasional, admin-triggered, not user-facing. See `docs/schema.md` for the data layer model (Layer 1/2/3) and full field schemas and extraction-rule caveats.
 
 ## Pipeline
 
@@ -12,11 +12,14 @@ One-time / occasional, admin-triggered, not user-facing. See `docs/architecture.
    - **Why no source docs:** an earlier version attached policy_doc + brochure PDFs for extra grounding, on the assumption Group A's concern-tag reasoning needed brochure framing Layer 1's schema doesn't capture. Testing found this added no measurable benefit while introducing a real bug — the model would sometimes re-derive a Group C bound from the raw PDFs instead of copying Layer 1's already-resolved value. For term assurance, Layer 1's own fields (`structural_variant`, `maturity_benefit`, `surrender_value_applicable`, etc.) already discriminate the concern-tag space that applies. Revisit if a future plan category's Group A tagging turns out to need brochure-only language Layer 1 doesn't capture (the PDF-grounded variant is kept at `docs/prompts/appendix/prompt_b_pdf_deprecated.txt` for that scenario).
 4. **Chunking:** structure-aware — split on the document's own PART/section headers (IRDAI mandates a consistent template across LIC products), not fixed-size windows and not model-based chunking.
 5. **Embedding:** Voyage `voyage-law-2` (verify current model name before building — Voyage ships new generations often). Domain-specialized for legal/insurance text, free for a corpus this size.
-6. **Load into Qdrant** per the three-layer scheme in `docs/architecture.md`.
+6. **Load into Qdrant** per the three-layer scheme in `docs/schema.md`.
 
 ## Running the pipeline
 
 See `CLAUDE.md`'s "Build & Run Commands" section — `extraction_test/run_pipeline.sh` runs steps 2 and 3 for one policy end-to-end, verifying each stage's output before proceeding to the next.
+
+## Explicitly deferred, not forgotten
+- Automated PDF scraping for policy updates: current ingestion is manual/admin-triggered; the scraper will call the same GitHub-upload step (step 1) later.
 
 ## Open questions
 

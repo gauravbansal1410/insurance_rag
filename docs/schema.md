@@ -1,8 +1,17 @@
 # Insurance RAG — extraction schemas
 
-Detailed Layer 1 (category-specific extraction) and Layer 2 (normalized decision layer) schemas. Split out of `architecture.md` to keep that document focused on the stable "why" decisions — this file will grow as each plan category gets scoped and is expected to churn more often.
+Detailed Layer 1 (category-specific extraction) and Layer 2 (normalized decision layer) schemas, plus the data layer model both `docs/ingestion.md` and `docs/query.md` build on. This file will grow as each plan category gets scoped and is expected to churn more often than the rest of the docs.
 
-See `architecture.md`'s "Data layers" section for what Layer 1, Layer 2, and Layer 3 (chunk-level narrative embeddings) each are and how they relate.
+## Curated knowledge base (admin-controlled, versioned)
+Raw PDFs + extracted structured JSON + embeddings.
+- Raw PDFs → GitHub (`/raw_pdfs/`). Stable fetch URL for n8n, free, versioned, and the same destination a future auto-scraper will target.
+- Extracted JSON → GitHub, versioned alongside the PDFs.
+- Vectors + filterable fields → Qdrant on the Oracle VM.
+
+**Metadata — three layers, not two:**
+- *Layer 1 — category-specific extraction.* Schema varies by plan type (term / money-back / whole-life / endowment each have different benefit structures). One record per policy, extracted directly from source documents. Full schema below (term-assurance built first; other categories not yet scoped at this depth).
+- *Layer 2 — normalized decision layer.* Identical schema across all categories, computed at ingestion time from Layer 1 via a separate Gemini call, given only Layer 1's JSON (see `docs/ingestion.md` for why source docs are deliberately withheld here). Some fields are direct copies of Layer 1 bounds (deterministic filter facts), some are restructured Layer 1 language (payout mechanics), and some are genuinely interpretive judgments (concern tags). This is the layer the query pipeline's deterministic filter and sort logic actually run against — Layer 1 is the source of truth, Layer 2 is what's queried. Full schema below.
+- *Layer 3 — chunk-level narrative embeddings.* Structure-aware chunks of the raw policy_doc text, tagged with policy_id, category, section_name. Keeps retrieval from confusing one policy's boilerplate for another's — this corpus is 60–70% identical legal text across documents (Insurance Act sections, grievance mechanisms), so provenance tags matter more here than in a typical RAG project. Fed by the same source document as Layer 1, but chunking/embedding is a separate ingestion sub-step from Layer 1/2 extraction. Used only by narrative retrieval (`docs/query.md` step 6), not the deterministic filter.
 
 ## Document merge rule (each policy has a brochure + a policy_doc)
 policy_doc is authoritative for every field — it runs 3-4x the section count of brochure and includes a full Definitions block brochure lacks. Brochure is used only to supply what policy_doc doesn't carry — confirmed so far to be just the sample illustrative premium table (used by the premium-interpolation query step). Track field-level provenance (policy_doc vs brochure) per field so any future conflict is traceable. First real conflict confirmed 2026-07-12: Saral Jeevan Bima's brochure has a redline/tracked-change artifact ("15 30 days") where policy_doc clearly states 30 — resolved via the redline-artifact caveat below, not a one-off.

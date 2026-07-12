@@ -1,8 +1,14 @@
 # Insurance RAG — Query pipeline
 
-Recurring, user-facing, cost-sensitive only on the LLM steps. See `docs/architecture.md`'s "Data layers" section for what Layer 1, Layer 2, and Layer 3 are and how they relate.
+Recurring, user-facing, cost-sensitive only on the LLM steps. See `docs/schema.md` for what Layer 1, Layer 2, and Layer 3 are and how they relate.
 
 **Status: designed, not yet built.**
+
+## Session state (ephemeral, per-conversation)
+Turn-based slot-filling state (age given? cover amount given? priorities given? result generated?). Not on GitHub. Clears when the conversation ends. Also the state machine that makes a future chat interface a frontend-only swap, not a backend rebuild.
+
+## Vector database choice — stated plainly, not oversold
+Qdrant, chosen for self-hosting fit and native n8n integration — not a rigorous benchmark against alternatives. Pinecone was excluded early because it has no self-hosting option at all below enterprise BYOC, which conflicts with the stated infra preference (see `docs/infra-baseline.md`). Weaviate was the closer, untested alternative — comparable feature set, would likely have worked equally well. Before scaling further: confirm actual free RAM on the specific Oracle VM shape in use (see `docs/infra-baseline.md` for current confirmed specs); at this corpus's scale (low thousands of vectors) Qdrant's own footprint is small, but it's still worth checking rather than assuming.
 
 ## Pipeline
 
@@ -17,6 +23,10 @@ Recurring, user-facing, cost-sensitive only on the LLM steps. See `docs/architec
 8. Narrative generation: Gemini flash-lite explains the top 3 plan + rider combos in plain language with pros/cons, and discloses that shown premiums are reference estimates from linear interpolation, not exact quotes. The only genuinely slow step — design the loading state around it specifically.
 9. Trace log write (async) after steps 3–8.
 10. BYOK check: client-supplied Gemini key used if present, falls back to your stored n8n credential otherwise.
+
+## Explicitly deferred, not forgotten
+- Rider-selection UI: plain multi-select on concerns, not a ranked list.
+- Chat interface: backend is already turn-based to support it — frontend swap only, whenever ready.
 
 ## Open questions
 
