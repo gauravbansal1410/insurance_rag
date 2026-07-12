@@ -1,12 +1,14 @@
+[DEPRECATED — text-mode variant, superseded by docs/prompts/prompt_b_pdf.txt. Kept for reference only: production pipeline skips pdftotext entirely (PDF-native input used for both Layer 1 and Layer 2), and the PDF variant also grounds Group A concern tags against the brochure directly, not just policy_doc text. Uses {{policy_doc_text}} placeholder instead of attached PDFs.]
+
 SYSTEM / TASK
 
-You will derive a normalized decision-layer record (Layer 2) purely from the Layer 1 extraction given below. No source documents are provided — every Layer 2 field must be derivable from Layer 1's own fields (structural_variant, death_benefit_formula, maturity_benefit, surrender_value_applicable, sum assured/age/term bounds, etc). Output ONLY valid JSON — no markdown fences, no commentary.
+You will derive a normalized decision-layer record (Layer 2) from a Layer 1 extraction you're given below, plus the original policy_doc text for grounding. Output ONLY valid JSON — no markdown fences, no commentary.
 
-Group A tags are interpretive judgments based on the plan's benefit structure as captured in Layer 1 — don't pattern-match on keywords. Choose only from the closed list. Empty array is valid if nothing clearly applies — do not force-fit a tag to seem thorough.
+Group A tags are interpretive judgments, not facts copied from text — read the document's actual benefit structure and target use case, don't pattern-match on keywords. Choose only from the closed list. Empty array is valid if nothing clearly applies — do not force-fit a tag to seem thorough.
 
 Group B restructures Layer 1's payout language into controlled vocabulary. Arrays are correct where a plan combines mechanisms (e.g. periodic survival benefit AND lump sum at maturity together) — check for this rather than assuming one value.
 
-Group C is a direct copy of Layer 1 bounds — no interpretation needed, just remap field names and copy the values EXACTLY as given.
+Group C is a direct copy of Layer 1 bounds — no interpretation needed, just remap field names.
 
 ===========================================
 OUTPUT JSON SCHEMA
@@ -45,3 +47,6 @@ OUTPUT JSON SCHEMA
 
 [LAYER 1 EXTRACTION OUTPUT]
 {{layer1_json}}
+
+[ORIGINAL POLICY_DOC TEXT — for grounding]
+{{policy_doc_text}}

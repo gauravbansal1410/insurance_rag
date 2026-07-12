@@ -2,7 +2,8 @@
   "policy_id": "LIC\u2019s Saral Jeevan Bima",
   "layer2": {
     "group_a_concern_tags": [
-      "income_replacement"
+      "income_replacement",
+      "estate_legacy_planning"
     ],
     "group_b": {
       "payout_on_death": [
@@ -11,7 +12,7 @@
       "payout_on_survival": [
         "none"
       ],
-      "payout_notes": "Death benefit is a lump sum. No maturity benefit is payable.",
+      "payout_notes": "Death benefit is the highest of 10x annualized premium, 105% of premiums paid, or sum assured (regular/limited); or higher of 125% of single premium or sum assured (single).",
       "is_participating": false,
       "builds_cash_value": false,
       "cash_value_loan_available": false,
@@ -28,9 +29,9 @@
     }
   },
   "derivation_notes": {
-    "concern_tag_reasoning": "This is a pure risk term assurance plan designed to provide a lump sum death benefit to beneficiaries, serving as basic income replacement for the family in the event of the policyholder's death.",
+    "concern_tag_reasoning": "As a pure term assurance plan, it serves as income replacement for dependents and provides a death benefit for estate planning. It lacks savings, investment, or medical components.",
     "ambiguous_calls": [
-      "The policy allows for a 'Policy Cancellation Value' (surrender-like) for single and limited premium policies, but explicitly states 'Surrender value is not applicable' in Part D, Condition 5. This is treated as a cancellation refund rather than a traditional cash-value accumulation."
+      "surrender_value_applicable is false, therefore builds_cash_value and cash_value_loan_available are false."
     ]
   }
 }

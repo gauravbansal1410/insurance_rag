@@ -11,7 +11,7 @@
       "payout_on_survival": [
         "none"
       ],
-      "payout_notes": "Death benefit is defined as 'Sum Assured on Death' per the Risk Cover Schedule, which is designed to align with loan repayment schedules.",
+      "payout_notes": "Death benefit is the absolute amount assured; no maturity benefit provided.",
       "is_participating": false,
       "builds_cash_value": false,
       "cash_value_loan_available": false,
@@ -28,9 +28,9 @@
     }
   },
   "derivation_notes": {
-    "concern_tag_reasoning": "The plan is explicitly marketed as a 'Credit Life' product intended to cover outstanding loan liabilities.",
+    "concern_tag_reasoning": "The plan is explicitly identified as a credit life product, which is designed to cover outstanding debt obligations.",
     "ambiguous_calls": [
-      "The minimum sum assured is listed as 50L in the extraction, but the notes mention a conditional 20L minimum for specific housing loans; 50L was retained as the primary bound."
+      "The plan is categorized as credit life, which typically implies a decreasing cover basis linked to a loan schedule, despite the fixed sum assured range provided in the extraction."
     ]
   }
 }

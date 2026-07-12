@@ -1,0 +1,51 @@
+[DEPRECATED — superseded by docs/prompts/prompt_b.txt (Layer1-JSON-only, no source docs at all). Testing on 2026-07-12 found attaching policy_doc/brochure PDFs added no measurable benefit to Group A concern tagging for term assurance (identical output to JSON-only across 4/4 runs) while introducing a real bug: the model would sometimes re-derive Group C bounds from the raw PDFs instead of copying Layer 1's already-resolved value, reintroducing exception-vs-general-rule ambiguity Layer 1 had already fixed (e.g. picking a conditional Sum Assured minimum instead of the general one). Kept for reference in case a future plan category's Group A tagging genuinely needs brochure-only positioning language Layer 1 doesn't capture.]
+
+SYSTEM / TASK
+
+You will derive a normalized decision-layer record (Layer 2) from a Layer 1 extraction you're given below, plus the original policy_doc and brochure PDFs for grounding. The policy_doc is authoritative for factual bounds and payout mechanics; the brochure often carries marketing-oriented framing (target audience, use-case positioning) that policy_doc's legal language doesn't state directly — use it especially for Group A's interpretive concern-tag judgments, not just as a fallback. Output ONLY valid JSON — no markdown fences, no commentary.
+
+Group A tags are interpretive judgments, not facts copied from text — read the document's actual benefit structure and target use case, don't pattern-match on keywords. Choose only from the closed list. Empty array is valid if nothing clearly applies — do not force-fit a tag to seem thorough.
+
+Group B restructures Layer 1's payout language into controlled vocabulary. Arrays are correct where a plan combines mechanisms (e.g. periodic survival benefit AND lump sum at maturity together) — check for this rather than assuming one value.
+
+Group C is a direct copy of Layer 1 bounds — no interpretation needed, just remap field names. Copy the values EXACTLY as given in the [LAYER 1 EXTRACTION OUTPUT] JSON below, even though the attached PDFs are also visible to you. Do NOT re-derive Group C values by re-reading the PDFs — Layer 1 has already resolved every general-rule-vs-exception ambiguity (e.g. a stated Sum Assured minimum with a lower age-band/purpose-conditional exception), and re-deriving from source text risks silently picking the exception value instead of the general rule Layer 1 already settled on. The PDFs are attached only to ground Group A's interpretive concern-tag judgments and Group B's payout-mechanics language — never to override a Group C field.
+
+===========================================
+OUTPUT JSON SCHEMA
+===========================================
+
+{
+  "policy_id": string,
+  "layer2": {
+    "group_a_concern_tags": [
+      "income_replacement", "debt_linked_cover", "child_education_fund",
+      "retirement_income", "estate_legacy_planning",
+      "forced_savings_discipline", "medical_critical_illness_addon",
+      "liquidity_via_policy_loan"
+    ],
+    "group_b": {
+      "payout_on_death": ["lump_sum" | "instalments_available" | "decreasing_schedule" | "other"],
+      "payout_on_survival": ["none" | "lump_sum_at_maturity" | "periodic_survival_benefit" | "bonus_accrual" | "other"],
+      "payout_notes": string | null,
+      "is_participating": boolean,
+      "builds_cash_value": boolean,
+      "cash_value_loan_available": boolean,
+      "cover_basis": "fixed" | "decreasing_loan_linked"
+    },
+    "group_c": {
+      "min_age": int, "max_age": int,
+      "min_sum_assured": number | null, "max_sum_assured": number | null,
+      "min_term": int, "max_term": int,
+      "compatible_riders": [string]
+    }
+  },
+  "derivation_notes": {
+    "concern_tag_reasoning": string,
+    "ambiguous_calls": [string]
+  }
+}
+
+[LAYER 1 EXTRACTION OUTPUT]
+{{layer1_json}}
+
+Now derive Layer 2 using the Layer 1 extraction above plus the two attached PDFs. The first attached PDF is policy_doc (authoritative). The second attached PDF is brochure (supplementary — use for concern-tag/target-audience framing not stated directly in policy_doc).
