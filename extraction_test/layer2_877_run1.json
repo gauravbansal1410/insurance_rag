@@ -1,5 +1,5 @@
 {
-  "policy_id": "LIC\u2019s Yuva Credit Life",
+  "policy_id": "877",
   "layer2": {
     "group_a_concern_tags": [
       "debt_linked_cover"
@@ -11,7 +11,7 @@
       "payout_on_survival": [
         "none"
       ],
-      "payout_notes": "Death benefit is the absolute amount assured; no maturity benefit provided.",
+      "payout_notes": "Death benefit is based on the Risk Cover Schedule, which typically follows a decreasing schedule for credit life products.",
       "is_participating": false,
       "builds_cash_value": false,
       "cash_value_loan_available": false,
@@ -28,9 +28,9 @@
     }
   },
   "derivation_notes": {
-    "concern_tag_reasoning": "The plan is explicitly identified as a credit life product, which is designed to cover outstanding debt obligations.",
+    "concern_tag_reasoning": "The plan is explicitly identified as a 'credit_life' structural variant, which is designed to cover outstanding debt obligations.",
     "ambiguous_calls": [
-      "The plan is categorized as credit life, which typically implies a decreasing cover basis linked to a loan schedule, despite the fixed sum assured range provided in the extraction."
+      "Cover basis is inferred as decreasing_loan_linked due to the 'credit_life' classification and reference to a 'Risk Cover Schedule' for death benefits."
     ]
   }
 }

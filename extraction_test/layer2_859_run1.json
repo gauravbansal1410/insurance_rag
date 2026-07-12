@@ -1,5 +1,5 @@
 {
-  "policy_id": "LIC\u2019s Saral Jeevan Bima",
+  "policy_id": "859",
   "layer2": {
     "group_a_concern_tags": [
       "income_replacement",
@@ -12,7 +12,7 @@
       "payout_on_survival": [
         "none"
       ],
-      "payout_notes": "Death benefit is the highest of 10x annualized premium, 105% of premiums paid, or sum assured (regular/limited); or higher of 125% of single premium or sum assured (single).",
+      "payout_notes": "Death benefit is the highest of 10x annualized premium, 105% of premiums paid, or absolute sum assured (regular/limited); or higher of 125% of single premium or absolute sum assured (single).",
       "is_participating": false,
       "builds_cash_value": false,
       "cash_value_loan_available": false,
@@ -29,9 +29,9 @@
     }
   },
   "derivation_notes": {
-    "concern_tag_reasoning": "As a pure term assurance plan, it serves as income replacement for dependents and provides a death benefit for estate planning. It lacks savings, investment, or medical components.",
+    "concern_tag_reasoning": "The plan is a pure term assurance product designed to provide a lump sum death benefit to beneficiaries, serving as income replacement or estate legacy. It lacks savings or investment components.",
     "ambiguous_calls": [
-      "surrender_value_applicable is false, therefore builds_cash_value and cash_value_loan_available are false."
+      "Surrender value is technically defined for cancellation, but the plan is a non-participating term product with no cash value accumulation, thus builds_cash_value is false."
     ]
   }
 }

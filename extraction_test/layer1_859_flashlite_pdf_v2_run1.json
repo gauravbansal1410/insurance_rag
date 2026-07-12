@@ -1,5 +1,5 @@
 {
-  "policy_id": "LIC\u2019s Saral Jeevan Bima",
+  "policy_id": "859",
   "plan_name": "LIC\u2019s Saral Jeevan Bima",
   "uin": "512N341V01",
   "plan_category": "term_assurance",
@@ -24,12 +24,12 @@
     "policy_term_min": 5,
     "policy_term_max": 40,
     "death_benefit_formula": {
-      "regular_limited_premium": "Highest of: 10 times Annualized Premium, 105% of all premiums paid, or Basic Sum Assured.",
-      "single_premium": "Higher of: 125% of Single Premium or Basic Sum Assured."
+      "regular_limited_premium": "Highest of: 10 times Annualized Premium, 105% of all premiums paid, or Absolute amount assured to be paid on death.",
+      "single_premium": "Higher of: 125% of Single Premium or Absolute amount assured to be paid on death."
     },
     "maturity_benefit": "none",
     "surrender_value_applicable": false,
-    "policy_cancellation_value_formula": "Single Premium: 70% \u00d7 Single Premium paid \u00d7 (Unexpired Policy Term / Original Policy Term). Limited Premium: 70% \u00d7 Total Premiums Paid \u00d7 (Unexpired Policy Term / Original Policy Term).",
+    "policy_cancellation_value_formula": "Single Premium: 70% * Single Premium * (Unexpired Policy Term / Original Policy Term). Limited Premium: 70% * Total Premiums Paid * (Unexpired Policy Term / Original Policy Term).",
     "grace_period_days": {
       "yearly_halfyearly": 30,
       "monthly": 15
@@ -37,8 +37,8 @@
     "free_look_period_days": 30,
     "suicide_exclusion": {
       "months": 12,
-      "payout_pct_single": 90.0,
-      "payout_pct_regular_limited": 80.0
+      "payout_pct_single": 90,
+      "payout_pct_regular_limited": 80
     },
     "rebate_structures": {
       "high_sum_assured_rebate_table": "10L-14.5L: 0.10%o B.S.A; 15L-19.5L: 0.20%o B.S.A; 20L+: 0.25%o B.S.A.",
@@ -498,15 +498,14 @@
     "low_confidence_fields": [
       "layer1.rebate_structures.high_sum_assured_rebate_table"
     ],
-    "fields_not_found": [],
+    "fields_not_found": [
+      "waiting_period_days",
+      "outstanding_loan_schedule_reference"
+    ],
     "field_specific_notes": [
       {
         "field": "layer1.rebate_structures.high_sum_assured_rebate_table",
         "note": "possible \u2030/%o encoding ambiguity \u2014 verify against source PDF before using in calculations."
-      },
-      {
-        "field": "layer1.free_look_period_days",
-        "note": "Source text contains '15 30 days' on page 9 of brochure, likely a redline artifact. Policy document (page 1) confirms 30 days."
       }
     ]
   }

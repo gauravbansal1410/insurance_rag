@@ -30,9 +30,15 @@ Any extraction-note field reference (`low_confidence_fields`, `field_specific_no
 - Two adjacent numbers with no separator (e.g. "15 30 days") is likely a redline/tracked-change artifact — an old value not fully removed during editing. Don't silently pick one number; flag both via `field_specific_notes` and cross-check against the other source document if possible.
 - Free Look Period (the return window) and a refund-processing timeline ("premium refunded within 15 days of receipt of the request") are different concepts that can appear close together in text — don't conflate them into the same field.
 - `premium_payment_option: "single"` always implies `payment_mode: "lump_sum"` — a Single Premium is paid once in full, never on an annual/half-yearly/monthly schedule.
+- `policy_id` is NOT `plan_name` and must not simply repeat it — an unguided schema caused exactly this on early test runs (e.g. `policy_id: "LIC's Saral Jeevan Bima"`, identical to `plan_name`). `policy_id` is the numeric Plan Number printed on the brochure's cover page (e.g. "859"), usually directly beneath the plan name alongside the UIN — not the UIN itself either. Fall back to the UIN only if the Plan Number genuinely isn't found on either document, and flag that fallback via `low_confidence_fields`.
 
 ## Layer 1 — term assurance (built first; locked for this category, other categories not yet scoped at this depth)
 
+    policy_id                            // numeric Plan Number from the brochure
+                                          // cover page (e.g. "859"), NOT plan_name
+                                          // and NOT the UIN — see extraction-rule
+                                          // caveats above. Falls back to UIN only
+                                          // if genuinely not found on either doc.
     plan_name, uin, plan_category: "term_assurance"
 
     premium_payment_options: ["single" | "regular" | "limited"]
