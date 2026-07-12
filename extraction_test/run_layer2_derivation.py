@@ -1,21 +1,17 @@
-# run_extraction.py
 import os, sys, json
 from google import genai
 from google.genai import types
 
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-def run(prompt_path, model, replacements, pdf_paths, out_path):
+def run(prompt_path, model, replacements, out_path):
     prompt = open(prompt_path).read()
     for key, filepath in replacements.items():
         prompt = prompt.replace(key, open(filepath).read())
 
-    uploaded = [client.files.upload(file=p) for p in pdf_paths]
-    contents = [prompt] + uploaded
-
     response = client.models.generate_content(
         model=model,
-        contents=contents,
+        contents=prompt,
         config=types.GenerateContentConfig(
             temperature=0,
             response_mime_type="application/json",  # forces valid JSON syntax, sidesteps the markdown-fence problem
@@ -27,15 +23,10 @@ def run(prompt_path, model, replacements, pdf_paths, out_path):
     print(f"Saved {out_path}")
 
 if __name__ == "__main__":
-    # usage: python3 run_extraction.py prompt.txt out.json model_name [key=path ...] [file.pdf ...]
-    # key=path args are substituted as text (e.g. layer1_json=path); bare paths are attached as PDFs.
+    # usage: python3 run_layer2_derivation.py prompt_b.txt out.json model_name layer1_json=path
     prompt_path, out_path, model = sys.argv[1], sys.argv[2], sys.argv[3]
     replacements = {}
-    pdf_paths = []
     for arg in sys.argv[4:]:
-        if "=" in arg:
-            tag, path = arg.split("=", 1)
-            replacements[f"{{{{{tag}}}}}"] = path
-        else:
-            pdf_paths.append(arg)
-    run(prompt_path, model, replacements, pdf_paths, out_path)
+        tag, path = arg.split("=", 1)
+        replacements[f"{{{{{tag}}}}}"] = path
+    run(prompt_path, model, replacements, out_path)
