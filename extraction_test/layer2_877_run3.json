@@ -1,0 +1,36 @@
+{
+  "policy_id": "LIC\u2019s Yuva Credit Life",
+  "layer2": {
+    "group_a_concern_tags": [
+      "debt_linked_cover"
+    ],
+    "group_b": {
+      "payout_on_death": [
+        "lump_sum"
+      ],
+      "payout_on_survival": [
+        "none"
+      ],
+      "payout_notes": "Death benefit is defined as 'Sum Assured on Death' per the Risk Cover Schedule, which is designed to align with loan repayment schedules.",
+      "is_participating": false,
+      "builds_cash_value": false,
+      "cash_value_loan_available": false,
+      "cover_basis": "decreasing_loan_linked"
+    },
+    "group_c": {
+      "min_age": 18,
+      "max_age": 45,
+      "min_sum_assured": 5000000,
+      "max_sum_assured": 50000000,
+      "min_term": 5,
+      "max_term": 30,
+      "compatible_riders": []
+    }
+  },
+  "derivation_notes": {
+    "concern_tag_reasoning": "The plan is explicitly marketed as a 'Credit Life' product intended to cover outstanding loan liabilities.",
+    "ambiguous_calls": [
+      "The minimum sum assured is listed as 50L in the extraction, but the notes mention a conditional 20L minimum for specific housing loans; 50L was retained as the primary bound."
+    ]
+  }
+}

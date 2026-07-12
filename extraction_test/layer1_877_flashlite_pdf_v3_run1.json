@@ -1,0 +1,189 @@
+{
+  "policy_id": "LIC\u2019s Yuva Credit Life",
+  "plan_name": "LIC\u2019s Yuva Credit Life",
+  "uin": "512N357V01",
+  "plan_category": "term_assurance",
+  "structural_variant": "credit_life",
+  "layer1": {
+    "premium_payment_options": [
+      "single",
+      "limited"
+    ],
+    "ppt_options": [
+      5,
+      10,
+      15
+    ],
+    "sum_assured_min": 5000000,
+    "sum_assured_max": 50000000,
+    "sum_assured_multiples": "Rs 1 lakh for 50L-75L; Rs 25 lakh for 75L-1.5Cr; Rs 50 lakh for 1.5Cr-4Cr; Rs 1Cr for above 4Cr",
+    "age_at_entry_min": 18,
+    "age_at_entry_max": 45,
+    "age_at_maturity_min": 23,
+    "age_at_maturity_max": 75,
+    "policy_term_min": 5,
+    "policy_term_max": 30,
+    "death_benefit_formula": {
+      "regular_limited_premium": "Higher of 105% of Total Premiums Paid or Absolute amount assured to be paid on death",
+      "single_premium": "Absolute amount assured to be paid on death"
+    },
+    "maturity_benefit": "none",
+    "surrender_value_applicable": false,
+    "policy_cancellation_value_formula": "Unexpired Risk Premium Value",
+    "grace_period_days": {
+      "yearly_halfyearly": 30,
+      "monthly": 0
+    },
+    "free_look_period_days": 30,
+    "suicide_exclusion": {
+      "months": 12,
+      "payout_pct_single": 80,
+      "payout_pct_regular_limited": 80
+    },
+    "rebate_structures": {
+      "high_sum_assured_rebate_table": "Provided in brochure page 6",
+      "online_sale_rebate_table": null,
+      "mode_loadings": "Yearly: 1, Half-Yearly: 0.51"
+    },
+    "death_benefit_instalment_option": false,
+    "sample_illustrative_premiums": [
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "premium_amount": 40900,
+        "derived": false
+      },
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 10100,
+        "derived": false
+      },
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 6100,
+        "derived": false
+      },
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_15",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 4850,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "premium_amount": 53550,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 13150,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 7900,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_15",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 6200,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "premium_amount": 103450,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 25100,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 14900,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_15",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 11650,
+        "derived": false
+      }
+    ],
+    "compatible_riders": [],
+    "waiting_period_days": null,
+    "outstanding_loan_schedule_reference": "Risk Cover Schedule"
+  },
+  "extraction_notes": {
+    "source_provenance": {},
+    "field_conflicts": [],
+    "low_confidence_fields": [],
+    "fields_not_found": [
+      "waiting_period_days"
+    ],
+    "field_specific_notes": [
+      {
+        "field": "layer1.sum_assured_min",
+        "note": "Conditional minimum of Rs 20,00,000 applies for eligible lives age 21-45 where insurance need is based on approved sanctioned loan for specified purpose such as housing loan."
+      }
+    ]
+  }
+}

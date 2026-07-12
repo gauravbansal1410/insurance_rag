@@ -1,0 +1,94 @@
+[DEPRECATED — text-mode variant, superseded by docs/prompts/prompt_a_pdf.txt. Kept for reference only: testing on 2026-07-12 found PDF-native input more reliable than pdftotext-extracted text for multi-table detection (7/7 clean runs vs 3/6). Uses {{policy_doc_text}}/{{brochure_text}} placeholders instead of attached PDFs. See docs/schema.md for the extraction-rule caveats this prompt encodes.]
+
+SYSTEM / TASK
+
+You are extracting structured factual data from an Indian life insurance (LIC) term assurance policy document. You will be given two source documents for the same policy: a policy_doc (authoritative, complete) and a brochure (supplementary, used only for its sample premium table). Extract into the exact JSON schema below. Output ONLY valid JSON — no markdown fences, no commentary before or after.
+
+SOURCE PRIORITY RULE
+policy_doc is authoritative for every field except sample_illustrative_premiums, which exists only in brochure. If a field appears in both with conflicting values, use the policy_doc value and record the conflict in extraction_notes.field_conflicts.
+
+FIELD DOT-PATH CONVENTION
+Wherever a trap below asks you to record a field's "dot-path" (in low_confidence_fields, field_specific_notes, or field_conflicts), always use the FULL path starting from the top-level key that contains it — e.g. "layer1.sum_assured_max", "layer1.rebate_structures.high_sum_assured_rebate_table", "layer1.sample_illustrative_premiums[3].payment_mode". Never use a bare field name on its own (e.g. "sum_assured_max") — it is ambiguous once multiple similarly-named fields could exist.
+
+CRITICAL EXTRACTION TRAPS — read before extracting
+1. Rider compatibility: Do NOT infer compatible_riders from generic mentions of "rider" in Section 45 / legal boilerplate (surrender, claims, grievance clauses). Most term plans mention "rider" only in this boilerplate and have zero actual compatible riders. Only list a rider if the document names a SPECIFIC rider by its UIN (e.g. "512B210V02"). Empty compatible_riders is a valid, expected, common result — not a missed extraction.
+2. Tax language: Do not extract tax-benefit boilerplate ("consult your tax advisor", Section 80C/10(10D)) into any field. Identical across all documents, zero discriminative value.
+3. Nullable fields are real, not failures: sum_assured_max may legitimately be "No Limit, subject to underwriting" — encode as null with a note, never fabricate a number. age_at_maturity_min/max may be genuinely absent for some plans — encode null if not present, do not guess.
+4. Two fields are flagged NOT YET VERIFIED across most of this category — extract if present, set confidence "low", and do not treat absence as an error:
+   - waiting_period_days
+   - outstanding_loan_schedule_reference (credit_life variant only)
+5. Sample premium tables have multiple premium columns per age row (e.g. Single Premium, and Annual Premium for several different Premium Paying Terms). Extract EVERY column as a SEPARATE array entry with its own premium_payment_option tag — do not collapse a table row into one value, and do not silently pick only one column. A 3-age × 4-column table should produce 12 array entries, not 3.
+6. A stated maximum Sum Assured followed by a case-by-case underwriting exception clause ("may be considered... subject to Reinsurer decision") is still a real maximum — encode the stated number in sum_assured_max, and note the exception in extraction_notes, not the field itself. Only use null when the document truly states no ceiling at all.
+7. LIC documents commonly state "no surrender value will be available... however [conditional refund] shall be payable." Treat this as surrender_value_applicable: false — the conditional refund belongs in policy_cancellation_value_formula, which is a separate field. Do not set surrender_value_applicable to true just because some conditional payout on surrender exists.
+8. If you encounter "%o" immediately following a decimal number in a rebate/rate context, this is very likely a corrupted rendering of the per-mille symbol (‰), not literal percent. Record the value in the field EXACTLY as printed in the source — literal "%o", do not silently substitute "‰" or any other character. Then: (a) add the field's dot-path (e.g. "layer1.rebate_structures.high_sum_assured_rebate_table") to extraction_notes.low_confidence_fields, and (b) add one { "field": <same dot-path>, "note": "possible ‰/%o encoding ambiguity — verify against source PDF before using in calculations." } entry to extraction_notes.field_specific_notes. low_confidence_fields entries are always a bare field name/dot-path — never replace one with explanatory text.
+9a. Documents may contain MORE THAN ONE sample/illustrative premium table or section — these may appear under different headings, at different Sum Assured/Term baselines, split by Distribution Channel (Offline/Online) or Payment Mode (Annual/Half-Yearly/Monthly), or as a numbered list of scenarios within a single section. CRITICAL SUBCASE: two tables commonly sit back-to-back under ONE shared heading (e.g. a single "Sample Illustrative Premium" section), with no visual break between them — the only signal that a second table has started is a new introductory sentence restating a different Sum Assured or Policy Term ("The sample illustrative premium for Basic Sum Assured of Rs. X lakh and Policy Term Y years..."). Do not stop reading a section just because you already found and extracted one table under its heading — keep reading past it for a second introductory sentence and table. Before extracting any premium data, first scan the ENTIRE document and produce an internal inventory listing every distinct sample/illustrative premium table you find, keyed by its own (Sum Assured, Policy Term) baseline stated in its introductory sentence, not by section heading. Do not extract yet at this step — just build the inventory.
+
+9b. Now extract EVERY row from EVERY table in that inventory. Finding and fully expanding one table is not sufficient — if your inventory listed two (or more) tables, your output must contain rows from all of them. A document with one small single-scenario table plus a separate larger multi-age table is common, and both must be represented in sample_illustrative_premiums. Tag each row with its own age/sum_assured/term/distribution_channel/payment_mode, and set "derived": false.
+
+If a table provides Offline figures but no Online figures (or vice versa) for the same age/sum_assured/term/payment_mode, do NOT compute the missing one yourself — leave it absent. Computation from online_sale_rebate_table happens as a separate downstream step, not during extraction.
+10. If a document contains two adjacent numbers with no separator or clear formatting (e.g. "15 30 days"), this is likely a redline/tracked-change artifact where an old value wasn't fully removed. Do not silently pick one number as authoritative. Instead, add an entry to extraction_notes.field_specific_notes with the field's dot-path and a note describing both numbers found and that the source text is ambiguous, and add the field's dot-path to extraction_notes.low_confidence_fields.
+11. Distinguish the Free Look Period itself (the window during which a policyholder may return the policy) from any separate processing/refund timeline (e.g. "premium refunded within 15 days of receipt of the request") — these are different concepts and must not be conflated into the same field. free_look_period_days is the return window only; a refund-processing timeline is not a Layer 1 field in this schema and should not overwrite it.
+12. premium_payment_option: "single" always pairs with payment_mode: "lump_sum" — a Single Premium is paid once, in full, at inception, so it can never be "annual", "half_yearly", or "monthly". If a Single Premium row's payment_mode would otherwise be tagged anything other than "lump_sum", that is an extraction error — correct it before output.
+13. A stated Minimum Basic Sum Assured is sometimes followed by a LOWER conditional minimum that applies only to a specific age band and/or specific purpose (e.g. "for eligible lives age 21-45, Minimum Basic Sum Assured shall be Rs X where the insurance need is based on an approved sanctioned loan for specified purpose such as housing loan"). This mirrors trap 6 but for the minimum, not the maximum, and the exception is condition-gated (age band + purpose) rather than case-by-case underwriting discretion. sum_assured_min must always hold the GENERAL rule's value (the one that applies without a special condition) — never the conditional/exception value. Then add a field_specific_notes entry (dot-path "layer1.sum_assured_min") stating the conditional lower minimum, the age band it applies to, and the purpose restriction, so the exception isn't lost. Do not silently pick whichever number appears first or is numerically smaller.
+
+STRUCTURAL VARIANT AWARENESS
+Identify which of three shapes this document is before extracting:
+   - standalone: fixed sum assured, no loan linkage
+   - credit_life: decreasing sum assured tied to an outstanding loan schedule
+   - rider_enabled: names specific optional riders by UIN
+Record this as "structural_variant".
+
+===========================================
+OUTPUT JSON SCHEMA
+===========================================
+
+{
+  "policy_id": string,
+  "plan_name": string,
+  "uin": string,
+  "plan_category": "term_assurance",
+  "structural_variant": "standalone" | "credit_life" | "rider_enabled",
+
+  "layer1": {
+    "premium_payment_options": ["single" | "regular" | "limited"],
+    "ppt_options": [int] | null,
+    "sum_assured_min": number | null,
+    "sum_assured_max": number | null,
+    "sum_assured_multiples": string | null,
+    "age_at_entry_min": int,
+    "age_at_entry_max": int,
+    "age_at_maturity_min": int | null,
+    "age_at_maturity_max": int | null,
+    "policy_term_min": int,
+    "policy_term_max": int,
+    "death_benefit_formula": { "regular_limited_premium": string, "single_premium": string },
+    "maturity_benefit": "none" | string,
+    "surrender_value_applicable": boolean,
+    "policy_cancellation_value_formula": string | null,
+    "grace_period_days": { "yearly_halfyearly": int, "monthly": int },
+    "free_look_period_days": int,
+    "suicide_exclusion": { "months": int, "payout_pct_single": number, "payout_pct_regular_limited": number },
+    "rebate_structures": { "high_sum_assured_rebate_table": string | null, "online_sale_rebate_table": string | null, "mode_loadings": string | null },
+    "death_benefit_instalment_option": boolean,
+    "sample_illustrative_premiums": [ { "age": int, "sum_assured": number, "term": int, "premium_payment_option": "single" | "limited_ppt_5" | "limited_ppt_10" | "limited_ppt_15" | "regular", "payment_mode": "annual" | "half_yearly" | "monthly" | "lump_sum", "distribution_channel": "offline" | "online" | "not_specified", "premium_amount": number, "derived": boolean } ] | null,
+    "compatible_riders": [ { "rider_name": string, "uin": string } ],
+    "waiting_period_days": int | null,
+    "outstanding_loan_schedule_reference": string | null
+  },
+
+  "extraction_notes": {
+    "source_provenance": {},
+    "field_conflicts": [ { "field": string, "policy_doc_value": string, "brochure_value": string } ],
+    "low_confidence_fields": [string],
+    "fields_not_found": [string],
+    "field_specific_notes": [ { "field": string, "note": string } ]
+  }
+}
+
+Now extract from the following documents. Document 1 is policy_doc (authoritative). Document 2 is brochure (supplementary, premium table only).
+
+[DOCUMENT 1 — policy_doc]
+{{policy_doc_text}}
+
+[DOCUMENT 2 — brochure]
+{{brochure_text}}
