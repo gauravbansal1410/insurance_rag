@@ -10,7 +10,7 @@ A personal project to build an end-to-end, usable Retrieval-Augmented Generation
 
 ## Status 🚧
 
-**Ingestion pipeline (extraction) is built and validated for the term assurance category only — all 7 policies in that category are now extracted.** Money-back, whole-life, endowment, and rider categories are scoped in the corpus but not yet extracted. The query/retrieval side (eligibility filtering, ranking, narrative generation) is designed but not yet built — see `docs/ingestion_architecture.md` and `docs/query_architecture.md` for the full pipeline design.
+**Ingestion pipeline (extraction + chunking) is built and validated for the term assurance category only — all 7 policies in that category are now extracted and chunked.** Money-back, whole-life, endowment, and rider categories are scoped in the corpus but not yet extracted. Embedding and loading into Qdrant are not yet built. The query/retrieval side (eligibility filtering, ranking, narrative generation) is designed but not yet built — see `docs/ingestion_architecture.md` and `docs/query_architecture.md` for the full pipeline design.
 
 | Category | Policies in corpus | Extraction validated |
 |---|---|---|
@@ -26,6 +26,7 @@ Each policy has two source PDFs — a `policy_doc` (authoritative, complete) and
 
 1. **Layer 1 — extraction**: category-specific structured JSON pulled directly from the two PDFs (premium, eligibility, benefit formulas, etc). See `docs/schema.md`.
 2. **Layer 2 — derivation**: a normalized decision-layer JSON derived *only* from Layer 1's output (no source docs) — the layer the future query pipeline will actually filter/rank against.
+3. **Layer 3 — chunking**: structure-aware split of `policy_doc`'s own PART/section headers into chunks, ready for embedding — used only by narrative retrieval, not the deterministic filter.
 
 Full design rationale is in `docs/ingestion_architecture.md` (extraction) and `docs/query_architecture.md` (the future retrieval/ranking side).
 
@@ -42,7 +43,7 @@ See `CLAUDE.md`'s "Build & Run Commands" section for full details, including how
 
 ## Documentation 📚
 
-- [`docs/ingestion_architecture.md`](docs/ingestion_architecture.md) — extraction pipeline detail (built and validated for term assurance).
+- [`docs/ingestion_architecture.md`](docs/ingestion_architecture.md) — extraction + chunking pipeline detail (both built and validated for term assurance).
 - [`docs/query_architecture.md`](docs/query_architecture.md) — query/retrieval pipeline detail (designed, not yet built).
 - [`docs/evaluation_architecture.md`](docs/evaluation_architecture.md) — golden set, trace log, LLM judge (not yet built).
 - [`docs/schema.md`](docs/schema.md) — data layer model (Layer 1/2/3), Layer 1/2 field schemas, and the extraction-rule caveats found so far (worth reading before touching extraction prompts — several are non-obvious document-formatting traps).
