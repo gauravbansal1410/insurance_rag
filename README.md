@@ -10,7 +10,7 @@ A personal project to build an end-to-end, usable Retrieval-Augmented Generation
 
 ## Status 🚧
 
-**Ingestion pipeline (extraction + chunking) is built and validated for the term assurance category only — all 7 policies in that category are now extracted and chunked.** Money-back, whole-life, endowment, and rider categories are scoped in the corpus but not yet extracted. Embedding and loading into Qdrant are not yet built. The query/retrieval side (eligibility filtering, ranking, narrative generation) is designed but not yet built — see `docs/ingestion_architecture.md` and `docs/query_architecture.md` for the full pipeline design.
+**Full ingestion pipeline (extraction, chunking, embedding, Qdrant load) is built and validated end-to-end for the term assurance category only — all 7 policies in that category are now extracted, chunked, embedded, and loaded into Qdrant.** Money-back, whole-life, endowment, and rider categories are scoped in the corpus but not yet extracted. The query/retrieval side (eligibility filtering, ranking, narrative generation) is designed but not yet built — see `docs/ingestion_architecture.md` and `docs/query_architecture.md` for the full pipeline design.
 
 | Category | Policies in corpus | Extraction validated |
 |---|---|---|
@@ -26,24 +26,26 @@ Each policy has two source PDFs — a `policy_doc` (authoritative, complete) and
 
 1. **Layer 1 — extraction**: category-specific structured JSON pulled directly from the two PDFs (premium, eligibility, benefit formulas, etc). See `docs/schema.md`.
 2. **Layer 2 — derivation**: a normalized decision-layer JSON derived *only* from Layer 1's output (no source docs) — the layer the future query pipeline will actually filter/rank against.
-3. **Layer 3 — chunking**: structure-aware split of `policy_doc`'s own PART/section headers into chunks, ready for embedding — used only by narrative retrieval, not the deterministic filter.
+3. **Layer 3 — chunking + embedding**: structure-aware split of `policy_doc`'s own PART/section headers into chunks, embedded with Voyage `voyage-law-2` and loaded into a single Qdrant collection (`insurance_rag_layer3`) shared across all categories — used only by narrative retrieval, not the deterministic filter.
 
 Full design rationale is in `docs/ingestion_architecture.md` (extraction) and `docs/query_architecture.md` (the future retrieval/ranking side).
 
 ## Quickstart 🚀
 
 ```bash
-pip install google-genai --break-system-packages
-cp .env.example .env   # then fill in your own GEMINI_API_KEY
+pip install google-genai qdrant-client voyageai --break-system-packages
+cp .env.example .env   # then fill in GEMINI_API_KEY, VOYAGE_API_KEY, QDRANT_URL
 
-extraction_test/run_pipeline.sh <policy_id> <policy_doc.pdf> <brochure.pdf>
+extraction_test/run_pipeline.sh <policy_id> <policy_doc.pdf> <brochure.pdf>   # Layer 1 + 2
+chunking/chunk_policy_doc.py <policy_id> <category> <policy_doc.pdf> <out.json>   # Layer 3 chunking
+chunking/embed_and_load_layer3.py insurance_rag_layer3 <chunks.json> [chunks.json ...]   # Layer 3 embed + load
 ```
 
 See `CLAUDE.md`'s "Build & Run Commands" section for full details, including how to run each stage individually.
 
 ## Documentation 📚
 
-- [`docs/ingestion_architecture.md`](docs/ingestion_architecture.md) — extraction + chunking pipeline detail (both built and validated for term assurance).
+- [`docs/ingestion_architecture.md`](docs/ingestion_architecture.md) — extraction, chunking, and embedding pipeline detail (all built and validated for term assurance).
 - [`docs/query_architecture.md`](docs/query_architecture.md) — query/retrieval pipeline detail (designed, not yet built).
 - [`docs/evaluation_architecture.md`](docs/evaluation_architecture.md) — golden set, trace log, LLM judge (not yet built).
 - [`docs/schema.md`](docs/schema.md) — data layer model (Layer 1/2/3), Layer 1/2 field schemas, and the extraction-rule caveats found so far (worth reading before touching extraction prompts — several are non-obvious document-formatting traps).
