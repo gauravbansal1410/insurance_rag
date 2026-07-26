@@ -20,6 +20,12 @@ Not Insurance-RAG-specific. This is the general infrastructure and environment c
   ```
 - `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` required in `~/n8n.env` for `$env` access inside nodes (n8n's Variables UI is a paid feature; this env-file approach is the free-tier workaround)
 - Containers created without a restart policy will not survive a VM reboot and require manual `docker start <name>` - always set `--restart unless-stopped` on new containers on this VM.
+- Qdrant (vector DB, insurance_rag project) self-hosted via Docker, confirmed running 2026-07-26:
+  ```
+  docker run -d --name qdrant --restart unless-stopped -p 127.0.0.1:6333:6333 -v qdrant_data:/qdrant/storage qdrant/qdrant
+  ```
+  Bound to `127.0.0.1:6333`, not `0.0.0.0:6333` - confirmed via `docker ps` and cross-checked from an external host (`curl` from outside the VM times out; `curl localhost:6333/healthz` from inside the VM succeeds). Qdrant has no built-in auth on the free/OSS image, so exposing it on all interfaces would leave the vector store openly writable from the internet. Reachable only from processes running on the VM itself (e.g. n8n) - use SSH port-forwarding for any external admin access rather than rebinding to `0.0.0.0`.
+  - **General rule for future services on this VM:** default any data-store or admin-surface container (no built-in auth, or auth you haven't verified) to `-p 127.0.0.1:<port>:<port>`, not a bare `-p <port>:<port>` (which binds `0.0.0.0`, all interfaces). n8n above binds `0.0.0.0:5678` but is fronted by the nginx/Let's Encrypt reverse proxy with its own auth - that's the exception that justifies it, not the default.
 
 ## Secondary infra (not actively used)
 - GCP e2-micro VM (Iowa region) - backup, currently stopped
