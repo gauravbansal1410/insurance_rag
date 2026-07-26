@@ -162,8 +162,8 @@ const ingestionSteps = [
   { title: '1. Upload PDFs to GitHub', subtitle: '', example: 'policy_doc_859_LIC_saral_jeevan_bima.pdf → raw_pdfs/term_assurance_plans/', actor: 'you', built: true },
   { title: '2. Extraction — Gemini flash-lite', subtitle: 'PDF-native input → Layer 1 JSON', example: 'policy_doc + brochure PDFs (attached, not pdftotext) → policy_id "859", sum_assured_max, death_benefit_formula', actor: 'gemini', built: true },
   { title: '2b. Layer 2 derivation', subtitle: 'separate call, Layer 1 JSON only — no source docs', example: 'L1 JSON → concern_tags: [income_replacement, debt_linked_cover], cover_basis: fixed', actor: 'gemini', built: true },
-  { title: '3. Chunking', subtitle: 'structure-aware, PART/section headers', example: 'same doc → 64 section-level chunks (Definitions, Death Benefit, Riders...)', actor: 'claude', built: false },
-  { title: '4. Embedding', subtitle: 'Voyage voyage-law-2', example: '64 chunks → 64 vectors, tagged policy_id=859', actor: 'system', built: false },
+  { title: '3. Chunking', subtitle: 'structure-aware, PART/section headers', example: 'same doc → 9 chunks (Definitions, Benefits, Conditions, Other Terms, Grievance, Annexures 1-3)', actor: 'claude', built: true },
+  { title: '4. Embedding', subtitle: 'Voyage voyage-law-2', example: '9 chunks → 9 vectors, tagged policy_id=859', actor: 'system', built: false },
   { title: '5. Load into Qdrant', subtitle: 'Layer 1+2 payload, Layer 3 vectors', example: 'L1+L2 JSON as filterable payload, L3 vectors for semantic search', actor: 'system', built: false },
 ];
 
