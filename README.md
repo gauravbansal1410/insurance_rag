@@ -10,11 +10,11 @@ A personal project to build an end-to-end, usable Retrieval-Augmented Generation
 
 ## Status 🚧
 
-**Ingestion pipeline (extraction) is built and validated for the term assurance category only.** Money-back, whole-life, endowment, and rider categories are scoped in the corpus but not yet extracted. The query/retrieval side (eligibility filtering, ranking, narrative generation) is designed but not yet built — see `docs/ingestion_architecture.md` and `docs/query_architecture.md` for the full pipeline design.
+**Ingestion pipeline (extraction) is built and validated for the term assurance category only — all 7 policies in that category are now extracted.** Money-back, whole-life, endowment, and rider categories are scoped in the corpus but not yet extracted. The query/retrieval side (eligibility filtering, ranking, narrative generation) is designed but not yet built — see `docs/ingestion_architecture.md` and `docs/query_architecture.md` for the full pipeline design.
 
 | Category | Policies in corpus | Extraction validated |
 |---|---|---|
-| Term assurance | 7 | Yes — tested end-to-end on 2 policies (Saral Jeevan Bima, Yuva Credit Life) |
+| Term assurance | 7 | Yes — all 7 extracted end-to-end |
 | Money-back | 6 | Not yet |
 | Endowment | 11 | Not yet |
 | Whole life | 2 | Not yet |

@@ -23,4 +23,4 @@ See `CLAUDE.md`'s "Build & Run Commands" section — `extraction_test/run_pipeli
 
 ## Open questions
 
-- Whether Flash-Lite + PDF input stays reliable once extraction expands beyond term-assurance to money-back / whole-life / endowment categories — only validated on 2 term policies so far.
+- Whether Flash-Lite + PDF input stays reliable once extraction expands beyond term-assurance to money-back / whole-life / endowment categories — validated across all 7 term-assurance policies so far, not yet tested on other categories.
