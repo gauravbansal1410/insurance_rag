@@ -1,0 +1,38 @@
+{
+  "policy_id": "512N350V02",
+  "layer2": {
+    "group_a_concern_tags": [
+      "income_replacement",
+      "estate_legacy_planning"
+    ],
+    "group_b": {
+      "payout_on_death": [
+        "lump_sum",
+        "instalments_available"
+      ],
+      "payout_on_survival": [
+        "none"
+      ],
+      "payout_notes": "Death benefit is paid as a lump sum or in instalments as per the death benefit instalment option. Maturity benefit is none.",
+      "is_participating": false,
+      "builds_cash_value": false,
+      "cash_value_loan_available": false,
+      "cover_basis": "fixed"
+    },
+    "group_c": {
+      "min_age": 18,
+      "max_age": 65,
+      "min_sum_assured": 2500000,
+      "max_sum_assured": null,
+      "min_term": 10,
+      "max_term": 40,
+      "compatible_riders": [
+        "LIC's Accident Benefit Rider"
+      ]
+    }
+  },
+  "derivation_notes": {
+    "concern_tag_reasoning": "LIC's New Jeevan Amar is a pure term assurance plan designed to replace income and provide financial security upon death to dependents (income_replacement and estate_legacy_planning). It does not build savings, offer maturity benefits, or include critical illness/medical riders natively.",
+    "ambiguous_calls": []
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "policy_id": "878",
+  "layer2": {
+    "group_a_concern_tags": [
+      "debt_linked_cover"
+    ],
+    "group_b": {
+      "payout_on_death": [
+        "lump_sum"
+      ],
+      "payout_on_survival": [
+        "none"
+      ],
+      "payout_notes": "Absolute amount assured paid on death as specified in the Risk Cover Schedule.",
+      "is_participating": false,
+      "builds_cash_value": false,
+      "cash_value_loan_available": false,
+      "cover_basis": "decreasing_loan_linked"
+    },
+    "group_c": {
+      "min_age": 18,
+      "max_age": 45,
+      "min_sum_assured": 5000000,
+      "max_sum_assured": 50000000,
+      "min_term": 5,
+      "max_term": 30,
+      "compatible_riders": []
+    }
+  },
+  "derivation_notes": {
+    "concern_tag_reasoning": "Plan is explicitly structured as a credit life product linked to loans and repayment schedules, making debt_linked_cover the sole appropriate tag.",
+    "ambiguous_calls": []
+  }
+}

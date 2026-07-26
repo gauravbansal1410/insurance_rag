@@ -1,0 +1,315 @@
+{
+  "policy_id": "512N350V02",
+  "plan_name": "LIC's New Jeevan Amar",
+  "uin": "512N350V02",
+  "plan_category": "term_assurance",
+  "structural_variant": "rider_enabled",
+  "layer1": {
+    "premium_payment_options": [
+      "single",
+      "regular",
+      "limited"
+    ],
+    "ppt_options": null,
+    "sum_assured_min": 2500000,
+    "sum_assured_max": null,
+    "sum_assured_multiples": "Rs 1,00,000/- if Basic Sum Assured is Rs 25,00,000 to Rs 40,00,000; Rs 10,00,000 if above Rs 40,00,000",
+    "age_at_entry_min": 18,
+    "age_at_entry_max": 65,
+    "age_at_maturity_min": null,
+    "age_at_maturity_max": 80,
+    "policy_term_min": 10,
+    "policy_term_max": 40,
+    "death_benefit_formula": {
+      "regular_limited_premium": "Highest of: 7 times of Annualised Premium; 105% of Total Premiums Paid upto the date of death; Absolute amount assured to be paid on death.",
+      "single_premium": "Higher of: 125% of Single Premium; Absolute amount assured to be paid on death."
+    },
+    "maturity_benefit": "none",
+    "surrender_value_applicable": false,
+    "policy_cancellation_value_formula": "Unexpired Risk Premium Value, if any",
+    "grace_period_days": {
+      "yearly_halfyearly": 30,
+      "monthly": 0
+    },
+    "free_look_period_days": 30,
+    "suicide_exclusion": {
+      "months": 12,
+      "payout_pct_single": 80,
+      "payout_pct_regular_limited": 80
+    },
+    "rebate_structures": {
+      "high_sum_assured_rebate_table": "Under Option I (Level Sum Assured): Up to 30 years: Nil (<50L), 13% (50L-<1C), 25% (1C+). 31 to 50 years: Nil (<50L), 11% (50L-<1C), 21% (1C+). 51+ years: Nil (<50L), 6% (50L-<1C), 11 (1C+). Under Option II (Increasing Sum Assured): Up to 30 years: Nil (<50L), 11% (50L-<1C), 23% (1C+). 31 to 50 years: Nil (<50L), 9% (50L-<1C), 19% (1C+). 51+ years: Nil (<50L), 5% (50L-<1C), 10% (1C+).",
+      "online_sale_rebate_table": null,
+      "mode_loadings": "Yearly: Nil, Half-Yearly: 2%"
+    },
+    "death_benefit_instalment_option": true,
+    "sample_illustrative_premiums": [
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 5959,
+        "derived": false
+      },
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 6873,
+        "derived": false
+      },
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 8830,
+        "derived": false
+      },
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "premium_amount": 57768,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 7830,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 9091,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 11788,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "premium_amount": 78213,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 15441,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 18067,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 23629,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "premium_amount": 160200,
+        "derived": false
+      },
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 7832,
+        "derived": false
+      },
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 9078,
+        "derived": false
+      },
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 11748,
+        "derived": false
+      },
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "premium_amount": 77786,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 11125,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 12994,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 16954,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "premium_amount": 114187,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 23933,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 28119,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "premium_amount": 36946,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 20,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "premium_amount": 252525,
+        "derived": false
+      }
+    ],
+    "compatible_riders": [
+      {
+        "rider_name": "LIC's Accident Benefit Rider",
+        "uin": "512B203V03"
+      }
+    ],
+    "waiting_period_days": null,
+    "outstanding_loan_schedule_reference": null
+  },
+  "extraction_notes": {
+    "source_provenance": {},
+    "field_conflicts": [],
+    "low_confidence_fields": [
+      "policy_id"
+    ],
+    "fields_not_found": [
+      "layer1.waiting_period_days",
+      "layer1.outstanding_loan_schedule_reference",
+      "layer1.ppt_options"
+    ],
+    "field_specific_notes": [
+      {
+        "field": "policy_id",
+        "note": "No standalone numeric Plan Number found on the brochure cover or policy document; used UIN fallback as per instructions."
+      }
+    ]
+  }
+}

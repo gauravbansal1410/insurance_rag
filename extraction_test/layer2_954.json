@@ -1,0 +1,38 @@
+{
+  "policy_id": "512N351V02",
+  "layer2": {
+    "group_a_concern_tags": [
+      "income_replacement",
+      "estate_legacy_planning"
+    ],
+    "group_b": {
+      "payout_on_death": [
+        "lump_sum",
+        "instalments_available"
+      ],
+      "payout_on_survival": [
+        "none"
+      ],
+      "payout_notes": "Death benefit payable as lump sum or in instalments as per option selected. No maturity benefit.",
+      "is_participating": false,
+      "builds_cash_value": false,
+      "cash_value_loan_available": false,
+      "cover_basis": "fixed"
+    },
+    "group_c": {
+      "min_age": 18,
+      "max_age": 65,
+      "min_sum_assured": 5000000,
+      "max_sum_assured": null,
+      "min_term": 10,
+      "max_term": 40,
+      "compatible_riders": [
+        "LIC's Accident Benefit Rider"
+      ]
+    }
+  },
+  "derivation_notes": {
+    "concern_tag_reasoning": "Selected income_replacement and estate_legacy_planning due to pure term assurance structure providing financial security on death to dependents. Other tags such as debt-linked, child education, or retirement do not specifically apply intrinsically from the product design.",
+    "ambiguous_calls": []
+  }
+}

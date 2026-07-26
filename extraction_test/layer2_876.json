@@ -1,0 +1,36 @@
+{
+  "policy_id": "876",
+  "layer2": {
+    "group_a_concern_tags": [
+      "income_replacement",
+      "estate_legacy_planning"
+    ],
+    "group_b": {
+      "payout_on_death": [
+        "lump_sum",
+        "instalments_available"
+      ],
+      "payout_on_survival": [
+        "none"
+      ],
+      "payout_notes": "Pure term insurance product offering death benefit as a lump sum or through instalments, with no maturity benefit.",
+      "is_participating": false,
+      "builds_cash_value": false,
+      "cash_value_loan_available": false,
+      "cover_basis": "fixed"
+    },
+    "group_c": {
+      "min_age": 18,
+      "max_age": 45,
+      "min_sum_assured": 5000000,
+      "max_sum_assured": 50000000,
+      "min_term": 15,
+      "max_term": 40,
+      "compatible_riders": []
+    }
+  },
+  "derivation_notes": {
+    "concern_tag_reasoning": "The plan is a standalone term assurance product providing financial protection upon death, making it suitable for income replacement and estate/legacy planning. It is not a savings, retirement, or investment-linked product.",
+    "ambiguous_calls": []
+  }
+}
