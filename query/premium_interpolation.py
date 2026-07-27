@@ -16,38 +16,20 @@ def _rows_for_column(sample_table, term, premium_payment_option):
 
 
 def _split_sum_assured_variants(sample_table):
-    """Splits a raw sample_illustrative_premiums table into {"level": [...], "increasing":
-    [...]} when it's actually two full tables back-to-back for a level-sum-assured option
-    and an increasing-sum-assured option - found on 4/7 term-assurance policies (875, 876,
-    954, 955). Layer 1's extraction schema has no field for which table a row came from
-    (docs/schema.md's sample_illustrative_premiums row shape has no sum-assured-type
-    field at all), so the two tables were flattened into one array of exact duplicates
-    (same age/term/option/payment_mode/distribution_channel, different premium_amount)
-    with no way to tell them apart from the data alone. Confirmed against the raw PDFs
-    2026-07-27: it's a level-vs-increasing-sum-assured split, not e.g. gender as first
-    guessed, and the extraction reliably emits the level table first, increasing second.
-
-    Detected positionally, since that's the only signal available without a Layer 1
-    schema/extraction fix (deliberately out of scope here - see docs/progress/
-    20260727-progress.md): if the table's row count is even and the second half's
-    (age, term, option, payment_mode, distribution_channel) key sequence exactly matches
-    the first half's in the same order, the first half is "level" and the second half is
-    "increasing" - verified on all 4 affected policies (exact key match each time, and
-    the second half is always pricier, consistent with increasing SA costing more).
-    Returns {"level": sample_table} unchanged when no such split is detected - a policy
-    with a single table has nothing to disambiguate.
-    """
-    n = len(sample_table)
-    if n % 2 != 0:
-        return {"level": sample_table}
-
-    half = n // 2
-    key = lambda r: (r["age"], r["term"], r["premium_payment_option"], r["payment_mode"], r["distribution_channel"])
-    first_half, second_half = sample_table[:half], sample_table[half:]
-    if [key(r) for r in first_half] != [key(r) for r in second_half]:
-        return {"level": sample_table}
-
-    return {"level": first_half, "increasing": second_half}
+    """Groups a sample_illustrative_premiums table by its real sum_assured_type field
+    ("level" | "increasing") - added to Layer 1's extraction schema 2026-07-27
+    (docs/prompts/prompt_a_pdf.txt trap 16, docs/schema.md) after finding that 4/7
+    term-assurance policies (875, 876, 954, 955) print a full second sample-premium
+    table for an increasing-sum-assured death-benefit option, identical to the level-SA
+    table on every other field. An earlier version of this function inferred the split
+    positionally (first half of the array = level, second half = increasing), since the
+    field didn't exist yet - replaced now that all 4 affected policies have been
+    re-extracted with the real tag, read from each table's own heading rather than
+    guessed from array order."""
+    variants = {}
+    for row in sample_table:
+        variants.setdefault(row.get("sum_assured_type", "level"), []).append(row)
+    return variants
 
 
 def interpolate_premium(profile, layer1_record):
