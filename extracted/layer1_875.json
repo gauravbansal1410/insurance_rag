@@ -1,6 +1,6 @@
 {
   "policy_id": "875",
-  "plan_name": "LIC's Yuva Term",
+  "plan_name": "LIC\u2019s Yuva Term",
   "uin": "512N355V02",
   "plan_category": "term_assurance",
   "structural_variant": "standalone",
@@ -16,7 +16,7 @@
     ],
     "sum_assured_min": 5000000,
     "sum_assured_max": 500000000,
-    "sum_assured_multiples": "From Rs 50,00,000/- to Rs 75,00,000/-: Rs 1,00,000/-; Above Rs 75,00,000/- to Rs 1,50,000,00/-: Rs 25,00,000/-; Above Rs 1,50,000,00/- to Rs 4,00,000,00/-: Rs 50,00,000/-; Above Rs 4,00,000,00/-: Rs 1,00,000,00/-",
+    "sum_assured_multiples": "Rs 1,00,000/- for 50L-75L; Rs 25,00,000/- for >75L-1.5Cr; Rs 50,00,000/- for >1.5Cr-4Cr; Rs 1,00,000,00/- for >4Cr",
     "age_at_entry_min": 18,
     "age_at_entry_max": 45,
     "age_at_maturity_min": 33,
@@ -29,7 +29,7 @@
     },
     "maturity_benefit": "none",
     "surrender_value_applicable": false,
-    "policy_cancellation_value_formula": "Unexpired Risk Premium Value, if applicable as per policy conditions.",
+    "policy_cancellation_value_formula": "Unexpired Risk Premium Value, if applicable under Single Premium or Limited Premium payment.",
     "grace_period_days": {
       "yearly_halfyearly": 30,
       "monthly": 0
@@ -41,9 +41,9 @@
       "payout_pct_regular_limited": 80
     },
     "rebate_structures": {
-      "high_sum_assured_rebate_table": "Available for High Basic Sum Assured across Regular, Limited and Single Premium options.",
+      "high_sum_assured_rebate_table": "Provided in brochure under Section 8 for Level and Increasing Sum Assured options across age bands and BSA tiers.",
       "online_sale_rebate_table": null,
-      "mode_loadings": "Half-Yearly: 2%"
+      "mode_loadings": "Premium Conversion rate: Yearly Nil, Half-Yearly 2%"
     },
     "death_benefit_instalment_option": true,
     "sample_illustrative_premiums": [
@@ -54,6 +54,7 @@
         "premium_payment_option": "regular",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "level",
         "premium_amount": 4550,
         "derived": false
       },
@@ -64,6 +65,7 @@
         "premium_payment_option": "limited_ppt_15",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "level",
         "premium_amount": 5250,
         "derived": false
       },
@@ -74,6 +76,7 @@
         "premium_payment_option": "limited_ppt_10",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "level",
         "premium_amount": 6600,
         "derived": false
       },
@@ -84,6 +87,7 @@
         "premium_payment_option": "single",
         "payment_mode": "lump_sum",
         "distribution_channel": "offline",
+        "sum_assured_type": "level",
         "premium_amount": 44350,
         "derived": false
       },
@@ -94,6 +98,7 @@
         "premium_payment_option": "regular",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "level",
         "premium_amount": 5950,
         "derived": false
       },
@@ -104,6 +109,7 @@
         "premium_payment_option": "limited_ppt_15",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "level",
         "premium_amount": 6850,
         "derived": false
       },
@@ -114,6 +120,7 @@
         "premium_payment_option": "limited_ppt_10",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "level",
         "premium_amount": 8750,
         "derived": false
       },
@@ -124,6 +131,7 @@
         "premium_payment_option": "single",
         "payment_mode": "lump_sum",
         "distribution_channel": "offline",
+        "sum_assured_type": "level",
         "premium_amount": 59550,
         "derived": false
       },
@@ -134,6 +142,7 @@
         "premium_payment_option": "regular",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "level",
         "premium_amount": 11700,
         "derived": false
       },
@@ -144,6 +153,7 @@
         "premium_payment_option": "limited_ppt_15",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "level",
         "premium_amount": 13600,
         "derived": false
       },
@@ -154,6 +164,7 @@
         "premium_payment_option": "limited_ppt_10",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "level",
         "premium_amount": 17500,
         "derived": false
       },
@@ -164,6 +175,7 @@
         "premium_payment_option": "single",
         "payment_mode": "lump_sum",
         "distribution_channel": "offline",
+        "sum_assured_type": "level",
         "premium_amount": 121900,
         "derived": false
       },
@@ -174,6 +186,7 @@
         "premium_payment_option": "regular",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "increasing",
         "premium_amount": 5850,
         "derived": false
       },
@@ -184,6 +197,7 @@
         "premium_payment_option": "limited_ppt_15",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "increasing",
         "premium_amount": 6750,
         "derived": false
       },
@@ -194,6 +208,7 @@
         "premium_payment_option": "limited_ppt_10",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "increasing",
         "premium_amount": 8550,
         "derived": false
       },
@@ -204,6 +219,7 @@
         "premium_payment_option": "single",
         "payment_mode": "lump_sum",
         "distribution_channel": "offline",
+        "sum_assured_type": "increasing",
         "premium_amount": 58400,
         "derived": false
       },
@@ -214,6 +230,7 @@
         "premium_payment_option": "regular",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "increasing",
         "premium_amount": 8250,
         "derived": false
       },
@@ -224,6 +241,7 @@
         "premium_payment_option": "limited_ppt_15",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "increasing",
         "premium_amount": 9600,
         "derived": false
       },
@@ -234,6 +252,7 @@
         "premium_payment_option": "limited_ppt_10",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "increasing",
         "premium_amount": 12250,
         "derived": false
       },
@@ -244,6 +263,7 @@
         "premium_payment_option": "single",
         "payment_mode": "lump_sum",
         "distribution_channel": "offline",
+        "sum_assured_type": "increasing",
         "premium_amount": 84950,
         "derived": false
       },
@@ -254,6 +274,7 @@
         "premium_payment_option": "regular",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "increasing",
         "premium_amount": 17850,
         "derived": false
       },
@@ -264,6 +285,7 @@
         "premium_payment_option": "limited_ppt_15",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "increasing",
         "premium_amount": 20850,
         "derived": false
       },
@@ -274,6 +296,7 @@
         "premium_payment_option": "limited_ppt_10",
         "payment_mode": "annual",
         "distribution_channel": "offline",
+        "sum_assured_type": "increasing",
         "premium_amount": 26850,
         "derived": false
       },
@@ -284,6 +307,7 @@
         "premium_payment_option": "single",
         "payment_mode": "lump_sum",
         "distribution_channel": "offline",
+        "sum_assured_type": "increasing",
         "premium_amount": 188950,
         "derived": false
       }
@@ -293,21 +317,14 @@
     "outstanding_loan_schedule_reference": null
   },
   "extraction_notes": {
-    "source_provenance": {
-      "policy_doc": "Authoritative for all policy terms, conditions, and rules.",
-      "brochure": "Used for sample illustrative premiums and plan metadata."
-    },
+    "source_provenance": {},
     "field_conflicts": [],
     "low_confidence_fields": [],
     "fields_not_found": [
-      "waiting_period_days",
-      "outstanding_loan_schedule_reference"
+      "layer1.waiting_period_days",
+      "layer1.outstanding_loan_schedule_reference",
+      "layer1.rebate_structures.online_sale_rebate_table"
     ],
-    "field_specific_notes": [
-      {
-        "field": "layer1.sum_assured_max",
-        "note": "Basic Sum Assured above 5 Crore may be considered on case-by-case underwriting basis subject to Reinsurer decision."
-      }
-    ]
+    "field_specific_notes": []
   }
 }
