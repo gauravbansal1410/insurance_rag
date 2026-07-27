@@ -36,6 +36,7 @@ Any extraction-note field reference (`low_confidence_fields`, `field_specific_no
 - `premium_payment_option: "single"` always implies `payment_mode: "lump_sum"` — a Single Premium is paid once in full, never on an annual/half-yearly/monthly schedule.
 - `policy_id` is NOT `plan_name` and must not simply repeat it — an unguided schema caused exactly this on early test runs (e.g. `policy_id: "LIC's Saral Jeevan Bima"`, identical to `plan_name`). `policy_id` is the numeric Plan Number printed on the brochure's cover page (e.g. "859"), usually directly beneath the plan name alongside the UIN — not the UIN itself either. Fall back to the UIN only if the Plan Number genuinely isn't found on either document, and flag that fallback via `low_confidence_fields`.
 - Every LIC `policy_doc`'s opening page prints "Registration Number: 512" — LIC's own constant IRDAI corporate registration number, identical across every LIC product, not plan-specific. It also happens to match the numeric UIN prefix on many plans (e.g. "512" in `512N351V02`), making it look plausible as a fallback identifier. Found on New Tech-Term (954) and New Jeevan Amar (955), both of which have a blank/unfilled "Plan Number" field in their Schedule and no plan number printed anywhere else — the model extracted the Registration Number ("512") as `policy_id` for both instead of falling back to the UIN, and without flagging `low_confidence_fields` at all. Never treat the Registration Number as `policy_id`, including as a fallback — the correct fallback when no real Plan Number exists is the UIN (per the caveat above), always flagged via `low_confidence_fields`.
+- Some documents offer a choice between a "Level Sum Assured" and an "Increasing Sum Assured" death benefit structure and print a full separate sample-premium table for each, at identical age/Sum Assured/Term/`premium_payment_option` combinations — every field looks the same except `premium_amount` (the increasing-SA table always pricier). Found on 4/7 term-assurance policies (875, 876, 954, 955) 2026-07-27, confirmed against the raw PDFs — before the `sum_assured_type` field existed, these rows were extracted as exact-duplicate-looking entries with conflicting `premium_amount` and no way to tell them apart downstream (query pipeline testing caught this as an "ambiguous row" case before the root cause was identified). Tag every row's `sum_assured_type` from the document's own heading immediately before each table (see `prompt_a_pdf.txt` trap 16) — never infer it from table order or position, since nothing guarantees which structure's table is printed first.
 
 ## Layer 1 — term assurance (built first; locked for this category, other categories not yet scoped at this depth)
 
@@ -104,6 +105,21 @@ Any extraction-note field reference (`low_confidence_fields`, `field_specific_no
                                           //     "online" | "not_specified"
                                           //     (not_specified when a table
                                           //     doesn't split by channel)
+                                          //   sum_assured_type: "level" |
+                                          //     "increasing" — added 2026-07-27
+                                          //     after finding 4/7 term policies
+                                          //     (875, 876, 954, 955) print a full
+                                          //     second sample-premium table for an
+                                          //     increasing-sum-assured option,
+                                          //     identical on every other field —
+                                          //     without this tag those rows are
+                                          //     indistinguishable duplicates with
+                                          //     conflicting premium_amount. Read
+                                          //     from the document's own heading
+                                          //     (see prompt_a_pdf.txt trap 16),
+                                          //     never inferred from table order.
+                                          //     Defaults to "level" when a
+                                          //     document offers no such choice.
                                           //   premium_amount: number
                                           //     (renamed from annual_premium)
                                           //   derived: boolean — false for
