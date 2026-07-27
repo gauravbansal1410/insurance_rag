@@ -4,7 +4,8 @@
 # premium_payment_option + term column, then scaled for the profile's actual sum_assured.
 #
 # profile shape (extends the eligibility_filter profile):
-#   {"age": int, "sum_assured": int, "term": int, "premium_payment_option": str, "budget": number}
+#   {"age": int, "sum_assured": int, "term": int, "premium_payment_option": str,
+#    "sum_assured_type": "level" | "increasing" (optional, defaults to "level"), "budget": number}
 
 
 def _rows_for_column(sample_table, term, premium_payment_option):
@@ -14,42 +15,64 @@ def _rows_for_column(sample_table, term, premium_payment_option):
     )
 
 
-def _ambiguous_ages(rows):
-    """Detects rows that share every currently-extracted key (age/term/option/payment_mode/
-    distribution_channel) but disagree on premium_amount - found on 4/7 term-assurance
-    policies (875, 876, 954, 955) during 2026-07-27 testing: every row is exactly
-    duplicated except for premium_amount, meaning some real dimension (most likely
-    gender - a common LIC premium-table split) isn't captured anywhere in Layer 1's
-    sample_illustrative_premiums schema (docs/schema.md). Silently picking one would
-    produce a wrong premium for real users, so this is treated as a hard exclusion, not
-    guessed around - a Layer 1 schema/extraction fix is the real fix, out of scope here."""
-    by_age = {}
-    for r in rows:
-        by_age.setdefault(r["age"], set()).add(r["premium_amount"])
-    return {age for age, amounts in by_age.items() if len(amounts) > 1}
+def _split_sum_assured_variants(sample_table):
+    """Splits a raw sample_illustrative_premiums table into {"level": [...], "increasing":
+    [...]} when it's actually two full tables back-to-back for a level-sum-assured option
+    and an increasing-sum-assured option - found on 4/7 term-assurance policies (875, 876,
+    954, 955). Layer 1's extraction schema has no field for which table a row came from
+    (docs/schema.md's sample_illustrative_premiums row shape has no sum-assured-type
+    field at all), so the two tables were flattened into one array of exact duplicates
+    (same age/term/option/payment_mode/distribution_channel, different premium_amount)
+    with no way to tell them apart from the data alone. Confirmed against the raw PDFs
+    2026-07-27: it's a level-vs-increasing-sum-assured split, not e.g. gender as first
+    guessed, and the extraction reliably emits the level table first, increasing second.
+
+    Detected positionally, since that's the only signal available without a Layer 1
+    schema/extraction fix (deliberately out of scope here - see docs/progress/
+    20260727-progress.md): if the table's row count is even and the second half's
+    (age, term, option, payment_mode, distribution_channel) key sequence exactly matches
+    the first half's in the same order, the first half is "level" and the second half is
+    "increasing" - verified on all 4 affected policies (exact key match each time, and
+    the second half is always pricier, consistent with increasing SA costing more).
+    Returns {"level": sample_table} unchanged when no such split is detected - a policy
+    with a single table has nothing to disambiguate.
+    """
+    n = len(sample_table)
+    if n % 2 != 0:
+        return {"level": sample_table}
+
+    half = n // 2
+    key = lambda r: (r["age"], r["term"], r["premium_payment_option"], r["payment_mode"], r["distribution_channel"])
+    first_half, second_half = sample_table[:half], sample_table[half:]
+    if [key(r) for r in first_half] != [key(r) for r in second_half]:
+        return {"level": sample_table}
+
+    return {"level": first_half, "increasing": second_half}
 
 
 def interpolate_premium(profile, layer1_record):
     """Returns {"excluded": False, "premium_amount": ..., ...} or
     {"excluded": True, "reason": ...} - never raises, so a bad candidate never fails the
     whole query (docs/query_architecture.md: "the query still completes")."""
+    sum_assured_type = profile.get("sum_assured_type", "level")
     sample_table = layer1_record["layer1"]["sample_illustrative_premiums"]
-    rows = _rows_for_column(sample_table, profile["term"], profile["premium_payment_option"])
+    variants = _split_sum_assured_variants(sample_table)
+
+    if sum_assured_type not in variants:
+        return {
+            "excluded": True,
+            "reason": f"no sample-premium table for sum_assured_type={sum_assured_type} "
+                      f"(this policy only has: {sorted(variants)})",
+        }
+
+    rows = _rows_for_column(variants[sum_assured_type], profile["term"], profile["premium_payment_option"])
 
     if not rows:
         return {
             "excluded": True,
             "reason": f"no sample-premium table for term={profile['term']}, "
-                      f"premium_payment_option={profile['premium_payment_option']}",
-        }
-
-    ambiguous = _ambiguous_ages(rows)
-    if ambiguous:
-        return {
-            "excluded": True,
-            "reason": f"ambiguous sample-premium rows at age(s) {sorted(ambiguous)} - identical on every "
-                      f"extracted field but different premium_amount, likely an uncaptured schema dimension "
-                      f"(e.g. gender) - see query/premium_interpolation.py's _ambiguous_ages docstring",
+                      f"premium_payment_option={profile['premium_payment_option']}, "
+                      f"sum_assured_type={sum_assured_type}",
         }
 
     ages = [r["age"] for r in rows]
@@ -88,6 +111,7 @@ def interpolate_premium(profile, layer1_record):
         "premium_amount": round(premium_amount, 2),
         "method": method,
         "table_baseline_sum_assured": baseline_sa,
+        "sum_assured_type": sum_assured_type,
     }
 
 
@@ -152,12 +176,26 @@ if __name__ == "__main__":
     )
     print(est)
 
-    print("\n--- Hand-check: policy 875, age 30, term 20, regular - real data has duplicate/ambiguous rows, should exclude ---")
+    print("\n--- Hand-check: policy 875, age 30, term 20, regular, sum_assured_type omitted -> defaults to 'level' ---")
     est = interpolate_premium(
         {"age": 30, "sum_assured": 5000000, "term": 20, "premium_payment_option": "regular"},
         layer1["875"],
     )
-    print(est)  # expect excluded=True, ambiguity reason - see _ambiguous_ages docstring
+    print(est)  # expect premium_amount == 5950 (first/level table's value - see raw layer1_875.json row 4)
+
+    print("\n--- Hand-check: policy 875, same profile, sum_assured_type='increasing' explicitly ---")
+    est = interpolate_premium(
+        {"age": 30, "sum_assured": 5000000, "term": 20, "premium_payment_option": "regular", "sum_assured_type": "increasing"},
+        layer1["875"],
+    )
+    print(est)  # expect premium_amount == 8250 (second table's value - see raw layer1_875.json row 16)
+
+    print("\n--- Hand-check: policy 877 (no level/increasing split - single table), asking for 'increasing' should exclude ---")
+    est = interpolate_premium(
+        {"age": 30, "sum_assured": 5000000, "term": 25, "premium_payment_option": "limited_ppt_15", "sum_assured_type": "increasing"},
+        layer1["877"],
+    )
+    print(est)  # expect excluded=True - 877 only has a "level" table (single, undifferentiated)
 
     print("\n--- End-to-end: eligibility -> budget filter for a realistic profile ---")
     print("    (debt_linked_cover forces tier-2 fallback so all 7 policies are candidates;")
@@ -177,3 +215,21 @@ if __name__ == "__main__":
     print("excluded:")
     for e in excluded_log:
         print(f"  {e['policy_id']}: {e['reason']}")
+
+    print("\n--- End-to-end, level vs increasing: same profile against 875/876/512..., budget tight enough to separate them ---")
+    profile_level = {
+        "age": 30, "sum_assured": 5000000, "term": 20,
+        "concern_tags": ["income_replacement"],
+        "premium_payment_option": "regular", "sum_assured_type": "level", "budget": 6500,
+    }
+    eligible = apply_fallback(profile_level, layer2)
+    survivors, excluded_log = filter_by_budget(eligible["results"], profile_level, layer1)
+    print(f"level (budget {profile_level['budget']}) survivors:")
+    for s in survivors:
+        print(f"  {s['policy_id']}: premium={s['premium_amount']}")
+
+    profile_increasing = {**profile_level, "sum_assured_type": "increasing"}
+    survivors, excluded_log = filter_by_budget(eligible["results"], profile_increasing, layer1)
+    print(f"increasing (same budget {profile_increasing['budget']}) survivors - expect fewer, since increasing SA costs more:")
+    for s in survivors:
+        print(f"  {s['policy_id']}: premium={s['premium_amount']}")
