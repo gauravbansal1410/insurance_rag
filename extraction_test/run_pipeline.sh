@@ -46,7 +46,7 @@ POLICY_DOC_PDF="$2"
 BROCHURE_PDF="$3"
 # Precedence: explicit 4th CLI argument wins; otherwise fall back to MODEL from .env (loaded above).
 MODEL="${4:-${MODEL:-}}"
-OUTPUT_DIR="${5:-$SCRIPT_DIR}"
+OUTPUT_DIR="${5:-$SCRIPT_DIR/../extracted}"
 
 PROMPT_A="$SCRIPT_DIR/../docs/prompts/prompt_a_pdf.txt"
 PROMPT_B="$SCRIPT_DIR/../docs/prompts/prompt_b.txt"
