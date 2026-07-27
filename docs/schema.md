@@ -5,7 +5,7 @@ Detailed Layer 1 (category-specific extraction) and Layer 2 (normalized decision
 ## Curated knowledge base (admin-controlled, versioned)
 Raw PDFs + extracted structured JSON + embeddings.
 - Raw PDFs → GitHub (`/raw_pdfs/`). Stable fetch URL for n8n, free, versioned, and the same destination a future auto-scraper will target.
-- Extracted JSON → GitHub, versioned alongside the PDFs.
+- Extracted JSON → GitHub, versioned alongside the PDFs, at `/extracted/` (Layer 1 + Layer 2, one file per policy per layer) — the permanent store; `extraction_test/` holds only the pipeline scripts that produce it.
 - Vectors + filterable fields → Qdrant on the Oracle VM, collection `insurance_rag_layer3` — one collection shared across all categories, filtered by `policy_id`/`category` at query time rather than split per category, matching how Layer 2's Group C fields already work. Built and validated for term assurance: 63 points loaded (7 policies × 9 chunks each).
 
 **Metadata — three layers, not two:**

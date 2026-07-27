@@ -70,7 +70,8 @@ insurance_rag/
 │   ├── prompts/           # Production extraction/derivation prompts (+ appendix/ deprecated variants)
 │   └── progress/          # Daily session progress logs (YYYYMMDD-progress.md)
 ├── raw_pdfs/              # Source policy documents (do not modify manually)
-├── extraction_test/       # Layer 1/2 extraction pipeline scripts + outputs
+├── extracted/             # Permanent, versioned Layer 1/2 JSON store (per policy)
+├── extraction_test/       # Layer 1/2 extraction pipeline scripts only
 ├── chunking/              # Layer 3 chunking + embedding scripts + outputs
 ├── CLAUDE.md              # This file
 └── README.md              # Project goal, constraints, corpus, and docs index
