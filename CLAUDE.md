@@ -41,7 +41,8 @@ This project is an insurance-domain Retrieval-Augmented Generation (RAG) system.
   - Layer 3 chunking + embedding: `chunking/chunk_policy_doc.py <policy_id> <category> <policy_doc.pdf> <out.json>` then `chunking/embed_and_load_layer3.py insurance_rag_layer3 <chunks.json> [chunks.json ...]`. The latter reads `VOYAGE_API_KEY`/`QDRANT_URL` from the environment directly (same `set -a && source .env && set +a` convention), embeds each chunk with Voyage `voyage-law-2`, upserts into the shared `insurance_rag_layer3` Qdrant collection. Batches and paces embed calls to stay within Voyage's free-tier 3 RPM / 10K TPM cap — expect minutes, not seconds, for a full category. See `docs/ingestion_architecture.md` and `docs/schema.md`'s "Layer 3 — chunking & embedding caveats" for details.
   - Precomputed rerank scores: `chunking/precompute_rerank_scores.py <chunks.json> [chunks.json ...]` — reranks chunks against the 8 fixed `concern_tags` (`query/concern_tags.py`), merges into `chunking/precomputed_rerank_scores.json`. Exists so the live query path never makes a per-query Voyage rerank call — see `docs/query_architecture.md`'s "Reranking data source" section. Same free-tier batching/pacing as embedding — expect minutes, not seconds.
 - Check concern_tags vocabulary sync: `python3 check_concern_tags_sync.py` (repo root) — verifies the 8-tag vocabulary matches across `docs/prompts/prompt_b.txt`, `query/concern_tags.py`, `chunking/precomputed_rerank_scores.json`, and already-extracted Layer 2 data. Purely local (no Gemini/Voyage calls), runs automatically as `ingest_policy.sh`'s last step, and should also be run manually after any deliberate concern_tags change — see `docs/schema.md`'s Group A checklist.
-- API server, tests, lint/format: not yet built.
+- Run the query service locally (wraps `query/`'s steps 3-8 behind HTTP — see `docs/query_architecture.md`'s "Runtime orchestration" section): `pip install fastapi uvicorn --break-system-packages`, then from `service/`: `set -a && source ../.env && set +a && uvicorn main:app --host 127.0.0.1 --port 8000` (needs `qdrant-tunnel` running first, same as any script touching Qdrant). `GET /health` for a smoke check; `POST /query` for a direct one-shot call with a full profile; `POST /chat` for turn-based slot-filling (`{"session_id": ..., "message": ...}`, `message: null` to start) — this is what n8n's Chat Trigger will eventually call. Not yet deployed to the Oracle VM or wired into an actual n8n workflow.
+- Tests, lint/format: not yet built.
 
 **Never type the API key value directly into a command, ever — including in a Claude Code session.** Always source it from `.env` (`set -a && source .env && set +a`, which `run_pipeline.sh` already does internally). Typing the literal key into a shell command puts it in plaintext in shell history and, if run via an AI coding assistant, in that assistant's conversation transcript — treat any key that's ever been typed literally as compromised and rotate it in Google AI Studio immediately, don't just stop reusing it.
 
@@ -72,6 +73,8 @@ insurance_rag/
 ├── extracted/             # Permanent, versioned Layer 1/2 JSON store (per policy)
 ├── extraction_test/       # Layer 1/2 extraction pipeline scripts only
 ├── chunking/              # Layer 3 chunking + embedding scripts + outputs
+├── query/                 # Query pipeline steps 3-8 (eligibility, premium interp, retrieval, rerank, generation)
+├── service/               # FastAPI wrapper around query/ - /query and /chat endpoints, run_query_pipeline.py, chat_session.py
 ├── CLAUDE.md              # This file
 └── README.md              # Project goal, constraints, corpus, and docs index
 ```

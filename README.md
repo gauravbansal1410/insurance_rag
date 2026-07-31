@@ -10,7 +10,7 @@ A personal project to build an end-to-end, usable Retrieval-Augmented Generation
 
 ## Status 🚧
 
-**Full ingestion pipeline (extraction, chunking, embedding, Qdrant load, precomputed rerank scores) is built and validated end-to-end for the term assurance category — all 7 policies are extracted, chunked, embedded, and loaded into Qdrant; precomputed rerank scores are done for 1 of 7 (875), with the remaining 6 running as a background job at time of writing.** Money-back, whole-life, endowment, and rider categories are scoped in the corpus but not yet extracted. Query pipeline steps 3-8 (deterministic eligibility filter, premium interpolation, narrative retrieval, reranking + sort, narrative generation) are built and verified against live data (`query/`) — step 8 currently covers base plans only, not plan + rider combos, since rider eligibility/combination isn't implemented in steps 3-5 yet; steps 1-2 (frontend slot-filling) and 9-10 (trace log, BYOK) are still design-only — see `docs/ingestion_architecture.md` and `docs/query_architecture.md` for the full pipeline design.
+**Full ingestion pipeline (extraction, chunking, embedding, Qdrant load, precomputed rerank scores) is built and validated end-to-end for the term assurance category — all 7 policies are extracted, chunked, embedded, and loaded into Qdrant; precomputed rerank scores are close to done for all 7 (6 of 7 running as a background job at time of writing, 1 already complete).** Money-back, whole-life, endowment, and rider categories are scoped in the corpus but not yet extracted. Query pipeline steps 1-8 (deterministic Q&A slot-filling, eligibility filter, premium interpolation, narrative retrieval, reranking + sort, narrative generation) are built and verified — step 8 currently covers base plans only, not plan + rider combos, since rider eligibility/combination isn't implemented yet. A Python service (`service/`) wraps steps 3-8 behind `/query` and `/chat` endpoints, tested locally; the n8n workflow that will call it and its deployment to the Oracle VM are the next concrete step. Steps 9-10 (trace log, BYOK) are still design-only, deliberately deferred to get an end-to-end usable path working first — see `docs/ingestion_architecture.md` and `docs/query_architecture.md` for the full pipeline design.
 
 | Category | Policies in corpus | Extraction validated |
 |---|---|---|
@@ -45,7 +45,7 @@ See `CLAUDE.md`'s "Build & Run Commands" section for full details, including how
 ## Documentation 📚
 
 - [`docs/ingestion_architecture.md`](docs/ingestion_architecture.md) — extraction, chunking, embedding, and precompute pipeline detail (all built and validated for term assurance).
-- [`docs/query_architecture.md`](docs/query_architecture.md) — query/retrieval pipeline detail (steps 3-8 built and verified; steps 1-2, 9-10 still design-only).
+- [`docs/query_architecture.md`](docs/query_architecture.md) — query/retrieval pipeline detail (steps 1-8 built and verified, wrapped by a Python service; n8n workflow/VM deployment and steps 9-10 still pending).
 - [`docs/evaluation_architecture.md`](docs/evaluation_architecture.md) — golden set, trace log, LLM judge (not yet built).
 - [`docs/schema.md`](docs/schema.md) — data layer model (Layer 1/2/3), Layer 1/2 field schemas, and the extraction-rule caveats found so far (worth reading before touching extraction prompts — several are non-obvious document-formatting traps).
 - [`docs/infra-baseline.md`](docs/infra-baseline.md) — infrastructure/deployment baseline.
