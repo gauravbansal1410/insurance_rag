@@ -177,6 +177,29 @@ Derived from Layer 1 at ingestion time. Group C is a direct copy of Layer 1 boun
       mechanism is manual: read documents, find a real recurring concern the
       tags miss, add it as a named tag.
 
+      **Checklist for adding/removing a tag** (this vocabulary is duplicated
+      in 3 places by necessity, not by accident — each serves a different
+      consumer, so there's no single file to edit):
+      1. Edit the list here AND in `docs/prompts/prompt_b.txt`'s
+         `group_a_concern_tags` field (the actual Gemini prompt — this is
+         what tells the model which tags it may assign).
+      2. Edit `query/concern_tags.py`'s `CONCERN_TAG_PHRASES` (add/remove the
+         entry, with a query-time phrase for a new tag).
+      3. Re-run Layer 2 derivation (`extraction_test/run_layer2_derivation.py`,
+         from each policy's existing Layer 1 JSON — no need to re-run Layer 1)
+         for every already-extracted policy, so their `group_a_concern_tags`
+         reflect the new vocabulary.
+      4. Re-run `chunking/precompute_rerank_scores.py` so the new/changed tag
+         has real scores in `chunking/precomputed_rerank_scores.json` — a
+         removed tag's old rows are harmless dead weight, a new tag has zero
+         rows (and will be silently un-matchable) until this runs.
+      Steps 3-4 cost real Gemini/Voyage time and are **not automated** — the
+      954/955 `policy_id` bug (`docs/progress/20260731-progress.md`) was
+      exactly this class of mistake (a manual, easy-to-forget re-sync step),
+      so run `python3 check_concern_tags_sync.py` from the repo root after
+      any tag change — it checks steps 1-4 landed everywhere without calling
+      Gemini or Voyage, and points back here if anything drifted.
+
     Group B — payout mechanics (arrays — confirmed necessary, real plans
     combine values, e.g. Jeevan Umang pays periodic survival benefit AND
     lump sum at maturity simultaneously):
