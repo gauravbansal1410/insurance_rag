@@ -199,6 +199,10 @@ Derived from Layer 1 at ingestion time. Group C is a direct copy of Layer 1 boun
       so run `python3 check_concern_tags_sync.py` from the repo root after
       any tag change — it checks steps 1-4 landed everywhere without calling
       Gemini or Voyage, and points back here if anything drifted.
+      `chunking/ingest_policy.sh` also runs this check automatically as its
+      last step for every new-policy ingestion (not just tag changes) — a
+      free safety net against a freshly-derived Layer 2 assigning a
+      concern_tag outside the vocabulary, independent of this checklist.
 
     Group B — payout mechanics (arrays — confirmed necessary, real plans
     combine values, e.g. Jeevan Umang pays periodic survival benefit AND

@@ -33,7 +33,7 @@ BROCHURE_PDF="$4"
 MODEL="${5:-}"
 OUTPUT_DIR="${6:-$SCRIPT_DIR/../extracted}"
 
-echo "=== [1/4] Layer 1 + 2 extraction (file id: $FILE_ID) ==="
+echo "=== [1/5] Layer 1 + 2 extraction (file id: $FILE_ID) ==="
 "$SCRIPT_DIR/../extraction_test/run_pipeline.sh" "$FILE_ID" "$POLICY_DOC_PDF" "$BROCHURE_PDF" "$MODEL" "$OUTPUT_DIR"
 
 LAYER1_OUT="$OUTPUT_DIR/layer1_${FILE_ID}.json"
@@ -46,13 +46,22 @@ fi
 
 CHUNKS_OUT="$SCRIPT_DIR/chunks_${POLICY_ID}.json"
 
-echo "=== [2/4] Layer 3 chunking (policy_id: $POLICY_ID) ==="
+echo "=== [2/5] Layer 3 chunking (policy_id: $POLICY_ID) ==="
 python3 "$SCRIPT_DIR/chunk_policy_doc.py" "$POLICY_ID" "$CATEGORY" "$POLICY_DOC_PDF" "$CHUNKS_OUT"
 
-echo "=== [3/4] Embedding + Qdrant load ==="
+echo "=== [3/5] Embedding + Qdrant load ==="
 python3 "$SCRIPT_DIR/embed_and_load_layer3.py" insurance_rag_layer3 "$CHUNKS_OUT"
 
-echo "=== [4/4] Precomputed rerank scores ==="
+echo "=== [4/5] Precomputed rerank scores ==="
 python3 "$SCRIPT_DIR/precompute_rerank_scores.py" "$CHUNKS_OUT"
+
+# Free (no Gemini/Voyage calls, purely local files) - catches a freshly-derived Layer 2
+# referencing a concern_tag outside the intended vocabulary (a prompt-following slip),
+# right when it's easiest to trace back to this specific ingestion run. Same failure shape
+# as the 954/955 policy_id bug this whole script exists to prevent (docs/schema.md's Group
+# A checklist) - a hard failure here, not a warning, since a real drift should stop before
+# "Done" is printed.
+echo "=== [5/5] Concern-tags sync check ==="
+python3 "$SCRIPT_DIR/../check_concern_tags_sync.py"
 
 echo "Done. Policy $POLICY_ID fully ingested: Layer 1/2 -> Layer 3 chunks -> Qdrant -> precomputed rerank scores."
