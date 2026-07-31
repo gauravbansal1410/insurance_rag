@@ -63,31 +63,43 @@ def load_existing(path=OUTPUT_PATH):
     return {}
 
 
-def precompute(chunks, voyage_client, tags=None):
-    """Returns tag -> chunk_id -> {policy_id, score}. `tags` defaults to all 8; pass a
-    subset for a smaller test run."""
+def precompute_and_save(chunks, voyage_client, tags=None, output_path=OUTPUT_PATH):
+    """Reranks `chunks` against each tag and writes to `output_path` after EVERY tag, not
+    once at the end. Confirmed necessary 2026-07-31: the original version only wrote once,
+    after all 8 tags finished, and an unrelated system interruption (the Mac slept/killed
+    the process ~90 minutes and 7/8 tags into a real run) lost the entire run - nothing had
+    been checkpointed. A crash/sleep/kill now costs at most one tag's work, not the whole
+    run. `tags` defaults to all 8; pass a subset for a smaller test run.
+
+    Also skips a tag entirely if every chunk_id in this run is already present in the
+    existing output for that tag - makes restarting after an interruption resume from where
+    it left off instead of re-reranking tags that already completed and were checkpointed."""
     tags = tags or list(CONCERN_TAG_PHRASES)
     wrapped = [_ChunkAdapter(c) for c in chunks]
-    result = {}
+    chunk_ids = {c["chunk_id"] for c in chunks}
+
     for tag in tags:
+        existing = load_existing(output_path)
+        already_covered = chunk_ids <= set(existing.get(tag, {}))
+        if already_covered:
+            print(f"Skipping tag '{tag}' - all {len(chunk_ids)} chunks already checkpointed.", flush=True)
+            continue
+
         phrase = CONCERN_TAG_PHRASES[tag]
         print(f"Reranking {len(chunks)} chunks against tag '{tag}': \"{phrase}\"", flush=True)
         scored = rerank_chunks(phrase, wrapped, voyage_client)
-        result[tag] = {
+        tag_scores = {
             chunks[s["chunk_index"]]["chunk_id"]: {
                 "policy_id": chunks[s["chunk_index"]]["policy_id"],
                 "score": s["relevance_score"],
             }
             for s in scored
         }
-        print(f"  done: {len(result[tag])} chunks scored for '{tag}'", flush=True)
-    return result
 
-
-def merge(existing, new):
-    for tag, chunk_scores in new.items():
-        existing.setdefault(tag, {}).update(chunk_scores)
-    return existing
+        existing.setdefault(tag, {}).update(tag_scores)
+        with open(output_path, "w") as f:
+            json.dump(existing, f, indent=2)
+        print(f"  done: {len(tag_scores)} chunks scored for '{tag}', checkpointed to {output_path}", flush=True)
 
 
 if __name__ == "__main__":
@@ -100,12 +112,8 @@ if __name__ == "__main__":
     print(f"Loaded {len(chunks)} chunks from {len(chunk_paths)} file(s).")
 
     voyage = make_voyage_client()
-    new_scores = precompute(chunks, voyage)
+    precompute_and_save(chunks, voyage)
 
-    existing = load_existing()
-    merged = merge(existing, new_scores)
-
-    with open(OUTPUT_PATH, "w") as f:
-        json.dump(merged, f, indent=2)
-    total_rows = sum(len(v) for v in merged.values())
-    print(f"Wrote {OUTPUT_PATH}: {len(merged)} tags, {total_rows} total (tag, chunk) rows.")
+    final = load_existing()
+    total_rows = sum(len(v) for v in final.values())
+    print(f"Done. {OUTPUT_PATH}: {len(final)} tags, {total_rows} total (tag, chunk) rows.")

@@ -35,6 +35,222 @@
     "875_ANNEXURE_3": {
       "policy_id": "875",
       "score": 0.3125
+    },
+    "859_PART_C": {
+      "policy_id": "859",
+      "score": 0.46484375
+    },
+    "859_PART_A": {
+      "policy_id": "859",
+      "score": 0.3984375
+    },
+    "859_PART_B": {
+      "policy_id": "859",
+      "score": 0.365234375
+    },
+    "859_PART_D": {
+      "policy_id": "859",
+      "score": 0.333984375
+    },
+    "859_ANNEXURE_2": {
+      "policy_id": "859",
+      "score": 0.515625
+    },
+    "859_PART_F": {
+      "policy_id": "859",
+      "score": 0.39453125
+    },
+    "859_ANNEXURE_1": {
+      "policy_id": "859",
+      "score": 0.345703125
+    },
+    "859_ANNEXURE_3": {
+      "policy_id": "859",
+      "score": 0.310546875
+    },
+    "859_PART_G": {
+      "policy_id": "859",
+      "score": 0.2734375
+    },
+    "876_PART_C": {
+      "policy_id": "876",
+      "score": 0.462890625
+    },
+    "876_PART_B": {
+      "policy_id": "876",
+      "score": 0.361328125
+    },
+    "876_PART_A": {
+      "policy_id": "876",
+      "score": 0.349609375
+    },
+    "876_PART_F": {
+      "policy_id": "876",
+      "score": 0.404296875
+    },
+    "876_PART_D": {
+      "policy_id": "876",
+      "score": 0.35546875
+    },
+    "876_ANNEXURE_1": {
+      "policy_id": "876",
+      "score": 0.341796875
+    },
+    "876_PART_G": {
+      "policy_id": "876",
+      "score": 0.283203125
+    },
+    "876_ANNEXURE_2": {
+      "policy_id": "876",
+      "score": 0.5
+    },
+    "877_PART_B": {
+      "policy_id": "877",
+      "score": 0.365234375
+    },
+    "877_PART_A": {
+      "policy_id": "877",
+      "score": 0.345703125
+    },
+    "876_ANNEXURE_3": {
+      "policy_id": "876",
+      "score": 0.314453125
+    },
+    "877_PART_C": {
+      "policy_id": "877",
+      "score": 0.45703125
+    },
+    "877_PART_F": {
+      "policy_id": "877",
+      "score": 0.3984375
+    },
+    "877_PART_D": {
+      "policy_id": "877",
+      "score": 0.3515625
+    },
+    "877_ANNEXURE_1": {
+      "policy_id": "877",
+      "score": 0.34375
+    },
+    "877_PART_G": {
+      "policy_id": "877",
+      "score": 0.27734375
+    },
+    "877_ANNEXURE_2": {
+      "policy_id": "877",
+      "score": 0.48828125
+    },
+    "878_PART_B": {
+      "policy_id": "878",
+      "score": 0.369140625
+    },
+    "878_PART_A": {
+      "policy_id": "878",
+      "score": 0.349609375
+    },
+    "877_ANNEXURE_3": {
+      "policy_id": "877",
+      "score": 0.318359375
+    },
+    "878_PART_C": {
+      "policy_id": "878",
+      "score": 0.451171875
+    },
+    "878_PART_F": {
+      "policy_id": "878",
+      "score": 0.396484375
+    },
+    "878_PART_D": {
+      "policy_id": "878",
+      "score": 0.345703125
+    },
+    "878_ANNEXURE_1": {
+      "policy_id": "878",
+      "score": 0.341796875
+    },
+    "878_PART_G": {
+      "policy_id": "878",
+      "score": 0.28125
+    },
+    "878_ANNEXURE_2": {
+      "policy_id": "878",
+      "score": 0.490234375
+    },
+    "512N351V02_PART_B": {
+      "policy_id": "512N351V02",
+      "score": 0.3671875
+    },
+    "512N351V02_PART_A": {
+      "policy_id": "512N351V02",
+      "score": 0.3515625
+    },
+    "878_ANNEXURE_3": {
+      "policy_id": "878",
+      "score": 0.314453125
+    },
+    "512N351V02_PART_C": {
+      "policy_id": "512N351V02",
+      "score": 0.45703125
+    },
+    "512N351V02_PART_F": {
+      "policy_id": "512N351V02",
+      "score": 0.400390625
+    },
+    "512N351V02_PART_D": {
+      "policy_id": "512N351V02",
+      "score": 0.359375
+    },
+    "512N351V02_PART_G": {
+      "policy_id": "512N351V02",
+      "score": 0.279296875
+    },
+    "512N351V02_ANNEXURE_2": {
+      "policy_id": "512N351V02",
+      "score": 0.5234375
+    },
+    "512N351V02_ANNEXURE_1": {
+      "policy_id": "512N351V02",
+      "score": 0.349609375
+    },
+    "512N350V02_PART_A": {
+      "policy_id": "512N350V02",
+      "score": 0.341796875
+    },
+    "512N351V02_ANNEXURE_3": {
+      "policy_id": "512N351V02",
+      "score": 0.3125
+    },
+    "512N350V02_PART_C": {
+      "policy_id": "512N350V02",
+      "score": 0.453125
+    },
+    "512N350V02_PART_B": {
+      "policy_id": "512N350V02",
+      "score": 0.361328125
+    },
+    "512N350V02_PART_D": {
+      "policy_id": "512N350V02",
+      "score": 0.353515625
+    },
+    "512N350V02_ANNEXURE_2": {
+      "policy_id": "512N350V02",
+      "score": 0.52734375
+    },
+    "512N350V02_PART_F": {
+      "policy_id": "512N350V02",
+      "score": 0.39453125
+    },
+    "512N350V02_ANNEXURE_1": {
+      "policy_id": "512N350V02",
+      "score": 0.349609375
+    },
+    "512N350V02_ANNEXURE_3": {
+      "policy_id": "512N350V02",
+      "score": 0.310546875
+    },
+    "512N350V02_PART_G": {
+      "policy_id": "512N350V02",
+      "score": 0.28125
     }
   },
   "debt_linked_cover": {
