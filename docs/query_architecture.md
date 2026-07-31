@@ -2,7 +2,7 @@
 
 Recurring, user-facing, cost-sensitive only on the LLM steps. See `docs/schema.md` for what Layer 1, Layer 2, and Layer 3 are and how they relate.
 
-**Status: designed, not yet built.**
+**Status: steps 3-8 built and verified against live data; steps 1-2 (frontend/session state) and 9-10 (trace log, BYOK) still design-only. Runtime orchestration (n8n + a Python query service, see below) not yet built either — everything built so far runs standalone via Claude Code, not through n8n.**
 
 ## Session state (ephemeral, per-conversation)
 Turn-based slot-filling state (age given? cover amount given? priorities given? result generated?). Not on GitHub. Clears when the conversation ends. Also the state machine that makes a future chat interface a frontend-only swap, not a backend rebuild.
@@ -41,6 +41,14 @@ Fix: the relevance signal in steps 6-7 depends only on the user's `concern_tags`
 ## Runtime data source for steps 3–5
 
 The live query pipeline (n8n, Oracle VM) reads Layer 1/2 JSON for steps 3–5 from a local git clone of this repo on the VM, kept current via `git pull` — a manual, end-of-session step for now, not automated (see `docs/infra-baseline.md`'s end-of-session checklist). Uses the same scoped fine-grained PAT and local (non-global) git identity already established for this repo's clone-safe exception in `docs/infra-baseline.md`. The live query path must never fetch from GitHub's raw endpoint per query — that pattern belongs to ingestion/admin-time tooling only, not a request-serving path.
+
+## Runtime orchestration: n8n as a thin layer, not a re-implementation
+
+Decided 2026-07-31, after steps 3-8 were already built and verified as plain Python (`query/`): n8n does **not** reimplement any of steps 3-8's logic as native nodes (Code nodes, per-step HTTP Request nodes to Qdrant/Voyage/Gemini, IF-node branching). That logic already represents real, tested effort — including bugs only found by actually running it (the Voyage batching/retry fix, the rerank tier-assignment logic, the narrative-generation heading-echo fix) — and n8n's Code-node environment is a much thinner, harder-to-debug place to redo that same work a second time, with real risk of silently reintroducing bugs already fixed once.
+
+Instead: **n8n handles only what it's actually suited for** — the webhook/chat trigger, turn-based session state (steps 1-2), and the BYOK key check (step 10) — and calls out to a small, self-hosted Python service (e.g. FastAPI) on the same Oracle VM that directly imports and runs the already-built `query/` modules for steps 3-8 (and, once built, step 9's trace log write). One HTTP Request node (or a small number of them) from n8n to that service, not a node-per-step reimplementation.
+
+**Open sub-question, not yet decided:** whether that Python service exposes one endpoint per pipeline step (more visibility into each stage from n8n's execution log, more HTTP round-trips and workflow complexity) or a single "run query" endpoint that internally sequences steps 3-8 and returns the final result (simpler for n8n, but step-level visibility has to come from the service's own logging instead). Leaning toward a single endpoint, since steps 3-8 are already a fixed, tightly sequential chain in the Python code (each step's output directly feeds the next) — decomposing that into separate n8n-visible HTTP calls would just re-expose an ordering n8n can't meaningfully reorder anyway. Not yet built either way.
 
 ## Explicitly deferred, not forgotten
 - Rider-selection UI: plain multi-select on concerns, not a ranked list.
