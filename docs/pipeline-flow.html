@@ -114,7 +114,7 @@
 
   <section>
     <h2>Ingestion pipeline — one-time / admin-triggered</h2>
-    <p class="source-note" style="margin-bottom: 14px;">Running example: the <strong>Saral Jeevan Bima (859)</strong> policy doc — one of all 7 term-assurance policies validated end-to-end so far.</p>
+    <p class="source-note" style="margin-bottom: 14px;">Running example: the <strong>Saral Jeevan Bima (859)</strong> policy doc — one of all 7 term-assurance policies validated end-to-end so far. <code>chunking/ingest_policy.sh</code> runs steps 2-6 for one new policy in a single command.</p>
     <div class="legend">
       <span class="legend-item"><span class="dot you"></span>You</span>
       <span class="legend-item"><span class="dot claude"></span>Claude Code</span>
@@ -165,16 +165,17 @@ const ingestionSteps = [
   { title: '3. Chunking', subtitle: 'structure-aware, PART/section headers', example: 'same doc → 9 chunks (Definitions, Benefits, Conditions, Other Terms, Grievance, Annexures 1-3)', actor: 'claude', built: true },
   { title: '4. Embedding', subtitle: 'Voyage voyage-law-2', example: '63 chunks (all 7 policies) → 63 vectors, batched/paced for the 3 RPM free-tier cap', actor: 'system', built: true },
   { title: '5. Load into Qdrant', subtitle: 'collection insurance_rag_layer3, shared across categories', example: '63 points upserted, collection now has 63 points total', actor: 'system', built: true },
+  { title: '6. Precompute rerank scores', subtitle: 'rerank each chunk vs 8 fixed concern tags, not live per-query', example: '63 chunks × 8 tags → precomputed_rerank_scores.json, 504 (tag, chunk) rows', actor: 'system', built: true },
 ];
 
 const queryOtherSteps = [
   { title: '1. Collect profile', subtitle: 'age, cover, budget + concerns', example: '35, ₹30L cover, ₹15k/yr budget, income replacement + debt payoff', actor: 'you', built: false },
   { title: '2. Session handler', subtitle: 'turn-based slot-filling', example: 'age + cover given → asks budget next', actor: 'system', built: false },
-  { title: '3. Eligibility filter', subtitle: 'Group C facts + concern OR-pass', example: '12 policies pass age/SA/term bounds, 5 match ≥1 concern tag', actor: 'system', built: false },
-  { title: '4. Fallback', subtitle: 'relax SA/age/term if <3 matches, budget not relaxed', example: '5 matches ≥ 3 → fallback not triggered', actor: 'system', built: false },
-  { title: '5. Premium interpolation', subtitle: '+ budget filter — quality unvalidated', example: 'New Tech Term table: ₹20L→₹10k/yr, ₹50L→₹14k/yr → ₹30L≈₹13k/yr → within ₹15k budget', actor: 'gemini', built: false },
-  { title: '6. Narrative retrieval', subtitle: 'restricted to surviving policy_ids', example: 'top ~18 chunks pulled from the 5 surviving policies', actor: 'system', built: false },
-  { title: '7. Rerank + sort', subtitle: 'tolerance band uncalibrated (0.05 placeholder)', example: 'New Tech Term & Digi Term rerank within 0.05 → tied → New Tech Term wins on price', actor: 'system', built: false },
+  { title: '3. Eligibility filter', subtitle: 'Group C facts + concern OR-pass', example: 'age 30, ₹50L SA, term 20, income_replacement + critical_illness → 4 policies clear tier 0 (no fallback)', actor: 'system', built: true },
+  { title: '4. Fallback', subtitle: 'relax SA/age/term if <3 matches, budget not relaxed', example: 'SA dropped to ₹10L → only 1 policy clears bounds → tier 1 relaxes age/SA/term, concern gate stays firm', actor: 'system', built: true },
+  { title: '5. Premium interpolation', subtitle: '+ budget filter — linear-in-SA assumption unvalidated', example: '4 eligible policies interpolated: New Tech Term ₹4568/yr … New Jeevan Amar ₹7830/yr, all within ₹10k budget', actor: 'system', built: true },
+  { title: '6. Narrative retrieval', subtitle: 'restricted to surviving policy_ids', example: '20 chunks retrieved across the 4 surviving policies', actor: 'system', built: true },
+  { title: '7. Rerank + sort', subtitle: 'precomputed lookup (step 6 of ingestion) — live rerank only as a rare fallback; tolerance band uncalibrated (0.05 placeholder)', example: '954/876/875/955 score 0.473/0.467/0.465/0.469 — all within 0.05 → one tier → sorted by premium', actor: 'system', built: true },
   { title: '8. Narrative generation', subtitle: 'Gemini flash-lite, top 3 combos', example: 'writes "New Tech Term + Accident Benefit Rider" pros/cons', actor: 'gemini', built: false },
   { title: '9. Trace log write', subtitle: 'async, never blocks response', example: 'query + chunks + response written to trace collection', actor: 'system', built: false },
   { title: '10. BYOK check', subtitle: 'governs key use in steps 5 & 8', example: 'no user key → falls back to stored n8n Gemini credential', actor: 'system', built: false },
