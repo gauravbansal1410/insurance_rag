@@ -78,6 +78,22 @@ insurance_rag/
 
 ---
 
+## Keeping Documentation in Sync
+
+Whenever a change touches the pipeline, architecture, schema, or how something is run or built, **check every doc below for whether it needs updating — proactively, without being asked file-by-file.** This list exists because doc drift has already happened more than once in this project (e.g. `README.md` claiming the query pipeline was "designed, not built" weeks after it had actually shipped) — the fix is checking this list as a habit, not waiting to be reminded per file.
+
+- `README.md` — Status table, "How it works," Quickstart commands, Documentation index. Update whenever a pipeline stage ships, a script's usage changes, or overall status changes.
+- `CLAUDE.md` (this file) — Build & Run Commands. Update whenever a new script/command is added or an existing one's usage/behavior changes.
+- `docs/schema.md` — Layer 1/2/3 field schemas, data layer model, extraction-rule caveats, and any derived-artifact schema (e.g. `precomputed_rerank_scores.json`). Update whenever a field, layer, or derived artifact is added/changed.
+- `docs/ingestion_architecture.md` — Extraction/chunking/embedding/precompute pipeline design and rationale. Update whenever an ingestion step is added/changed.
+- `docs/query_architecture.md` — Query/retrieval pipeline design, open questions. Update whenever a query-pipeline step is added/changed, or a design decision/tradeoff is made.
+- `docs/infra-baseline.md` — Infra/deployment topology and operational constraints. Update whenever infra actually changes (new service, new VM config, new access pattern) — most code changes don't touch this one, but check rather than assume.
+- `docs/pipeline-flow.html` — Visual pipeline diagram (built/not-built status per step, with real examples). Update whenever a step's built status changes, or its example data is stale/hypothetical instead of real.
+- `docs/progress/YYYYMMDD-progress.md` — Dated session log. Add or update the current date's entry for any non-trivial build/fix/decision made in the session — this is the detailed record the other docs above summarize from.
+- `docs/evaluation_architecture.md` — Golden set / trace log / LLM judge design, once it exists. Check whether eval-relevant changes (anything touching the trace log or ranking logic) need a mention here too.
+
+When in doubt about whether a doc needs touching, check it anyway rather than skip it — the cost of a quick read is much lower than the cost of another silent staleness bug.
+
 ## Notes for Future Claude Code Sessions
 
 - This file is the entry point for all AI-assisted work. Keep it up to date as the project evolves.
