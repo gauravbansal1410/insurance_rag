@@ -1,0 +1,306 @@
+{
+  "income_replacement": {
+    "875_PART_C": {
+      "policy_id": "875",
+      "score": 0.470703125
+    },
+    "875_PART_B": {
+      "policy_id": "875",
+      "score": 0.361328125
+    },
+    "875_PART_A": {
+      "policy_id": "875",
+      "score": 0.34375
+    },
+    "875_PART_F": {
+      "policy_id": "875",
+      "score": 0.400390625
+    },
+    "875_PART_D": {
+      "policy_id": "875",
+      "score": 0.349609375
+    },
+    "875_ANNEXURE_1": {
+      "policy_id": "875",
+      "score": 0.33984375
+    },
+    "875_PART_G": {
+      "policy_id": "875",
+      "score": 0.2890625
+    },
+    "875_ANNEXURE_2": {
+      "policy_id": "875",
+      "score": 0.50390625
+    },
+    "875_ANNEXURE_3": {
+      "policy_id": "875",
+      "score": 0.3125
+    }
+  },
+  "debt_linked_cover": {
+    "875_PART_A": {
+      "policy_id": "875",
+      "score": 0.26953125
+    },
+    "875_PART_B": {
+      "policy_id": "875",
+      "score": 0.26953125
+    },
+    "875_PART_C": {
+      "policy_id": "875",
+      "score": 0.255859375
+    },
+    "875_PART_D": {
+      "policy_id": "875",
+      "score": 0.3046875
+    },
+    "875_ANNEXURE_1": {
+      "policy_id": "875",
+      "score": 0.296875
+    },
+    "875_PART_G": {
+      "policy_id": "875",
+      "score": 0.265625
+    },
+    "875_PART_F": {
+      "policy_id": "875",
+      "score": 0.259765625
+    },
+    "875_ANNEXURE_2": {
+      "policy_id": "875",
+      "score": 0.30859375
+    },
+    "875_ANNEXURE_3": {
+      "policy_id": "875",
+      "score": 0.2451171875
+    }
+  },
+  "child_education_fund": {
+    "875_PART_A": {
+      "policy_id": "875",
+      "score": 0.26953125
+    },
+    "875_PART_C": {
+      "policy_id": "875",
+      "score": 0.263671875
+    },
+    "875_PART_B": {
+      "policy_id": "875",
+      "score": 0.259765625
+    },
+    "875_PART_D": {
+      "policy_id": "875",
+      "score": 0.28125
+    },
+    "875_PART_F": {
+      "policy_id": "875",
+      "score": 0.26953125
+    },
+    "875_ANNEXURE_1": {
+      "policy_id": "875",
+      "score": 0.248046875
+    },
+    "875_PART_G": {
+      "policy_id": "875",
+      "score": 0.2451171875
+    },
+    "875_ANNEXURE_2": {
+      "policy_id": "875",
+      "score": 0.3125
+    },
+    "875_ANNEXURE_3": {
+      "policy_id": "875",
+      "score": 0.2412109375
+    }
+  },
+  "retirement_income": {
+    "875_PART_C": {
+      "policy_id": "875",
+      "score": 0.392578125
+    },
+    "875_PART_A": {
+      "policy_id": "875",
+      "score": 0.326171875
+    },
+    "875_PART_B": {
+      "policy_id": "875",
+      "score": 0.322265625
+    },
+    "875_PART_D": {
+      "policy_id": "875",
+      "score": 0.3515625
+    },
+    "875_PART_F": {
+      "policy_id": "875",
+      "score": 0.318359375
+    },
+    "875_ANNEXURE_1": {
+      "policy_id": "875",
+      "score": 0.2490234375
+    },
+    "875_PART_G": {
+      "policy_id": "875",
+      "score": 0.2412109375
+    },
+    "875_ANNEXURE_2": {
+      "policy_id": "875",
+      "score": 0.318359375
+    },
+    "875_ANNEXURE_3": {
+      "policy_id": "875",
+      "score": 0.263671875
+    }
+  },
+  "estate_legacy_planning": {
+    "875_PART_C": {
+      "policy_id": "875",
+      "score": 0.357421875
+    },
+    "875_PART_B": {
+      "policy_id": "875",
+      "score": 0.326171875
+    },
+    "875_PART_A": {
+      "policy_id": "875",
+      "score": 0.306640625
+    },
+    "875_PART_F": {
+      "policy_id": "875",
+      "score": 0.341796875
+    },
+    "875_ANNEXURE_1": {
+      "policy_id": "875",
+      "score": 0.318359375
+    },
+    "875_PART_D": {
+      "policy_id": "875",
+      "score": 0.30859375
+    },
+    "875_PART_G": {
+      "policy_id": "875",
+      "score": 0.259765625
+    },
+    "875_ANNEXURE_2": {
+      "policy_id": "875",
+      "score": 0.439453125
+    },
+    "875_ANNEXURE_3": {
+      "policy_id": "875",
+      "score": 0.28125
+    }
+  },
+  "forced_savings_discipline": {
+    "875_PART_B": {
+      "policy_id": "875",
+      "score": 0.294921875
+    },
+    "875_PART_C": {
+      "policy_id": "875",
+      "score": 0.2890625
+    },
+    "875_PART_A": {
+      "policy_id": "875",
+      "score": 0.2890625
+    },
+    "875_PART_D": {
+      "policy_id": "875",
+      "score": 0.298828125
+    },
+    "875_PART_F": {
+      "policy_id": "875",
+      "score": 0.27734375
+    },
+    "875_PART_G": {
+      "policy_id": "875",
+      "score": 0.267578125
+    },
+    "875_ANNEXURE_1": {
+      "policy_id": "875",
+      "score": 0.26171875
+    },
+    "875_ANNEXURE_2": {
+      "policy_id": "875",
+      "score": 0.279296875
+    },
+    "875_ANNEXURE_3": {
+      "policy_id": "875",
+      "score": 0.251953125
+    }
+  },
+  "medical_critical_illness_addon": {
+    "875_PART_A": {
+      "policy_id": "875",
+      "score": 0.345703125
+    },
+    "875_PART_B": {
+      "policy_id": "875",
+      "score": 0.341796875
+    },
+    "875_PART_C": {
+      "policy_id": "875",
+      "score": 0.33203125
+    },
+    "875_PART_D": {
+      "policy_id": "875",
+      "score": 0.349609375
+    },
+    "875_PART_F": {
+      "policy_id": "875",
+      "score": 0.318359375
+    },
+    "875_PART_G": {
+      "policy_id": "875",
+      "score": 0.296875
+    },
+    "875_ANNEXURE_1": {
+      "policy_id": "875",
+      "score": 0.2734375
+    },
+    "875_ANNEXURE_2": {
+      "policy_id": "875",
+      "score": 0.287109375
+    },
+    "875_ANNEXURE_3": {
+      "policy_id": "875",
+      "score": 0.283203125
+    }
+  },
+  "liquidity_via_policy_loan": {
+    "875_PART_A": {
+      "policy_id": "875",
+      "score": 0.3515625
+    },
+    "875_PART_C": {
+      "policy_id": "875",
+      "score": 0.349609375
+    },
+    "875_PART_B": {
+      "policy_id": "875",
+      "score": 0.345703125
+    },
+    "875_ANNEXURE_1": {
+      "policy_id": "875",
+      "score": 0.4375
+    },
+    "875_PART_D": {
+      "policy_id": "875",
+      "score": 0.396484375
+    },
+    "875_PART_F": {
+      "policy_id": "875",
+      "score": 0.37109375
+    },
+    "875_PART_G": {
+      "policy_id": "875",
+      "score": 0.294921875
+    },
+    "875_ANNEXURE_2": {
+      "policy_id": "875",
+      "score": 0.388671875
+    },
+    "875_ANNEXURE_3": {
+      "policy_id": "875",
+      "score": 0.33203125
+    }
+  }
+}
