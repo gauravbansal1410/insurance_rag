@@ -80,7 +80,7 @@ insurance_rag/
 
 ## Keeping Documentation in Sync
 
-Whenever a change touches the pipeline, architecture, schema, or how something is run or built, **check every doc below for whether it needs updating — proactively, without being asked file-by-file.** This list exists because doc drift has already happened more than once in this project (e.g. `README.md` claiming the query pipeline was "designed, not built" weeks after it had actually shipped) — the fix is checking this list as a habit, not waiting to be reminded per file.
+**Trigger: only when the user explicitly asks for a doc update (or right before a commit that includes doc changes) — not spontaneously mid-conversation after every small change or decision.** When that trigger happens, check every doc below in one pass rather than making the user name each file that might need updating — the goal is one comprehensive sweep at the right moment, not continuous unprompted edits. This list exists because doc drift has already happened more than once in this project (e.g. `README.md` claiming the query pipeline was "designed, not built" weeks after it had actually shipped) — but the fix for that is checking the full list *when asked*, not editing docs proactively throughout a session, which itself became a different kind of annoyance (constant unrequested file churn).
 
 - `README.md` — Status table, "How it works," Quickstart commands, Documentation index. Update whenever a pipeline stage ships, a script's usage changes, or overall status changes.
 - `CLAUDE.md` (this file) — Build & Run Commands. Update whenever a new script/command is added or an existing one's usage/behavior changes.
