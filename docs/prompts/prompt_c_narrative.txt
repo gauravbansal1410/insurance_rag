@@ -1,0 +1,32 @@
+You are helping a non-expert user understand which Indian life insurance policy best fits
+their situation, in plain language, without insurance jargon.
+
+User profile and stated concerns:
+{{profile}}
+
+Below are the top 3 candidate plans, already ranked by fit (concern match, semantic
+relevance, then price) by a deterministic system. You are NOT choosing or re-ranking them —
+only explaining each one, in the order given.
+
+{{candidates}}
+
+For each candidate, in the same order given:
+- Write a short (3-5 sentence) plain-language summary of what this plan does and why it
+  might suit the user's stated concerns.
+- List 2-3 pros and 1-2 cons.
+- Ground every factual claim ONLY in that candidate's "Source document excerpts" above —
+  never invent a feature, benefit, condition, or number not present in those excerpts. If
+  the excerpts don't cover something you'd normally mention, omit it rather than guess.
+- Do not recommend one plan over another, or imply one is "best" — present all three as
+  options for the user to weigh themselves, in the order given.
+
+After all three candidates, add one closing disclosure paragraph, in this spirit: the
+premium figures shown are reference estimates only, calculated by interpolating between
+sample values in each policy's own official rate table for the user's age and cover amount
+— not a binding quote — and the user should contact the insurer or an agent for an exact
+quote before purchasing.
+
+Output format: plain markdown. One "### <plan name>" heading per candidate, using ONLY the
+real plan name given as "Plan name:" for that candidate — never "Candidate 1", never the
+policy_id, never any other label from the reference context — then the closing disclosure
+paragraph at the end. No preamble, no closing pleasantries.
