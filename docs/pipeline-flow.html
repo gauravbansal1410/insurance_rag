@@ -176,7 +176,7 @@ const queryOtherSteps = [
   { title: '5. Premium interpolation', subtitle: '+ budget filter — linear-in-SA assumption unvalidated', example: '4 eligible policies interpolated: New Tech Term ₹4568/yr … New Jeevan Amar ₹7830/yr, all within ₹10k budget', actor: 'system', built: true },
   { title: '6. Narrative retrieval', subtitle: 'restricted to surviving policy_ids', example: '20 chunks retrieved across the 4 surviving policies', actor: 'system', built: true },
   { title: '7. Rerank + sort', subtitle: 'precomputed lookup (step 6 of ingestion) — live rerank only as a rare fallback; tolerance band uncalibrated (0.05 placeholder)', example: '954/876/875/955 score 0.473/0.467/0.465/0.469 — all within 0.05 → one tier → sorted by premium', actor: 'system', built: true },
-  { title: '8. Narrative generation', subtitle: 'Gemini flash-lite, top 3 combos', example: 'writes "New Tech Term + Accident Benefit Rider" pros/cons', actor: 'gemini', built: false },
+  { title: '8. Narrative generation', subtitle: 'Gemini flash-lite, top 3 base plans (rider combos not yet built)', example: 'writes grounded pros/cons for Yuva Term, New Tech-Term, Digi Term + a premium-estimate disclosure', actor: 'gemini', built: true },
   { title: '9. Trace log write', subtitle: 'async, never blocks response', example: 'query + chunks + response written to trace collection', actor: 'system', built: false },
   { title: '10. BYOK check', subtitle: 'governs key use in steps 5 & 8', example: 'no user key → falls back to stored n8n Gemini credential', actor: 'system', built: false },
 ];

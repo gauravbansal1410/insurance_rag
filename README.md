@@ -10,7 +10,7 @@ A personal project to build an end-to-end, usable Retrieval-Augmented Generation
 
 ## Status 🚧
 
-**Full ingestion pipeline (extraction, chunking, embedding, Qdrant load, precomputed rerank scores) is built and validated end-to-end for the term assurance category only — all 7 policies in that category are now extracted, chunked, embedded, loaded into Qdrant, and precomputed.** Money-back, whole-life, endowment, and rider categories are scoped in the corpus but not yet extracted. Query pipeline steps 3-7 (deterministic eligibility filter, premium interpolation, narrative retrieval, reranking + sort) are built and verified against live data (`query/`); steps 1-2 (frontend slot-filling) and 8-10 (narrative generation, trace log, BYOK) are still design-only — see `docs/ingestion_architecture.md` and `docs/query_architecture.md` for the full pipeline design.
+**Full ingestion pipeline (extraction, chunking, embedding, Qdrant load, precomputed rerank scores) is built and validated end-to-end for the term assurance category — all 7 policies are extracted, chunked, embedded, and loaded into Qdrant; precomputed rerank scores are done for 1 of 7 (875), with the remaining 6 running as a background job at time of writing.** Money-back, whole-life, endowment, and rider categories are scoped in the corpus but not yet extracted. Query pipeline steps 3-8 (deterministic eligibility filter, premium interpolation, narrative retrieval, reranking + sort, narrative generation) are built and verified against live data (`query/`) — step 8 currently covers base plans only, not plan + rider combos, since rider eligibility/combination isn't implemented in steps 3-5 yet; steps 1-2 (frontend slot-filling) and 9-10 (trace log, BYOK) are still design-only — see `docs/ingestion_architecture.md` and `docs/query_architecture.md` for the full pipeline design.
 
 | Category | Policies in corpus | Extraction validated |
 |---|---|---|
@@ -45,11 +45,11 @@ See `CLAUDE.md`'s "Build & Run Commands" section for full details, including how
 ## Documentation 📚
 
 - [`docs/ingestion_architecture.md`](docs/ingestion_architecture.md) — extraction, chunking, embedding, and precompute pipeline detail (all built and validated for term assurance).
-- [`docs/query_architecture.md`](docs/query_architecture.md) — query/retrieval pipeline detail (steps 3-7 built and verified; steps 1-2, 8-10 still design-only).
+- [`docs/query_architecture.md`](docs/query_architecture.md) — query/retrieval pipeline detail (steps 3-8 built and verified; steps 1-2, 9-10 still design-only).
 - [`docs/evaluation_architecture.md`](docs/evaluation_architecture.md) — golden set, trace log, LLM judge (not yet built).
 - [`docs/schema.md`](docs/schema.md) — data layer model (Layer 1/2/3), Layer 1/2 field schemas, and the extraction-rule caveats found so far (worth reading before touching extraction prompts — several are non-obvious document-formatting traps).
 - [`docs/infra-baseline.md`](docs/infra-baseline.md) — infrastructure/deployment baseline.
-- [`docs/prompts/`](docs/prompts/) — the production extraction/derivation prompts, plus an `appendix/` of deprecated variants kept for reference.
+- [`docs/prompts/`](docs/prompts/) — the production extraction/derivation/narrative-generation prompts, plus an `appendix/` of deprecated variants kept for reference.
 - [`docs/progress/`](docs/progress/) — dated session logs with testing detail behind the decisions in the docs above.
 - [`CLAUDE.md`](CLAUDE.md) — instructions for AI-assisted work on this repo (Claude Code entry point).
 
