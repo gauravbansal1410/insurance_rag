@@ -10,7 +10,21 @@
 from eligibility_filter import bounds_ok  # sibling import - run as `python3 query/premium_interpolation.py`
 
 
-def available_terms(layer1_records, layer2_records=None, age=None, sum_assured=None):
+def _policy_matches(l2, age, sum_assured, term, concern_tags):
+    """Group C bounds AND (if concern_tags given) at least one Group A concern_tags
+    overlap - the same hard OR-gate eligibility_filter.py's step 3 applies, needed here too
+    since a term/option can look available by age/cover alone but only on a policy that
+    doesn't serve the user's stated concern at all (confirmed 2026-08-01: 877/878's 25-year
+    data only serves debt_linked_cover, not income_replacement)."""
+    if not bounds_ok({"age": age, "sum_assured": sum_assured, "term": term}, l2["layer2"]["group_c"]):
+        return False
+    if concern_tags is not None:
+        if not (set(concern_tags) & set(l2["layer2"]["group_a_concern_tags"])):
+            return False
+    return True
+
+
+def available_terms(layer1_records, layer2_records=None, age=None, sum_assured=None, concern_tags=None):
     """All terms with at least one sample_illustrative_premiums row - used by the chat
     slot-filling step (service/chat_session.py) to reject an unsupported term immediately,
     rather than silently accepting it and discovering the problem only after every other
@@ -18,31 +32,32 @@ def available_terms(layer1_records, layer2_records=None, age=None, sum_assured=N
     empty candidate set and a hallucinated result).
 
     If `layer2_records`/`age`/`sum_assured` are given, restricts to policies actually
-    eligible for this age/sum_assured (via eligibility_filter.bounds_ok) before checking
+    eligible for this age/sum_assured/concern (via `_policy_matches()`) before checking
     table availability - confirmed 2026-08-01 that a term can have real data corpus-wide
-    but only on a policy the user doesn't qualify for by cover amount, which isn't a real
-    answer for them and would otherwise still lead to a dead end a question later."""
+    but only on a policy the user doesn't qualify for by cover amount or concern, which
+    isn't a real answer for them and would otherwise still lead to a dead end later."""
     terms = set()
     for policy_id, record in layer1_records.items():
         for row in record["layer1"]["sample_illustrative_premiums"]:
             term = row["term"]
             if layer2_records is not None and age is not None and sum_assured is not None:
                 l2 = layer2_records.get(policy_id)
-                if l2 is None or not bounds_ok({"age": age, "sum_assured": sum_assured, "term": term}, l2["layer2"]["group_c"]):
+                if l2 is None or not _policy_matches(l2, age, sum_assured, term, concern_tags):
                     continue
             terms.add(term)
     return terms
 
 
-def available_payment_options_for_term(layer1_records, term, layer2_records=None, age=None, sum_assured=None):
+def available_payment_options_for_term(layer1_records, term, layer2_records=None, age=None,
+                                        sum_assured=None, concern_tags=None):
     """Payment options with at least one row at this specific term - a term can have data
     for some payment options but not others. Same eligibility-narrowing as available_terms()
-    when layer2_records/age/sum_assured are given."""
+    when layer2_records/age/sum_assured (and optionally concern_tags) are given."""
     options = set()
     for policy_id, record in layer1_records.items():
         if layer2_records is not None and age is not None and sum_assured is not None:
             l2 = layer2_records.get(policy_id)
-            if l2 is None or not bounds_ok({"age": age, "sum_assured": sum_assured, "term": term}, l2["layer2"]["group_c"]):
+            if l2 is None or not _policy_matches(l2, age, sum_assured, term, concern_tags):
                 continue
         for row in record["layer1"]["sample_illustrative_premiums"]:
             if row["term"] == term:
