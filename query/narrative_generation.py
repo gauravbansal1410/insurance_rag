@@ -77,7 +77,17 @@ def generate_narrative(profile, ranked_top3, layer1_records, layer2_records, chu
     """ranked_top3: rank_candidates()'s output, sliced to the top 3. chunks_by_policy:
     policy_id -> list of Qdrant ScoredPoints (or equivalent .payload-bearing objects) from
     narrative_retrieval.retrieve_narrative_chunks, restricted to just these top-3 policy_ids -
-    the grounding text this step is not allowed to contradict or go beyond."""
+    the grounding text this step is not allowed to contradict or go beyond.
+
+    Raises ValueError on an empty ranked_top3 rather than calling Gemini - confirmed
+    2026-08-01 that an empty candidate list produces a prompt with a blank candidates
+    section, and Gemini filled the gap by hallucinating entirely fake, non-existent
+    insurance products instead of refusing. Callers (e.g. run_query_pipeline.py) should
+    check for zero survivors themselves and never reach this function in that case; this is
+    a defense-in-depth guard against any future caller doing the same thing accidentally."""
+    if not ranked_top3:
+        raise ValueError("generate_narrative() called with zero candidates - would produce a prompt with no real grounding, risking hallucinated plans. Caller should handle the zero-candidate case itself instead.")
+
     model = model or os.environ.get("MODEL", DEFAULT_MODEL)
     client = genai.Client(api_key=api_key or os.environ["GEMINI_API_KEY"])
     prompt = build_prompt(profile, ranked_top3, layer1_records, layer2_records, chunks_by_policy)
