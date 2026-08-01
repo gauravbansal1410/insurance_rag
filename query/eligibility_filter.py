@@ -9,7 +9,11 @@
 from load_extracted import load_layer2  # sibling import - run as `python3 query/eligibility_filter.py`
 
 
-def _bounds_ok(profile, group_c):
+# Public (not _bounds_ok) as of 2026-08-01 - reused by premium_interpolation.py's
+# available_terms()/available_payment_options_for_term() to filter to just the policies
+# actually eligible for a given age/sum_assured before checking sample-table availability,
+# rather than duplicating this same bounds logic there.
+def bounds_ok(profile, group_c):
     age_ok = group_c["min_age"] <= profile["age"] <= group_c["max_age"]
     sa_ok = group_c["min_sum_assured"] <= profile["sum_assured"] and (
         group_c["max_sum_assured"] is None or profile["sum_assured"] <= group_c["max_sum_assured"]
@@ -30,7 +34,7 @@ def filter_eligible(profile, layer2_records, require_bounds=True, require_concer
         group_a = record["layer2"]["group_a_concern_tags"]
         group_c = record["layer2"]["group_c"]
 
-        if require_bounds and not _bounds_ok(profile, group_c):
+        if require_bounds and not bounds_ok(profile, group_c):
             continue
 
         overlap = _concern_overlap(profile, group_a)
