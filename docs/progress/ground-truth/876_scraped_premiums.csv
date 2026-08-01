@@ -1,61 +1,71 @@
-policy_id,dob,intended_age,actual_age_system,sum_assured,policy_term,ppt,sale_type,sum_assured_type,premium_payment_option,single_premium,yearly_premium,notes
-876,,31,31,10000000,20,20,online,level,regular,91290,8316,age confirmed 31 by user retroactively; PPT assumed = PT (regular premium)
-876,,31,31,10000000,25,25,online,level,regular,119340,9828,
-876,,31,31,10000000,30,30,online,level,regular,150705,11508,
-876,,31,31,10000000,35,35,online,level,regular,183005,13272,
-876,,31,31,10000000,40,40,online,level,regular,216665,15120,
-876,,31,31,5000000,20,20,online,level,regular,53700,4950,
-876,,31,31,5000000,25,25,online,level,regular,70200,5850,
-876,,31,31,5000000,30,30,online,level,regular,88650,6850,
-876,,31,31,5000000,35,35,online,level,regular,107650,7900,
-876,,31,31,5000000,40,40,online,level,regular,127450,9000,
-876,,31,31,20000000,20,20,online,level,regular,161100,14256,
-876,,31,31,20000000,25,25,online,level,regular,210600,16848,
-876,,31,31,20000000,30,30,online,level,regular,265950,19728,
-876,,31,31,20000000,35,35,online,level,regular,322950,22752,
-876,,31,31,20000000,40,40,online,level,regular,382350,25920,
-876,14/10/1999,26,26,10000000,20,20,online,level,regular,71214,6642,
-876,14/10/1999,26,26,10000000,25,25,online,level,regular,87731,7380,
-876,14/10/1999,26,26,10000000,30,30,online,level,regular,108066,8446,
-876,14/10/1999,26,26,10000000,35,35,online,level,regular,130891,9676,
-876,14/10/1999,26,26,10000000,40,40,online,level,regular,154297,10988,
-876,14/10/1999,26,26,5000000,20,20,online,level,regular,42900,4050,
-876,14/10/1999,26,26,5000000,25,25,online,level,regular,52850,4500,
-876,14/10/1999,26,26,5000000,30,30,online,level,regular,65100,5150,
-876,14/10/1999,26,26,5000000,35,35,online,level,regular,78850,5900,
-876,14/10/1999,26,26,5000000,40,40,online,level,regular,92950,6700,
-876,14/10/1999,26,26,20000000,20,20,online,level,regular,125268,11340,
-876,14/10/1999,26,26,20000000,25,25,online,level,regular,154322,12600,
-876,14/10/1999,26,26,20000000,30,30,online,level,regular,190092,14420,
-876,14/10/1999,26,26,20000000,35,35,online,level,regular,230242,16520,
-876,14/10/1999,26,26,20000000,40,40,online,level,regular,271414,18760,
-876,14/10/1990,35,35,10000000,20,20,online,level,regular,119510,10752,
-876,14/10/1990,35,35,10000000,25,25,online,level,regular,158865,12852,
-876,14/10/1990,35,35,10000000,30,30,online,level,regular,199750,15036,
-876,14/10/1990,35,35,10000000,35,35,online,level,regular,241995,17388,
-876,14/10/1990,35,35,10000000,40,40,online,level,regular,287640,19992,
-876,14/10/1990,35,35,5000000,20,20,online,level,regular,70300,6400,
-876,14/10/1990,35,35,5000000,25,25,online,level,regular,93450,7650,
-876,14/10/1990,35,35,5000000,30,30,online,level,regular,117500,8950,
-876,14/10/1990,35,35,5000000,35,35,online,level,regular,142350,10350,
-876,14/10/1990,35,35,5000000,40,40,online,level,regular,169200,11900,
-876,14/10/1990,35,35,20000000,20,20,online,level,regular,210900,18432,
-876,14/10/1990,35,35,20000000,25,25,online,level,regular,280350,22032,
-876,14/10/1990,35,35,20000000,30,30,online,level,regular,352500,25776,
-876,14/10/1990,35,35,20000000,35,35,online,level,regular,427050,29808,
-876,14/10/1990,35,35,20000000,40,40,online,level,regular,507600,34272,
-876,14/10/1998,28,27,5000000,30,30,online,level,regular,68900,5400,DOB birthday not yet passed relative to Aug-1 today; actual age differs from intended
-876,14/10/1996,30,29,5000000,30,30,online,level,regular,77800,6050,DOB birthday not yet passed relative to Aug-1 today; actual age differs from intended
-876,14/10/1986,40,39,5000000,20,20,online,level,regular,96600,8650,DOB birthday not yet passed relative to Aug-1 today; actual age differs from intended
-876,14/10/1986,40,39,5000000,25,25,online,level,regular,127050,10300,
-876,14/10/1986,40,39,5000000,30,30,online,level,regular,158350,12000,
-876,14/10/1986,40,39,5000000,35,35,online,level,regular,191950,13850,
-876,14/10/1986,40,39,5000000,40,40,online,level,regular,,,INVALID - blank/rejected, likely age-at-maturity ceiling (39+40=79 > max 75)
-876,14/10/1986,40,39,20000000,20,20,online,level,regular,289800,24912,
-876,14/10/1986,40,39,20000000,25,25,online,level,regular,381150,29664,
-876,14/10/1986,40,39,20000000,30,30,online,level,regular,475050,34560,
-876,14/10/1986,40,39,20000000,35,35,online,level,regular,575850,39888,
-876,14/10/1986,40,39,20000000,40,40,online,level,regular,,,INVALID - blank/rejected, likely age-at-maturity ceiling
-876,15/01/1997,29,29,20000000,30,30,online,level,regular,227176,16940,exact-age boundary probe cell
-876,15/01/1981,45,45,5000000,30,30,online,level,regular,253550,19150,exact-age boundary probe cell
-876,15/06/1996,30,30,5000000,30,30,online,level,regular,82950,6450,exact-age boundary probe cell
+policy_id,category,dob,gender,smoker_status,sum_assured,sum_assured_type,policy_term,premium_payment_option,ppt,distribution_channel,single_premium,yearly_premium,scraped_date,source,notes
+876,term_assurance,,male,non_smoker,10000000,level,20,regular,20,online,91290,8316,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively;age confirmed 31 by user retroactively;PPT assumed = PT (regular premium)
+876,term_assurance,,male,non_smoker,10000000,level,25,regular,25,online,119340,9828,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively
+876,term_assurance,,male,non_smoker,10000000,level,30,regular,30,online,150705,11508,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively
+876,term_assurance,,male,non_smoker,10000000,level,35,regular,35,online,183005,13272,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively
+876,term_assurance,,male,non_smoker,10000000,level,40,regular,40,online,216665,15120,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively
+876,term_assurance,,male,non_smoker,5000000,level,20,regular,20,online,53700,4950,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively
+876,term_assurance,,male,non_smoker,5000000,level,25,regular,25,online,70200,5850,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively
+876,term_assurance,,male,non_smoker,5000000,level,30,regular,30,online,88650,6850,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively
+876,term_assurance,,male,non_smoker,5000000,level,35,regular,35,online,107650,7900,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively
+876,term_assurance,,male,non_smoker,5000000,level,40,regular,40,online,127450,9000,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively
+876,term_assurance,,male,non_smoker,20000000,level,20,regular,20,online,161100,14256,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively
+876,term_assurance,,male,non_smoker,20000000,level,25,regular,25,online,210600,16848,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively
+876,term_assurance,,male,non_smoker,20000000,level,30,regular,30,online,265950,19728,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively
+876,term_assurance,,male,non_smoker,20000000,level,35,regular,35,online,322950,22752,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively
+876,term_assurance,,male,non_smoker,20000000,level,40,regular,40,online,382350,25920,2026-08-01,LIC live online quote calculator,intended_age 31 confirmed retroactively
+876,term_assurance,14/10/1999,male,non_smoker,10000000,level,20,regular,20,online,71214,6642,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1999,male,non_smoker,10000000,level,25,regular,25,online,87731,7380,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1999,male,non_smoker,10000000,level,30,regular,30,online,108066,8446,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1999,male,non_smoker,10000000,level,35,regular,35,online,130891,9676,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1999,male,non_smoker,10000000,level,40,regular,40,online,154297,10988,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1999,male,non_smoker,5000000,level,20,regular,20,online,42900,4050,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1999,male,non_smoker,5000000,level,25,regular,25,online,52850,4500,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1999,male,non_smoker,5000000,level,30,regular,30,online,65100,5150,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1999,male,non_smoker,5000000,level,35,regular,35,online,78850,5900,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1999,male,non_smoker,5000000,level,40,regular,40,online,92950,6700,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1999,male,non_smoker,20000000,level,20,regular,20,online,125268,11340,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1999,male,non_smoker,20000000,level,25,regular,25,online,154322,12600,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1999,male,non_smoker,20000000,level,30,regular,30,online,190092,14420,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1999,male,non_smoker,20000000,level,35,regular,35,online,230242,16520,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1999,male,non_smoker,20000000,level,40,regular,40,online,271414,18760,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,10000000,level,20,regular,20,online,119510,10752,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,10000000,level,25,regular,25,online,158865,12852,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,10000000,level,30,regular,30,online,199750,15036,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,10000000,level,35,regular,35,online,241995,17388,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,10000000,level,40,regular,40,online,287640,19992,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,5000000,level,20,regular,20,online,70300,6400,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,5000000,level,25,regular,25,online,93450,7650,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,5000000,level,30,regular,30,online,117500,8950,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,5000000,level,35,regular,35,online,142350,10350,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,5000000,level,40,regular,40,online,169200,11900,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,20000000,level,20,regular,20,online,210900,18432,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,20000000,level,25,regular,25,online,280350,22032,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,20000000,level,30,regular,30,online,352500,25776,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,20000000,level,35,regular,35,online,427050,29808,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1990,male,non_smoker,20000000,level,40,regular,40,online,507600,34272,2026-08-01,LIC live online quote calculator,
+876,term_assurance,14/10/1998,male,non_smoker,5000000,level,30,regular,30,online,68900,5400,2026-08-01,LIC live online quote calculator,intended_age 28 vs actual_age_system 27 at scrape time (DOB birthday hadn't passed yet); DOB birthday not yet passed relative to Aug-1 today; actual age differs from intended
+876,term_assurance,14/10/1996,male,non_smoker,5000000,level,30,regular,30,online,77800,6050,2026-08-01,LIC live online quote calculator,intended_age 30 vs actual_age_system 29 at scrape time (DOB birthday hadn't passed yet); DOB birthday not yet passed relative to Aug-1 today; actual age differs from intended
+876,term_assurance,14/10/1986,male,non_smoker,5000000,level,20,regular,20,online,96600,8650,2026-08-01,LIC live online quote calculator,intended_age 40 vs actual_age_system 39 at scrape time (DOB birthday hadn't passed yet); DOB birthday not yet passed relative to Aug-1 today; actual age differs from intended
+876,term_assurance,14/10/1986,male,non_smoker,5000000,level,25,regular,25,online,127050,10300,2026-08-01,LIC live online quote calculator,intended_age 40 vs actual_age_system 39 at scrape time (DOB birthday hadn't passed yet)
+876,term_assurance,14/10/1986,male,non_smoker,5000000,level,30,regular,30,online,158350,12000,2026-08-01,LIC live online quote calculator,intended_age 40 vs actual_age_system 39 at scrape time (DOB birthday hadn't passed yet)
+876,term_assurance,14/10/1986,male,non_smoker,5000000,level,35,regular,35,online,191950,13850,2026-08-01,LIC live online quote calculator,intended_age 40 vs actual_age_system 39 at scrape time (DOB birthday hadn't passed yet)
+876,term_assurance,14/10/1986,male,non_smoker,5000000,level,40,regular,40,online,,,2026-08-01,LIC live online quote calculator,intended_age 40 vs actual_age_system 39 at scrape time (DOB birthday hadn't passed yet); INVALID - blank/rejected
+876,term_assurance,14/10/1986,male,non_smoker,20000000,level,20,regular,20,online,289800,24912,2026-08-01,LIC live online quote calculator,intended_age 40 vs actual_age_system 39 at scrape time (DOB birthday hadn't passed yet)
+876,term_assurance,14/10/1986,male,non_smoker,20000000,level,25,regular,25,online,381150,29664,2026-08-01,LIC live online quote calculator,intended_age 40 vs actual_age_system 39 at scrape time (DOB birthday hadn't passed yet)
+876,term_assurance,14/10/1986,male,non_smoker,20000000,level,30,regular,30,online,475050,34560,2026-08-01,LIC live online quote calculator,intended_age 40 vs actual_age_system 39 at scrape time (DOB birthday hadn't passed yet)
+876,term_assurance,14/10/1986,male,non_smoker,20000000,level,35,regular,35,online,575850,39888,2026-08-01,LIC live online quote calculator,intended_age 40 vs actual_age_system 39 at scrape time (DOB birthday hadn't passed yet)
+876,term_assurance,14/10/1986,male,non_smoker,20000000,level,40,regular,40,online,,,2026-08-01,LIC live online quote calculator,intended_age 40 vs actual_age_system 39 at scrape time (DOB birthday hadn't passed yet); INVALID - blank/rejected
+876,term_assurance,15/01/1997,male,non_smoker,20000000,level,30,regular,30,online,227176,16940,2026-08-01,LIC live online quote calculator,exact-age boundary probe cell
+876,term_assurance,15/01/1981,male,non_smoker,5000000,level,30,regular,30,online,253550,19150,2026-08-01,LIC live online quote calculator,exact-age boundary probe cell
+876,term_assurance,15/06/1996,male,non_smoker,5000000,level,30,regular,30,online,82950,6450,2026-08-01,LIC live online quote calculator,exact-age boundary probe cell
+876,term_assurance,15/01/2006,male,non_smoker,5000000,level,15,regular,15,online,31400,3450,2026-08-01,LIC live online quote calculator,age 20 at scrape (v1 scope: regular/level anchor point); term at/near policy_term_min or age-band edge
+876,term_assurance,15/01/2006,male,non_smoker,5000000,level,20,regular,20,online,37750,3600,2026-08-01,LIC live online quote calculator,age 20 at scrape (v1 scope: regular/level anchor point)
+876,term_assurance,15/01/2006,male,non_smoker,5000000,level,25,regular,25,online,43900,3800,2026-08-01,LIC live online quote calculator,age 20 at scrape (v1 scope: regular/level anchor point)
+876,term_assurance,15/01/2006,male,non_smoker,5000000,level,30,regular,30,online,50650,4100,2026-08-01,LIC live online quote calculator,age 20 at scrape (v1 scope: regular/level anchor point)
+876,term_assurance,15/01/2006,male,non_smoker,5000000,level,35,regular,35,online,59000,4500,2026-08-01,LIC live online quote calculator,age 20 at scrape (v1 scope: regular/level anchor point)
+876,term_assurance,15/01/2006,male,non_smoker,5000000,level,40,regular,40,online,68500,5050,2026-08-01,LIC live online quote calculator,age 20 at scrape (v1 scope: regular/level anchor point)
+876,term_assurance,15/01/1981,male,non_smoker,5000000,level,15,regular,15,online,114500,11900,2026-08-01,LIC live online quote calculator,age 45 at scrape (v1 scope: regular/level anchor point); term at/near policy_term_min or age-band edge
+876,term_assurance,15/01/1981,male,non_smoker,5000000,level,20,regular,20,online,158700,14100,2026-08-01,LIC live online quote calculator,age 45 at scrape (v1 scope: regular/level anchor point)
+876,term_assurance,15/01/1981,male,non_smoker,5000000,level,25,regular,25,online,204250,16450,2026-08-01,LIC live online quote calculator,age 45 at scrape (v1 scope: regular/level anchor point); term at/near policy_term_min or age-band edge
+876,term_assurance,15/01/1995,male,non_smoker,5000000,level,15,regular,15,online,40350,4350,2026-08-01,LIC live online quote calculator,age 31 at scrape (v1 scope: regular/level anchor point); term at/near policy_term_min or age-band edge
