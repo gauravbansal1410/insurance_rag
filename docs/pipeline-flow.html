@@ -169,8 +169,8 @@ const ingestionSteps = [
 ];
 
 const queryOtherSteps = [
-  { title: '1. Collect profile', subtitle: 'deterministic Q&A v1 (swappable for a future LLM chat frontend)', example: '"What\'s your age?" → "30" → "How much cover..." → "50,00,000" → ...', actor: 'you', built: true },
-  { title: '2. Session handler', subtitle: 'turn-based slot-filling, service/chat_session.py', example: 'age + cover given → asks term next; bad reply re-asks instead of crashing', actor: 'system', built: true },
+  { title: '1. Collect profile', subtitle: 'deterministic Q&A v1, via n8n Chat Trigger (swappable for a future LLM frontend)', example: 'age 31, ₹50L cover, income replacement, term 31 → rejected: "Available terms: 20" → term 20 accepted', actor: 'you', built: true },
+  { title: '2. Session handler', subtitle: 'turn-based slot-filling + live data validation, service/chat_session.py', example: 'term/payment_option checked against real sample-premium data the moment they\'re answered, not at the end', actor: 'system', built: true },
   { title: '3. Eligibility filter', subtitle: 'Group C facts + concern OR-pass', example: 'age 30, ₹50L SA, term 20, income_replacement + critical_illness → 4 policies clear tier 0 (no fallback)', actor: 'system', built: true },
   { title: '4. Fallback', subtitle: 'relax SA/age/term if <3 matches, budget not relaxed', example: 'SA dropped to ₹10L → only 1 policy clears bounds → tier 1 relaxes age/SA/term, concern gate stays firm', actor: 'system', built: true },
   { title: '5. Premium interpolation', subtitle: '+ budget filter — linear-in-SA assumption unvalidated', example: '4 eligible policies interpolated: New Tech Term ₹4568/yr … New Jeevan Amar ₹7830/yr, all within ₹10k budget', actor: 'system', built: true },
