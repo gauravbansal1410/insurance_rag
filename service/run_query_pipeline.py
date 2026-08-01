@@ -61,6 +61,27 @@ def run_query(profile, layer1_records, layer2_records, precomputed, voyage_clien
     ranked = rank_candidates(survivors, scores)
     top3 = ranked[:TOP_N]
 
+    # Hard guard, not a prompt-level ask: confirmed 2026-08-01 that calling
+    # generate_narrative() with zero candidates (every eligible policy excluded at step 5 -
+    # e.g. a term with no matching sample-premium table row, as happened with a 40-year
+    # term none of this corpus's tables cover) produces an EMPTY candidates section in the
+    # prompt, and Gemini filled the gap by hallucinating three entirely fake, non-LIC
+    # insurance products instead of refusing. A prompt instruction alone can't be trusted to
+    # refuse gracefully when handed nothing to ground on - detect this case in code and
+    # never call Gemini at all when there's nothing real to describe.
+    if not top3:
+        return {
+            "fallback_tier": eligible["fallback_tier"],
+            "excluded": excluded_log,
+            "top3": [],
+            "narrative": (
+                "No eligible plans were found for this profile within your stated budget. "
+                "This can happen if the requested term, sum assured, or budget falls outside "
+                "what's available in the current policy set - try adjusting one of those "
+                "(e.g. a shorter term or a higher budget) and asking again."
+            ),
+        }
+
     # Step 6 again, this time for step 8's grounding text - a separate purpose (narrative
     # grounding, not relevance scoring) from the lookup/fallback above, so re-fetched
     # per-policy rather than reusing whatever fallback_chunks happened to retrieve.
