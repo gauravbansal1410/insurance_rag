@@ -72,7 +72,7 @@ def chat(msg: ChatMessage):
     the deterministic Q&A logic and its intended swap point for a future LLM-based
     frontend."""
     state = _sessions.setdefault(msg.session_id, new_session())
-    state, reply, complete = fill_next_field(state, msg.message)
+    state, reply, complete = fill_next_field(state, msg.message, layer1_records=_layer1)
 
     if not complete:
         return {"done": False, "reply": reply}
