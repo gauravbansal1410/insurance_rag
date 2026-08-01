@@ -1,0 +1,78 @@
+{
+  "name": "insurance_rag_chat",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "lastNode",
+          "initialMessages": "Hi! Let's find the right term insurance plan for you.\n\nWhat's your age?"
+        }
+      },
+      "id": "chat-trigger-1",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [-400, 0],
+      "webhookId": "insurance-rag-chat"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:8000/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"session_id\": $json.sessionId, \"message\": $json.chatInput } }}",
+        "options": {}
+      },
+      "id": "http-request-1",
+      "name": "Call query service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-160, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "output-field",
+              "name": "output",
+              "type": "string",
+              "value": "={{ $json.reply }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-output-1",
+      "name": "Format reply",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [80, 0]
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Call query service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call query service": {
+      "main": [
+        [
+          {
+            "node": "Format reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
