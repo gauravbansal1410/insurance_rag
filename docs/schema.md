@@ -222,3 +222,7 @@ Derived from Layer 1 at ingestion time. Group C is a direct copy of Layer 1 boun
     Group C — deterministic pre-filter facts (direct copy from Layer 1):
       min_age, max_age, min_sum_assured, max_sum_assured, min_term, max_term
       compatible_riders: []
+
+## Open questions
+
+- **`policy_term_max` can't represent an Increasing-Sum-Assured-specific banding (found 2026-08-01, 876 only checked so far):** Layer 1 has a single scalar `policy_term_max` per policy, but 876's brochure (section 2(g), page 3-4) shows this scalar (40) applies only to the Level Sum Assured death benefit option. Under Increasing Sum Assured, maximum Policy Term is instead banded jointly by age-at-entry AND Basic Sum Assured range (e.g. Regular/Limited Premium, age 36-45 at Rs.50L-<1Cr caps at PT 26, not 40; age 40-45 at Rs.1Cr-<2.5Cr caps at PT 21), with a separate set of bands again for Single Premium — flagged on 876 via `extraction_notes.field_specific_notes` rather than fixed, since representing this needs a structured field (age band x SA band x payment-type -> max term), not a scalar, and that's a real schema change, not a one-off data fix. Not yet checked whether this also applies to the other 3 policies that offer an Increasing SA option (875, 954, 955) — do that before designing the structured replacement, since the banding shape may differ per policy. Until this is added, any query-pipeline eligibility check against `policy_term_max` for a `sum_assured_type: "increasing"` candidate is checking too permissive a bound.

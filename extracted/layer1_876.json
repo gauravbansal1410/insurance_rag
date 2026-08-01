@@ -355,6 +355,10 @@
       {
         "field": "layer1.rebate_structures.high_sum_assured_rebate_table",
         "note": "Age band for the second row is NOT consistent across the four sub-tables on brochure pages 9-10 - confirmed by direct read, not a transcription error. Increasing Sum Assured / Regular-or-Limited Premium uses '31 to 50 years'; the other three sub-tables (Level SA regular/limited, Level SA single, Increasing SA single) all use '31 to 45 years'. Do not normalize this to '31 to 45' across the board."
+      },
+      {
+        "field": "layer1.policy_term_max",
+        "note": "This scalar (40) applies ONLY to the Level Sum Assured (Option I) death benefit option - confirmed via brochure_876_LIC_digi_term.pdf section 2(g), page 3-4. Under the Increasing Sum Assured (Option II) death benefit option, maximum Policy Term is instead banded jointly by age-at-entry AND Basic Sum Assured range (e.g. Regular/Limited Premium, age 36-45 at Rs.50L-<1Cr: max PT 26 years, not 40; age 40-45 at Rs.1Cr-<2.5Cr: max PT 21 years), with separate bands again for Single Premium. Current Layer 1 schema has only one scalar policy_term_max per policy, which cannot represent this - see docs/schema.md's open questions. Any query-pipeline logic that checks policy_term_max for a sum_assured_type=\"increasing\" candidate against this policy is currently checking the wrong (too permissive) bound; not fixed here, flagged only."
       }
     ]
   }
