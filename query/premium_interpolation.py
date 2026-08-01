@@ -7,25 +7,43 @@
 #   {"age": int, "sum_assured": int, "term": int, "premium_payment_option": str,
 #    "sum_assured_type": "level" | "increasing" (optional, defaults to "level"), "budget": number}
 
+from eligibility_filter import bounds_ok  # sibling import - run as `python3 query/premium_interpolation.py`
 
-def available_terms(layer1_records):
-    """All terms with at least one sample_illustrative_premiums row, across every policy in
-    the corpus - used by the chat slot-filling step (service/chat_session.py) to reject an
-    unsupported term immediately, rather than silently accepting it and discovering the
-    problem only after every other question has been answered (confirmed 2026-08-01 that
-    silently proceeding led to an empty candidate set and a hallucinated result)."""
+
+def available_terms(layer1_records, layer2_records=None, age=None, sum_assured=None):
+    """All terms with at least one sample_illustrative_premiums row - used by the chat
+    slot-filling step (service/chat_session.py) to reject an unsupported term immediately,
+    rather than silently accepting it and discovering the problem only after every other
+    question has been answered (confirmed 2026-08-01 that silently proceeding led to an
+    empty candidate set and a hallucinated result).
+
+    If `layer2_records`/`age`/`sum_assured` are given, restricts to policies actually
+    eligible for this age/sum_assured (via eligibility_filter.bounds_ok) before checking
+    table availability - confirmed 2026-08-01 that a term can have real data corpus-wide
+    but only on a policy the user doesn't qualify for by cover amount, which isn't a real
+    answer for them and would otherwise still lead to a dead end a question later."""
     terms = set()
-    for record in layer1_records.values():
+    for policy_id, record in layer1_records.items():
         for row in record["layer1"]["sample_illustrative_premiums"]:
-            terms.add(row["term"])
+            term = row["term"]
+            if layer2_records is not None and age is not None and sum_assured is not None:
+                l2 = layer2_records.get(policy_id)
+                if l2 is None or not bounds_ok({"age": age, "sum_assured": sum_assured, "term": term}, l2["layer2"]["group_c"]):
+                    continue
+            terms.add(term)
     return terms
 
 
-def available_payment_options_for_term(layer1_records, term):
-    """Payment options with at least one row at this specific term, across every policy -
-    a term can have data for some payment options but not others."""
+def available_payment_options_for_term(layer1_records, term, layer2_records=None, age=None, sum_assured=None):
+    """Payment options with at least one row at this specific term - a term can have data
+    for some payment options but not others. Same eligibility-narrowing as available_terms()
+    when layer2_records/age/sum_assured are given."""
     options = set()
-    for record in layer1_records.values():
+    for policy_id, record in layer1_records.items():
+        if layer2_records is not None and age is not None and sum_assured is not None:
+            l2 = layer2_records.get(policy_id)
+            if l2 is None or not bounds_ok({"age": age, "sum_assured": sum_assured, "term": term}, l2["layer2"]["group_c"]):
+                continue
         for row in record["layer1"]["sample_illustrative_premiums"]:
             if row["term"] == term:
                 options.add(row["premium_payment_option"])
