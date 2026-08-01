@@ -10,7 +10,12 @@
 # conversation history, not just the current field-state dict) before it exists. The seam
 # that matters is real (this one function), the framework around it isn't needed yet.
 
+import os
 import re
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "query"))
+from premium_interpolation import available_terms, available_payment_options_for_term
 
 FIELD_ORDER = ["age", "sum_assured", "term", "premium_payment_option", "budget", "concern_tags"]
 
@@ -99,10 +104,19 @@ def _parse_field(field, message):
     raise ValueError(f"unknown field: {field}")
 
 
-def fill_next_field(state, message):
+def fill_next_field(state, message, layer1_records=None):
     """The swap point described above - everything before/after this call (session state
     shape, run_query_pipeline.py's execution) stays the same regardless of how this
     function is implemented. `message` is None on the very first turn (no user reply yet).
+
+    `layer1_records` (optional): when provided, validates `term` and
+    `premium_payment_option` against real sample-premium-table availability the moment
+    they're answered, rejecting an impossible combination immediately instead of silently
+    accepting it and discovering the problem only after every question has been answered.
+    Confirmed 2026-08-01 that letting this go undetected led to an empty candidate set at
+    step 5 and a hallucinated result at step 8 - catching it here is the real fix, a
+    downstream "no results" message is a fallback, not a substitute for this.
+
     Returns (state, reply_text_or_none, profile_complete)."""
     profile = state["profile"]
 
@@ -112,6 +126,26 @@ def fill_next_field(state, message):
             value, error = _parse_field(pending, message)
             if error:
                 return state, error, False
+
+            if pending == "term" and layer1_records is not None:
+                valid_terms = available_terms(layer1_records)
+                if value not in valid_terms:
+                    options = ", ".join(str(t) for t in sorted(valid_terms))
+                    return state, (
+                        f"We don't have premium data for a {value}-year term. "
+                        f"Available terms: {options}. {QUESTIONS['term']}"
+                    ), False
+
+            if pending == "premium_payment_option" and layer1_records is not None:
+                valid_options = available_payment_options_for_term(layer1_records, profile["term"])
+                if value not in valid_options:
+                    readable = ", ".join(sorted(valid_options)) or "none"
+                    return state, (
+                        f"We don't have premium data for a {profile['term']}-year term with "
+                        f"'{value}' payments. Available options for this term: {readable}. "
+                        f"{QUESTIONS['premium_payment_option']}"
+                    ), False
+
             profile[pending] = value
 
     pending = next((f for f in FIELD_ORDER if f not in profile), None)
