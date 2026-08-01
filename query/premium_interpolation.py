@@ -8,6 +8,30 @@
 #    "sum_assured_type": "level" | "increasing" (optional, defaults to "level"), "budget": number}
 
 
+def available_terms(layer1_records):
+    """All terms with at least one sample_illustrative_premiums row, across every policy in
+    the corpus - used by the chat slot-filling step (service/chat_session.py) to reject an
+    unsupported term immediately, rather than silently accepting it and discovering the
+    problem only after every other question has been answered (confirmed 2026-08-01 that
+    silently proceeding led to an empty candidate set and a hallucinated result)."""
+    terms = set()
+    for record in layer1_records.values():
+        for row in record["layer1"]["sample_illustrative_premiums"]:
+            terms.add(row["term"])
+    return terms
+
+
+def available_payment_options_for_term(layer1_records, term):
+    """Payment options with at least one row at this specific term, across every policy -
+    a term can have data for some payment options but not others."""
+    options = set()
+    for record in layer1_records.values():
+        for row in record["layer1"]["sample_illustrative_premiums"]:
+            if row["term"] == term:
+                options.add(row["premium_payment_option"])
+    return options
+
+
 def _rows_for_column(sample_table, term, premium_payment_option):
     return sorted(
         (r for r in sample_table if r["term"] == term and r["premium_payment_option"] == premium_payment_option),
