@@ -41,7 +41,30 @@
       "payout_pct_regular_limited": 80
     },
     "rebate_structures": {
-      "high_sum_assured_rebate_table": "As specified in the brochure for Level and Increasing Sum Assured under regular, limited, and single premium.",
+      "high_sum_assured_rebate_table": {
+        "level_sum_assured": {
+          "regular_limited_premium": {
+            "up_to_30": {"50L_to_1Cr": 0, "1Cr_to_2Cr": 18, "2Cr_to_5Cr": 30, "5Cr_and_above": 37},
+            "31_to_45": {"50L_to_1Cr": 0, "1Cr_to_2Cr": 16, "2Cr_to_5Cr": 28, "5Cr_and_above": 33}
+          },
+          "single_premium": {
+            "up_to_30": {"50L_to_1Cr": 0, "1Cr_to_2Cr": 17, "2Cr_to_5Cr": 27, "5Cr_and_above": 30},
+            "31_to_45": {"50L_to_1Cr": 0, "1Cr_to_2Cr": 15, "2Cr_to_5Cr": 25, "5Cr_and_above": 27}
+          }
+        },
+        "increasing_sum_assured": {
+          "regular_limited_premium": {
+            "up_to_30": {"50L_to_1Cr": 0, "1Cr_to_2Cr": 16, "2Cr_to_5Cr": 26, "5Cr_and_above": 33},
+            "31_to_50": {"50L_to_1Cr": 0, "1Cr_to_2Cr": 14, "2Cr_to_5Cr": 24, "5Cr_and_above": 29}
+          },
+          "single_premium": {
+            "up_to_30": {"50L_to_1Cr": 0, "1Cr_to_2Cr": 15, "2Cr_to_5Cr": 24, "5Cr_and_above": 27},
+            "31_to_45": {"50L_to_1Cr": 0, "1Cr_to_2Cr": 14, "2Cr_to_5Cr": 23, "5Cr_and_above": 25}
+          }
+        },
+        "units": "percent rebate off tabular premium",
+        "source": "brochure_876_LIC_digi_term.pdf, page 9-10"
+      },
       "online_sale_rebate_table": null,
       "mode_loadings": "Yearly: Nil, Half-Yearly: 2%"
     },
@@ -328,6 +351,10 @@
       {
         "field": "layer1.sum_assured_max",
         "note": "The Basic Sum Assured above Rs. 5,00,00,000 may be considered on a case-to-case basis subject to reinsurer and underwriting policy decisions."
+      },
+      {
+        "field": "layer1.rebate_structures.high_sum_assured_rebate_table",
+        "note": "Age band for the second row is NOT consistent across the four sub-tables on brochure pages 9-10 - confirmed by direct read, not a transcription error. Increasing Sum Assured / Regular-or-Limited Premium uses '31 to 50 years'; the other three sub-tables (Level SA regular/limited, Level SA single, Increasing SA single) all use '31 to 45 years'. Do not normalize this to '31 to 45' across the board."
       }
     ]
   }
