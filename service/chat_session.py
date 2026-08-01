@@ -17,7 +17,13 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "query"))
 from premium_interpolation import available_terms, available_payment_options_for_term
 
-FIELD_ORDER = ["age", "sum_assured", "term", "premium_payment_option", "budget", "concern_tags"]
+# concern_tags asked before term/premium_payment_option (not after, as originally ordered) -
+# confirmed 2026-08-01 that validating term/payment_option availability against real data
+# needs the concern tags known first: a term can look available (right age/sum_assured) but
+# only on a policy that doesn't match the user's stated concern (e.g. 877/878's 25-year data
+# only serves debt_linked_cover, not income_replacement) - undetectable without concern_tags
+# already in hand.
+FIELD_ORDER = ["age", "sum_assured", "concern_tags", "term", "premium_payment_option", "budget"]
 
 QUESTIONS = {
     "age": "What's your age?",
@@ -104,7 +110,7 @@ def _parse_field(field, message):
     raise ValueError(f"unknown field: {field}")
 
 
-def fill_next_field(state, message, layer1_records=None):
+def fill_next_field(state, message, layer1_records=None, layer2_records=None):
     """The swap point described above - everything before/after this call (session state
     shape, run_query_pipeline.py's execution) stays the same regardless of how this
     function is implemented. `message` is None on the very first turn (no user reply yet).
@@ -117,6 +123,14 @@ def fill_next_field(state, message, layer1_records=None):
     step 5 and a hallucinated result at step 8 - catching it here is the real fix, a
     downstream "no results" message is a fallback, not a substitute for this.
 
+    `layer2_records` (optional, only used alongside `layer1_records`): narrows the
+    availability check to policies actually eligible for the user's already-answered
+    age/sum_assured (via eligibility_filter.bounds_ok) - confirmed 2026-08-01 that a term
+    can have real data corpus-wide but only on a policy the user doesn't qualify for by
+    cover amount, which isn't a real answer for them (the ₹1 crore / term-25 / regular
+    case: term 25 exists corpus-wide, but the only policy with that exact column has a
+    ₹25L sum assured cap, so it was never a real option for that profile).
+
     Returns (state, reply_text_or_none, profile_complete)."""
     profile = state["profile"]
 
@@ -128,16 +142,22 @@ def fill_next_field(state, message, layer1_records=None):
                 return state, error, False
 
             if pending == "term" and layer1_records is not None:
-                valid_terms = available_terms(layer1_records)
+                valid_terms = available_terms(
+                    layer1_records, layer2_records, profile.get("age"), profile.get("sum_assured"),
+                    profile.get("concern_tags"),
+                )
                 if value not in valid_terms:
                     options = ", ".join(str(t) for t in sorted(valid_terms))
                     return state, (
-                        f"We don't have premium data for a {value}-year term. "
-                        f"Available terms: {options}. {QUESTIONS['term']}"
+                        f"We don't have premium data for a {value}-year term matching your "
+                        f"age/cover/concerns. Available terms: {options}. {QUESTIONS['term']}"
                     ), False
 
             if pending == "premium_payment_option" and layer1_records is not None:
-                valid_options = available_payment_options_for_term(layer1_records, profile["term"])
+                valid_options = available_payment_options_for_term(
+                    layer1_records, profile["term"], layer2_records, profile.get("age"),
+                    profile.get("sum_assured"), profile.get("concern_tags"),
+                )
                 if value not in valid_options:
                     readable = ", ".join(sorted(valid_options)) or "none"
                     return state, (
