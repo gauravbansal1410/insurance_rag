@@ -24,7 +24,12 @@ PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "docs", "prompts", "
 
 def _format_candidate(rank, candidate, layer1_record, layer2_record, chunks):
     group_b = layer2_record["layer2"]["group_b"]
-    plan_name = layer1_record["layer1"].get("plan_name", candidate["policy_id"])
+    # `.get("plan_name", default)` only falls back when the KEY is missing, not when it's
+    # present with value None - confirmed 2026-08-01 that plan_name is None (not absent) for
+    # all 7 term-assurance Layer 1 records, a real extraction gap, not a rare edge case. The
+    # `or` here catches both missing-key and None-value cases; `.get("plan_name", ...)` alone
+    # let the literal string "Plan name: None" leak into the Gemini prompt.
+    plan_name = layer1_record["layer1"].get("plan_name") or candidate["policy_id"]
     grounding = "\n\n".join(
         f"[{c.payload['section_name']}]\n{c.payload['chunk_text']}" for c in chunks
     ) or "(no source excerpts retrieved for this plan)"
