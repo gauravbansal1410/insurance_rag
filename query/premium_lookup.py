@@ -1,7 +1,7 @@
 # Precomputed premium lookup - v1 pilot, policy 876 only, regular/level only
-# (docs/query_architecture.md open questions). Replaces the single two-point linear
-# interpolation in premium_interpolation.py with two independently-modeled axes,
-# confirmed separable against real scraped ground truth
+# (docs/query_architecture.md open questions), policy 859's SA axis added 2026-08-05.
+# Replaces the single two-point linear interpolation in premium_interpolation.py with
+# two independently-modeled axes, confirmed separable against real scraped ground truth
 # (docs/progress/ground-truth/876_scraped_premiums.csv):
 #
 #   1. age x term (NOT linear - mortality cost accelerates with age): bilinear
@@ -10,23 +10,31 @@
 #      is excluded, never extrapolated - same "exclude and log" behavior
 #      premium_interpolation.py already uses for out-of-range candidates.
 #   2. sum_assured (separable from term, confirmed constant ratio at every term within
-#      an age band - but NOT simple proportional scaling, e.g. Rs 1Cr costs ~1.64-1.68x
-#      of Rs 50L, not 2x). **Corrected 2026-08-05:** originally thought this needed an
-#      empirical multiplier table because rebate_structures.high_sum_assured_rebate_table's
-#      percentages didn't seem to reproduce the real ratios - that was a band-boundary
-#      bug in the check, not a real gap. The rebate table DOES reproduce the real ratios
-#      exactly once sum_assured bands are read as lower-bound-inclusive (e.g.
-#      "1Cr_to_2Cr" applies AT Rs 1Cr itself, not "50L_to_1Cr"). multiplier = (sum_assured
-#      / reference_sum_assured) x (1 - rebate_pct/100) - a closed-form formula parsed
-#      directly from Layer 1, needing zero scraping. Scraped ground truth is now used
-#      only as a QA cross-check on this formula (see query/build_premium_lookup.py),
-#      not as the source of the multiplier itself.
+#      an age band on 876 - but NOT simple proportional scaling, e.g. Rs 1Cr costs
+#      ~1.64-1.68x of Rs 50L, not 2x): a closed-form formula parsed directly from
+#      Layer 1's rebate_structures.high_sum_assured_rebate_table (docs/schema.md),
+#      needing zero scraping - scraped ground truth is used only as a QA cross-check
+#      on the formula (see query/build_premium_lookup.py), never as its source.
+#      **The formula's actual shape is policy-specific, not one universal equation** -
+#      confirmed 2026-08-05 that 859's real rebate table is genuinely a different kind
+#      of rebate, not just different numbers: a flat Rupee deduction proportional to
+#      Basic Sum Assured, not a percent-of-premium discount. compute_sa_adjustment()
+#      below dispatches on the table's own "type" tag (set by the extraction prompt
+#      itself, docs/prompts/prompt_a_pdf.txt trap 17 - not inferred or guessed here):
+#        - "percent_of_tabular_premium" (876/877-style, age-banded):
+#          premium(SA) = base_premium x (SA / reference_SA) x (1 - rebate_pct/100)
+#        - "per_mille_of_sum_assured_rupees" (859-style, no age split):
+#          premium(SA) = base_premium x (SA / reference_SA) - (rate_per_mille/1000) x SA
+#      Sum-assured bands in both shapes are extracted as explicit numeric
+#      {min, max (None = open-ended), ...} objects with an INCLUSIVE max (per the same
+#      trap 17 contract) - no string-band-name parsing or inclusive/exclusive
+#      convention-guessing needed at this layer.
 #
-# The grid is scattered, not a clean rectangle (some ages only have 1-2 terms
-# scraped) - see docs/progress/ground-truth/ and the 2026-08 gap analysis. The age
-# bracket search below deliberately skips past a thin single-term anchor to the next
-# age that actually has a real bracket for the requested term, rather than blocking
-# on an exact age match with insufficient data at that exact age.
+# The age x term grid is scattered, not a clean rectangle (some ages only have 1-2
+# terms scraped) - see docs/progress/ground-truth/ and the 2026-08 gap analysis. The
+# age bracket search below deliberately skips past a thin single-term anchor to the
+# next age that actually has a real bracket for the requested term, rather than
+# blocking on an exact age match with insufficient data at that exact age.
 
 
 def _term_interp(term_premium_pairs, term):
@@ -84,35 +92,63 @@ def bilinear_lookup(age_term_grid, age, term):
     return {"premium": premium, "method": f"bilinear_age_{age_lo}_{age_hi}_term_{term}"}
 
 
-def sa_multiplier(sa_scaling, age, sum_assured):
-    """sa_scaling: {"reference_sum_assured": int, "age_bands": [{"age_min", "age_max",
-    "sa_bands": [{"min", "max" (None = unbounded), "rebate_pct"}, ...]}, ...]}.
-    Returns (sum_assured / reference_sum_assured) x (1 - rebate_pct/100) - a direct
-    formula parsed from Layer 1's rebate_structures.high_sum_assured_rebate_table
-    (see query/build_premium_lookup.py), not an empirical/interpolated value - so this
-    is exact (no scraping involved) for any sum_assured the table's bands cover.
-    Returns None only if `sum_assured` is below the reference (shouldn't happen in
-    practice - eligibility_filter.py already enforces the policy's real min_sum_assured
-    upstream of this call) or no age band matches."""
-    band = next(
-        (b for b in sa_scaling["age_bands"] if b["age_min"] <= age <= b["age_max"]),
+def _find_sa_band(sa_bands, sum_assured):
+    """sa_bands: [{"min": int, "max": int | None, ...}, ...] - max is INCLUSIVE
+    (None = open-ended/"and above"), per the extraction prompt's explicit numeric-band
+    contract (docs/prompts/prompt_a_pdf.txt trap 17). Returns the matching band, or
+    None if sum_assured falls in a genuine gap between printed bands (e.g. 859's real
+    table has no band at all for BSA 9.5L-10L - a real gap in the source document, not
+    a bug) - caller should treat None as excluded, not interpolate across the gap."""
+    return next(
+        (b for b in sa_bands if b["min"] <= sum_assured and (b["max"] is None or sum_assured <= b["max"])),
         None,
     )
-    if band is None:
-        return None
 
+
+def compute_sa_adjustment(sa_scaling, base_premium, age, sum_assured):
+    """sa_scaling: one policy's built SA-scaling object (query/build_premium_lookup.py),
+    tagged with the same "type" the extraction prompt itself assigned to
+    rebate_structures.high_sum_assured_rebate_table - dispatches on that tag rather than
+    assuming one universal rebate formula, since 859's real rebate table turned out to
+    be a genuinely different kind of rebate from 876's, not just different numbers (see
+    this module's docstring). Returns {"premium": ..., "method": ...} or None if
+    sum_assured/age falls outside what this policy's rebate table actually covers -
+    caller should treat None as excluded, never extrapolated."""
     ref_sa = sa_scaling["reference_sum_assured"]
     if sum_assured < ref_sa:
         return None
 
-    sa_band = next(
-        (b for b in band["sa_bands"] if b["min"] <= sum_assured and (b["max"] is None or sum_assured < b["max"])),
-        None,
-    )
-    if sa_band is None:
-        return None
+    rtype = sa_scaling["type"]
 
-    return (sum_assured / ref_sa) * (1 - sa_band["rebate_pct"] / 100)
+    if rtype == "percent_of_tabular_premium":
+        band = next(
+            (b for b in sa_scaling["age_bands"] if b["age_min"] <= age <= b["age_max"]),
+            None,
+        )
+        if band is None:
+            return None
+        sa_band = _find_sa_band(band["sa_bands"], sum_assured)
+        if sa_band is None:
+            return None
+        multiplier = (sum_assured / ref_sa) * (1 - sa_band["rebate_pct"] / 100)
+        return {
+            "premium": base_premium * multiplier,
+            "method": f"percent_of_tabular_premium_x{round(multiplier, 4)}",
+        }
+
+    if rtype == "per_mille_of_sum_assured_rupees":
+        sa_band = _find_sa_band(sa_scaling["sa_bands"], sum_assured)
+        if sa_band is None:
+            return None
+        rebate_rs = (sa_band["rate_per_mille"] / 1000) * sum_assured
+        premium = base_premium * (sum_assured / ref_sa) - rebate_rs
+        return {
+            "premium": premium,
+            "method": f"per_mille_of_sum_assured_rupees_rebate_rs{round(rebate_rs, 2)}",
+        }
+
+    raise ValueError(f"compute_sa_adjustment: unsupported sa_scaling type {rtype!r} - "
+                      f"add a formula branch above before building a lookup that uses it")
 
 
 def lookup_premium(policy_lookup, age, term, sum_assured):
@@ -128,8 +164,8 @@ def lookup_premium(policy_lookup, age, term, sum_assured):
                       f"(no bracket on one or both axes)",
         }
 
-    multiplier = sa_multiplier(policy_lookup["sa_scaling"], age, sum_assured)
-    if multiplier is None:
+    adjustment = compute_sa_adjustment(policy_lookup["sa_scaling"], base["premium"], age, sum_assured)
+    if adjustment is None:
         return {
             "excluded": True,
             "reason": f"sum_assured={sum_assured} outside the known SA-scaling range for age={age}",
@@ -137,8 +173,8 @@ def lookup_premium(policy_lookup, age, term, sum_assured):
 
     return {
         "excluded": False,
-        "premium_amount": round(base["premium"] * multiplier, 2),
-        "method": f"{base['method']}_x_sa_multiplier_{round(multiplier, 4)}",
+        "premium_amount": round(adjustment["premium"], 2),
+        "method": f"{base['method']}_x_{adjustment['method']}",
         "table_baseline_sum_assured": policy_lookup["sa_scaling"]["reference_sum_assured"],
         "sum_assured_type": policy_lookup["sum_assured_type"],
     }
