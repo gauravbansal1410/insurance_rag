@@ -21,6 +21,52 @@ Raw PDFs + extracted structured JSON + embeddings.
 ## Layer 3 — precomputed rerank scores (`chunking/precomputed_rerank_scores.json`)
 Produced by `chunking/precompute_rerank_scores.py`, keyed `tag -> chunk_id -> {policy_id, score}` for each of the query pipeline's 8 fixed `concern_tags` (`query/concern_tags.py`) — not per concern_tag *combination*. Reranking the full corpus against every possible combination (255 non-empty subsets of 8 tags) would take days at Voyage's free-tier pace; scoring each tag independently is tractable and grows only linearly as new policies are ingested. At query time, `query/precomputed_relevance.py` combines a user's selected tags by taking the **max** precomputed score across them per chunk, then per policy — a deliberate approximation, not identical to reranking one joined query string against each chunk (which is what the live fallback path still does). Consistent with an approximation already used elsewhere in this design (`rerank_and_sort.max_rerank_score_by_policy` already collapses per-chunk scores to per-policy via max, not an average). Exists because a live per-query Voyage rerank call doesn't meet a live query's latency bar at this corpus's chunk sizes — see `docs/query_architecture.md`'s "Reranking data source" section for the full rationale. Refreshed by re-running the precompute script (merges into the existing file by `chunk_id`, doesn't recompute the whole corpus) — normally triggered automatically by `chunking/ingest_policy.sh` when a new policy is ingested.
 
+## Layer 1 derived artifact — precomputed premium lookup (`query/premium_lookup.json`)
+Produced by `query/build_premium_lookup.py` — **v1 pilot, policy 876 only, `premium_payment_option: "regular"` + `sum_assured_type: "level"` only** (see `docs/query_architecture.md` step 5 and open questions for the full design rationale). Merges 876's own Layer 1 `sample_illustrative_premiums` rows (regular/level only, all at 876's own `sum_assured_min` of Rs 50L, its 0%-rebate baseline) with `docs/progress/ground-truth/876_scraped_premiums.csv` (real quotes scraped from LIC's live calculator — kept out of Layer 1/2/3, per the ground-truth CSV's own status below). Two independently-modeled axes, not one interpolation formula, confirmed via real data rather than assumed:
+
+    { "876": {
+        "premium_payment_option": "regular", "sum_assured_type": "level",
+        "age_term_grid": [ { "age": int, "term": int, "premium": number,
+                              "source": "brochure" | "scraped" }, ... ],
+                                            // bilinear-interpolated at query time
+                                            // (query/premium_lookup.py) — confirmed
+                                            // NOT linear in age (mortality cost
+                                            // accelerates); a query (age, term)
+                                            // outside this grid's known bracket on
+                                            // either axis is excluded, never
+                                            // extrapolated
+        "sa_scaling": {
+          "reference_sum_assured": 5000000,
+          "age_bands": [ { "band": "up_to_30" | "31_to_45", "age_min", "age_max",
+                            "points": [ { "sum_assured": int, "multiplier": number,
+                                          "sample_count": int }, ... ] }, ... ]
+        },                                  // empirical premium ratio relative to
+                                            // reference_sum_assured, averaged across
+                                            // every term sampled at that (age_band,
+                                            // sum_assured) — confirmed the ratio is
+                                            // constant across term within a band, so
+                                            // this is separable from the age_term_grid
+                                            // above, but NOT simple proportional
+                                            // scaling (real Rs 1Cr premium is ~1.6-1.7x
+                                            // of Rs 50L, not 2x; Rs 2Cr is ~2.8-2.9x,
+                                            // not 4x) — tried deriving this from
+                                            // rebate_structures.high_sum_assured_rebate_table's
+                                            // percentages directly first, didn't land
+                                            // exactly (implies an unmodeled fixed-cost
+                                            // component), so stored as empirical
+                                            // ratios instead. A sum_assured outside
+                                            // the known points for a given age's band
+                                            // is excluded, never extrapolated.
+        "built_from": { ... }               // provenance: point/row counts from each
+                                            // source, for a quick sanity check without
+                                            // re-diffing the whole file
+    } }
+
+Validated via `query/validate_premium_lookup.py` (leave-one-out against 876's own real points): median error 1.06%, mean 3.53% — the mean is pulled up by one real finding, not a defect: term 15 is the thinnest slice of the grid (only 4 scraped ages), so removing its one mid-range anchor leaves a wide age gap that a straight-line interpolation misjudges given the curve's real curvature (64.78% error on that single held-out point). Every other policy, and every other `premium_payment_option`/`sum_assured_type` combination on 876 itself, still uses the original live two-point linear interpolation in `query/premium_interpolation.py` — the dispatch is scope-guarded, not a global replacement (see `docs/query_architecture.md`). Extending this design to another policy is expected to reuse the *method* (separate sum_assured from age x term, bilinear the latter) but not 876's actual numbers — `rebate_structures.high_sum_assured_rebate_table`'s shape already differs per policy (see the extraction-rule caveat above), so each policy's real ground truth needs its own scrape.
+
+## Ground-truth validation datasets (not extracted content — deliberately outside Layer 1/2/3)
+`docs/progress/ground-truth/` holds manually-scraped real data used to validate extraction/interpolation accuracy — never loaded into Qdrant, never treated as an extracted field. `876_scraped_premiums.csv`: real premium quotes pulled from LIC's live online quote calculator for policy 876 (Digi Term), schema designed to scale across policies (`category`, `gender`, `smoker_status`, `sum_assured_type`, split `ppt`/`policy_term`, `scraped_date`/`source` for provenance) — see `docs/query_architecture.md`'s open questions for what it's been used to confirm so far, and the premium-lookup artifact above for what it feeds.
+
 ## Document merge rule (each policy has a brochure + a policy_doc)
 policy_doc is authoritative for every field — it runs 3-4x the section count of brochure and includes a full Definitions block brochure lacks. Brochure is used only to supply what policy_doc doesn't carry — confirmed so far to be just the sample illustrative premium table (used by the premium-interpolation query step). Track field-level provenance (policy_doc vs brochure) per field so any future conflict is traceable. First real conflict confirmed 2026-07-12: Saral Jeevan Bima's brochure has a redline/tracked-change artifact ("15 30 days") where policy_doc clearly states 30 — resolved via the redline-artifact caveat below, not a one-off.
 
