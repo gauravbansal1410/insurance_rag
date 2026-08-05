@@ -1,0 +1,593 @@
+{
+  "policy_id": "859",
+  "plan_name": "LIC's Saral Jeevan Bima",
+  "uin": "512N341V01",
+  "plan_category": "term_assurance",
+  "structural_variant": "standalone",
+  "layer1": {
+    "premium_payment_options": [
+      "single",
+      "regular",
+      "limited"
+    ],
+    "ppt_options": [
+      5,
+      10
+    ],
+    "sum_assured_min": 500000,
+    "sum_assured_max": 2500000,
+    "sum_assured_multiples": "Rs. 50,000/-",
+    "age_at_entry_min": 18,
+    "age_at_entry_max": 65,
+    "age_at_maturity_min": null,
+    "age_at_maturity_max": 70,
+    "policy_term_min": 5,
+    "policy_term_max": 40,
+    "death_benefit_formula": {
+      "regular_limited_premium": "Sum Assured on Death which is the highest of: (a) 10 times of annualized premium; or (b) 105% of all the premiums paid as on the date of death; or (c) Absolute amount assured to be paid on death.",
+      "single_premium": "Sum Assured on Death which is the higher of: (a) 125% of Single Premium or (b) Absolute amount assured to be paid on death."
+    },
+    "maturity_benefit": "none",
+    "surrender_value_applicable": false,
+    "policy_cancellation_value_formula": "Single Premium Policies: =70% \u00d7 Single Premium paid x Unexpired Policy Term / Original Policy Term. Limited Premium Payment Term (5 or 10 years): =70% \u00d7 Total Premiums Paid x Unexpired Policy Term / Original Policy Term",
+    "grace_period_days": {
+      "yearly_halfyearly": 30,
+      "monthly": 15
+    },
+    "free_look_period_days": 30,
+    "suicide_exclusion": {
+      "months": 12,
+      "payout_pct_single": 90,
+      "payout_pct_regular_limited": 80
+    },
+    "rebate_structures": {
+      "high_sum_assured_rebate_table": {
+        "type": "per_mille_of_sum_assured_rupees",
+        "dimensions": [],
+        "sa_bands": [
+          {
+            "min": 500000,
+            "max": 950000,
+            "rate_per_mille": 0
+          },
+          {
+            "min": 1000000,
+            "max": 1450000,
+            "rate_per_mille": 0.1
+          },
+          {
+            "min": 1500000,
+            "max": 1950000,
+            "rate_per_mille": 0.2
+          },
+          {
+            "min": 2000000,
+            "max": null,
+            "rate_per_mille": 0.25
+          }
+        ],
+        "units": "per-mille of Basic Sum Assured, rebate paid as a Rupee deduction",
+        "source": "brochure page 6"
+      },
+      "online_sale_rebate_table": "Single Premium: 2.00%, 5 to 9 years PPT: 5.00%, 10 to 14 years PPT: 6.00%, 15 years and above PPT: 7.00%",
+      "mode_loadings": "Yearly mode: NIL, Half-yearly mode: 2% of Tabular annual premium, Monthly (ECS/NACH): 3% of Tabular annual premium"
+    },
+    "death_benefit_instalment_option": false,
+    "sample_illustrative_premiums": [
+      {
+        "age": 30,
+        "sum_assured": 500000,
+        "term": 20,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 2095,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 500000,
+        "term": 20,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 3010,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 500000,
+        "term": 20,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 4955,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 500000,
+        "term": 20,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 20310,
+        "derived": false
+      },
+      {
+        "age": 25,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 41610,
+        "derived": false
+      },
+      {
+        "age": 25,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 3850,
+        "derived": false
+      },
+      {
+        "age": 25,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "half_yearly",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 1965,
+        "derived": false
+      },
+      {
+        "age": 25,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "monthly",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 331,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 52260,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 4670,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "half_yearly",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 2383,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "monthly",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 401,
+        "derived": false
+      },
+      {
+        "age": 35,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 70840,
+        "derived": false
+      },
+      {
+        "age": 35,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 6110,
+        "derived": false
+      },
+      {
+        "age": 35,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "half_yearly",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 3117,
+        "derived": false
+      },
+      {
+        "age": 35,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "monthly",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 525,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 98630,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 8340,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "half_yearly",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 4254,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "monthly",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 716,
+        "derived": false
+      },
+      {
+        "age": 45,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 138230,
+        "derived": false
+      },
+      {
+        "age": 45,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 11660,
+        "derived": false
+      },
+      {
+        "age": 45,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "half_yearly",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 5948,
+        "derived": false
+      },
+      {
+        "age": 45,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "monthly",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 1001,
+        "derived": false
+      },
+      {
+        "age": 25,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 40776,
+        "derived": false
+      },
+      {
+        "age": 25,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 3574,
+        "derived": false
+      },
+      {
+        "age": 25,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "half_yearly",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 1826,
+        "derived": false
+      },
+      {
+        "age": 25,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "monthly",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 308,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 51213,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 4336,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "half_yearly",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 2216,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "monthly",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 373,
+        "derived": false
+      },
+      {
+        "age": 35,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 69421,
+        "derived": false
+      },
+      {
+        "age": 35,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 5675,
+        "derived": false
+      },
+      {
+        "age": 35,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "half_yearly",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 2900,
+        "derived": false
+      },
+      {
+        "age": 35,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "monthly",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 488,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 96655,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 7749,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "half_yearly",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 3959,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "monthly",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 667,
+        "derived": false
+      },
+      {
+        "age": 45,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 135463,
+        "derived": false
+      },
+      {
+        "age": 45,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "annual",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 10837,
+        "derived": false
+      },
+      {
+        "age": 45,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "half_yearly",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 5536,
+        "derived": false
+      },
+      {
+        "age": 45,
+        "sum_assured": 1000000,
+        "term": 25,
+        "premium_payment_option": "regular",
+        "payment_mode": "monthly",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 932,
+        "derived": false
+      }
+    ],
+    "compatible_riders": [],
+    "waiting_period_days": 45,
+    "outstanding_loan_schedule_reference": null
+  },
+  "extraction_notes": {
+    "source_provenance": {
+      "policy_doc": "PDF 1, 14 pages",
+      "brochure": "PDF 2, 16 pages"
+    },
+    "field_conflicts": [
+      {
+        "field": "layer1.free_look_period_days",
+        "policy_doc_value": "30",
+        "brochure_value": "15 30"
+      }
+    ],
+    "low_confidence_fields": [
+      "layer1.rebate_structures.high_sum_assured_rebate_table"
+    ],
+    "fields_not_found": [],
+    "field_specific_notes": [
+      {
+        "field": "layer1.rebate_structures.high_sum_assured_rebate_table",
+        "note": "possible \u2030/%o encoding ambiguity \u2014 verify against source PDF before using in calculations."
+      },
+      {
+        "field": "layer1.free_look_period_days",
+        "note": "Brochure page 9 contains a redline/tracked-change artifact showing '15 30 days', policy_doc authoritatively confirms 30 days."
+      }
+    ]
+  }
+}
