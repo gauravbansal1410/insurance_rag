@@ -10,11 +10,17 @@
 #      is excluded, never extrapolated - same "exclude and log" behavior
 #      premium_interpolation.py already uses for out-of-range candidates.
 #   2. sum_assured (separable from term, confirmed constant ratio at every term within
-#      an age band - but NOT simple proportional scaling: real ratios are ~1.64-1.68x
-#      at 1Cr and ~2.80-2.88x at 2Cr, not 2x/4x, likely a fixed-cost component the
-#      rebate_structures percentage table alone doesn't capture) - stored as an
-#      empirical multiplier table keyed by age band, derived directly from scraped
-#      ratios rather than reverse-engineered from rebate percentages.
+#      an age band - but NOT simple proportional scaling, e.g. Rs 1Cr costs ~1.64-1.68x
+#      of Rs 50L, not 2x). **Corrected 2026-08-05:** originally thought this needed an
+#      empirical multiplier table because rebate_structures.high_sum_assured_rebate_table's
+#      percentages didn't seem to reproduce the real ratios - that was a band-boundary
+#      bug in the check, not a real gap. The rebate table DOES reproduce the real ratios
+#      exactly once sum_assured bands are read as lower-bound-inclusive (e.g.
+#      "1Cr_to_2Cr" applies AT Rs 1Cr itself, not "50L_to_1Cr"). multiplier = (sum_assured
+#      / reference_sum_assured) x (1 - rebate_pct/100) - a closed-form formula parsed
+#      directly from Layer 1, needing zero scraping. Scraped ground truth is now used
+#      only as a QA cross-check on this formula (see query/build_premium_lookup.py),
+#      not as the source of the multiplier itself.
 #
 # The grid is scattered, not a clean rectangle (some ages only have 1-2 terms
 # scraped) - see docs/progress/ground-truth/ and the 2026-08 gap analysis. The age
@@ -80,11 +86,14 @@ def bilinear_lookup(age_term_grid, age, term):
 
 def sa_multiplier(sa_scaling, age, sum_assured):
     """sa_scaling: {"reference_sum_assured": int, "age_bands": [{"age_min", "age_max",
-    "points": [{"sum_assured", "multiplier"}, ...]}, ...]}. Returns a multiplier
-    (piecewise-linear over the band's known SA points, reference SA always implicitly
-    1.0x) or None if `sum_assured` falls outside the known points for this age's band
-    (e.g. above the highest sum_assured we have real rebate data for) - excluded, not
-    extrapolated, same policy as the age x term axis above."""
+    "sa_bands": [{"min", "max" (None = unbounded), "rebate_pct"}, ...]}, ...]}.
+    Returns (sum_assured / reference_sum_assured) x (1 - rebate_pct/100) - a direct
+    formula parsed from Layer 1's rebate_structures.high_sum_assured_rebate_table
+    (see query/build_premium_lookup.py), not an empirical/interpolated value - so this
+    is exact (no scraping involved) for any sum_assured the table's bands cover.
+    Returns None only if `sum_assured` is below the reference (shouldn't happen in
+    practice - eligibility_filter.py already enforces the policy's real min_sum_assured
+    upstream of this call) or no age band matches."""
     band = next(
         (b for b in sa_scaling["age_bands"] if b["age_min"] <= age <= b["age_max"]),
         None,
@@ -93,18 +102,17 @@ def sa_multiplier(sa_scaling, age, sum_assured):
         return None
 
     ref_sa = sa_scaling["reference_sum_assured"]
-    points = [(ref_sa, 1.0)] + [(p["sum_assured"], p["multiplier"]) for p in band["points"]]
-    points.sort()
-
-    if sum_assured < points[0][0] or sum_assured > points[-1][0]:
+    if sum_assured < ref_sa:
         return None
 
-    lo = max((p for p in points if p[0] <= sum_assured), key=lambda p: p[0])
-    hi = min((p for p in points if p[0] >= sum_assured), key=lambda p: p[0])
-    if lo[0] == hi[0]:
-        return lo[1]
-    weight = (sum_assured - lo[0]) / (hi[0] - lo[0])
-    return lo[1] + weight * (hi[1] - lo[1])
+    sa_band = next(
+        (b for b in band["sa_bands"] if b["min"] <= sum_assured and (b["max"] is None or sum_assured < b["max"])),
+        None,
+    )
+    if sa_band is None:
+        return None
+
+    return (sum_assured / ref_sa) * (1 - sa_band["rebate_pct"] / 100)
 
 
 def lookup_premium(policy_lookup, age, term, sum_assured):
