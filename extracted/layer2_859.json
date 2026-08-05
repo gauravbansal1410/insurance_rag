@@ -1,0 +1,36 @@
+{
+  "policy_id": "859",
+  "layer2": {
+    "group_a_concern_tags": [
+      "income_replacement",
+      "debt_linked_cover",
+      "estate_legacy_planning"
+    ],
+    "group_b": {
+      "payout_on_death": [
+        "lump_sum"
+      ],
+      "payout_on_survival": [
+        "none"
+      ],
+      "payout_notes": "Sum Assured on Death paid as a lump sum based on formula rules.",
+      "is_participating": false,
+      "builds_cash_value": true,
+      "cash_value_loan_available": false,
+      "cover_basis": "fixed"
+    },
+    "group_c": {
+      "min_age": 18,
+      "max_age": 65,
+      "min_sum_assured": 500000,
+      "max_sum_assured": 2500000,
+      "min_term": 5,
+      "max_term": 40,
+      "compatible_riders": []
+    }
+  },
+  "derivation_notes": {
+    "concern_tag_reasoning": "Standard pure term insurance product providing financial protection upon death, which aligns with income replacement, debt-linked cover, and estate/legacy planning.",
+    "ambiguous_calls": []
+  }
+}
