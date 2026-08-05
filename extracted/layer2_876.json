@@ -13,7 +13,7 @@
       "payout_on_survival": [
         "none"
       ],
-      "payout_notes": "Pure term insurance product offering death benefit as a lump sum or through instalments, with no maturity benefit.",
+      "payout_notes": "Death benefit payable as lump sum or via instalment option as per policy terms. No maturity benefit.",
       "is_participating": false,
       "builds_cash_value": false,
       "cash_value_loan_available": false,
@@ -30,7 +30,9 @@
     }
   },
   "derivation_notes": {
-    "concern_tag_reasoning": "The plan is a standalone term assurance product providing financial protection upon death, making it suitable for income replacement and estate/legacy planning. It is not a savings, retirement, or investment-linked product.",
-    "ambiguous_calls": []
+    "concern_tag_reasoning": "Selected income_replacement and estate_legacy_planning because it is a standalone pure term assurance plan providing death cover to secure beneficiaries financially.",
+    "ambiguous_calls": [
+      "Maturity benefit is explicitly none and surrender value is not applicable, indicating no savings or survival element."
+    ]
   }
 }
