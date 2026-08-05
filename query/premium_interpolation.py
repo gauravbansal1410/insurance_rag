@@ -7,7 +7,30 @@
 #   {"age": int, "sum_assured": int, "term": int, "premium_payment_option": str,
 #    "sum_assured_type": "level" | "increasing" (optional, defaults to "level"), "budget": number}
 
+import json
+from pathlib import Path
+
 from eligibility_filter import bounds_ok  # sibling import - run as `python3 query/premium_interpolation.py`
+from premium_lookup import lookup_premium
+
+# v1 pilot precomputed premium lookup (docs/query_architecture.md open questions) -
+# policy 876, regular/level only, built by query/build_premium_lookup.py from real
+# scraped ground truth (docs/progress/ground-truth/876_scraped_premiums.csv), since
+# 876 is the only policy so far with both a real (non-placeholder) rebate table and
+# enough ground truth to validate a bilinear age x term surface against (see
+# query/validate_premium_lookup.py). Every other policy/payment-option/sum_assured_type
+# combination keeps the original live linear interpolation below untouched.
+_PREMIUM_LOOKUP_PATH = Path(__file__).resolve().parent / "premium_lookup.json"
+_PREMIUM_LOOKUP_SCOPE = {"policy_id": "876", "premium_payment_option": "regular", "sum_assured_type": "level"}
+
+
+def _load_premium_lookup_table():
+    if not _PREMIUM_LOOKUP_PATH.exists():
+        return {}
+    return json.loads(_PREMIUM_LOOKUP_PATH.read_text())
+
+
+_premium_lookup_table = _load_premium_lookup_table()
 
 
 def _policy_matches(l2, age, sum_assured, term, concern_tags):
@@ -94,6 +117,18 @@ def interpolate_premium(profile, layer1_record):
     {"excluded": True, "reason": ...} - never raises, so a bad candidate never fails the
     whole query (docs/query_architecture.md: "the query still completes")."""
     sum_assured_type = profile.get("sum_assured_type", "level")
+    policy_id = layer1_record["policy_id"]
+
+    if (
+        policy_id == _PREMIUM_LOOKUP_SCOPE["policy_id"]
+        and profile["premium_payment_option"] == _PREMIUM_LOOKUP_SCOPE["premium_payment_option"]
+        and sum_assured_type == _PREMIUM_LOOKUP_SCOPE["sum_assured_type"]
+        and policy_id in _premium_lookup_table
+    ):
+        return lookup_premium(
+            _premium_lookup_table[policy_id], profile["age"], profile["term"], profile["sum_assured"],
+        )
+
     sample_table = layer1_record["layer1"]["sample_illustrative_premiums"]
     variants = _split_sum_assured_variants(sample_table)
 
