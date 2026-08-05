@@ -12,18 +12,19 @@ On an exact (age, term) collision, the scraped row wins (already cross-validated
 against the brochure's own baseline - see docs/progress/20260801-progress.md - so
 this is a tie-break rule, not a real conflict).
 
-sa_scaling is now a direct formula parsed from Layer 1's own
-rebate_structures.high_sum_assured_rebate_table (level_sum_assured /
-regular_limited_premium), not an empirical table - corrected 2026-08-05 after
-finding the earlier "doesn't quite match" conclusion was a band-boundary bug in
-that check, not a real gap: sum_assured bands are lower-bound-inclusive (e.g.
-"1Cr_to_2Cr" applies AT Rs 1Cr itself), and once read that way the formula
-reproduces the scraped ratios exactly. This means the SA axis needs zero
-scraping once a policy's rebate table is real structured data (not the placeholder
-prose string still present on 6/7 term-assurance policies as of this date - see
-docs/schema.md's extraction-rule caveats). The scraped CSV's cross-SA rows are
-still used here, but only as a QA cross-check logged into the built artifact, not
-as the source of the multiplier.
+sa_scaling is a direct formula parsed from Layer 1's own
+rebate_structures.high_sum_assured_rebate_table, not an empirical table - see
+query/premium_lookup.py's module docstring for the two formula shapes this
+dispatches between (corrected 2026-08-05, generalized 2026-08-05 once policy 859
+confirmed the rebate table's real shape - not just its numbers - varies by policy).
+The rebate table's own "type" tag and explicit numeric {min, max, ...} sa_bands
+(docs/prompts/prompt_a_pdf.txt trap 17) mean this loader does no string-band
+parsing or bound-inclusivity guessing - it reads the extraction's own numbers
+directly. This means the SA axis needs zero scraping once a policy's rebate table
+is real structured data (not the placeholder prose string still present on most
+term-assurance policies as of this date - see docs/schema.md's extraction-rule
+caveats). The scraped CSV's cross-SA rows are still used here, but only as a QA
+cross-check logged into the built artifact, not as the source of the multiplier.
 """
 
 import csv
@@ -32,28 +33,6 @@ import re
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
-
-_INDIAN_UNIT_MULTIPLIERS = {"L": 100_000, "Cr": 10_000_000}
-
-
-def _parse_indian_amount(s):
-    """'50L' -> 5000000, '1Cr' -> 10000000 - the unit shorthand used in
-    rebate_structures.high_sum_assured_rebate_table's own band-name keys."""
-    m = re.match(r"^(\d+(?:\.\d+)?)(L|Cr)$", s)
-    if not m:
-        raise ValueError(f"unrecognized Indian amount format: {s!r}")
-    return int(float(m.group(1)) * _INDIAN_UNIT_MULTIPLIERS[m.group(2)])
-
-
-def _parse_sa_band_key(key):
-    """'50L_to_1Cr' -> (5000000, 10000000); '5Cr_and_above' -> (50000000, None).
-    Bands are lower-bound-inclusive - confirmed 2026-08-05 by checking which
-    band's rebate_pct actually reproduces the scraped ratios at exactly Rs 1Cr
-    and Rs 2Cr (the band named for that amount, not the one below it)."""
-    if key.endswith("_and_above"):
-        return _parse_indian_amount(key[: -len("_and_above")]), None
-    lo, hi = key.split("_to_")
-    return _parse_indian_amount(lo), _parse_indian_amount(hi)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 LAYER1_PATH = REPO_ROOT / "extracted" / "layer1_876.json"
@@ -65,11 +44,15 @@ REFERENCE_SUM_ASSURED = 5_000_000  # 876's own sum_assured_min - 0% rebate band
 PREMIUM_PAYMENT_OPTION = "regular"
 SUM_ASSURED_TYPE = "level"
 
-# Matches rebate_structures.high_sum_assured_rebate_table's own age bands for
-# level_sum_assured / regular_limited_premium (docs/schema.md, extracted/layer1_876.json).
+# Matches rebate_structures.high_sum_assured_rebate_table's own age-band key names for
+# level_sum_assured / regular_limited_premium (docs/schema.md, extracted/layer1_876.json) -
+# the extraction prompt requires explicit numeric sa_bands leaves (trap 17) but leaves the
+# age-band level's own key naming to mirror the document, so this mapping (which age range
+# a given key name means) is still policy-specific config, not something the build script
+# can infer from the key string alone.
 AGE_BANDS = [
-    {"band": "up_to_30", "age_min": 0, "age_max": 30},
-    {"band": "31_to_45", "age_min": 31, "age_max": 999},
+    {"band": "up_to_30_years", "age_min": 0, "age_max": 30},
+    {"band": "31_to_45_years", "age_min": 31, "age_max": 999},
 ]
 
 # Maps this build's fixed scope (module-level constants above) to
@@ -106,30 +89,34 @@ def _age_band(age):
     raise ValueError(f"age {age} doesn't fall in any known age band")
 
 
-def load_rebate_bands():
-    """Parses rebate_structures.high_sum_assured_rebate_table into, per age band,
-    a list of {"min", "max" (None = unbounded), "rebate_pct"} sa_bands - the direct
-    formula source for sa_multiplier(), not an empirical fit. Raises if the field
-    is still the old placeholder/prose-string shape (fine to fail loudly here -
-    this build script is 876-only; docs/schema.md's extraction-rule caveats note
-    the other 6 term-assurance policies aren't in this shape yet)."""
+def load_rebate_table():
+    """Reads rebate_structures.high_sum_assured_rebate_table as-is - the extraction
+    prompt (docs/prompts/prompt_a_pdf.txt trap 17) requires this to already be typed
+    ("type": "percent_of_tabular_premium" | "per_mille_of_sum_assured_rupees" | "other")
+    with explicit numeric {min, max, ...} sa_bands leaves, so no string-band parsing
+    happens here or in query/premium_lookup.py's compute_sa_adjustment() - this loader
+    just fails loudly if the field is still the old unstructured placeholder/prose
+    shape (a real, still-possible state - see docs/schema.md's extraction-rule
+    caveats for which policies haven't been re-extracted with the current prompt yet)."""
     layer1 = json.loads(LAYER1_PATH.read_text())["layer1"]
     table = layer1["rebate_structures"]["high_sum_assured_rebate_table"]
-    if not isinstance(table, dict):
+    if not isinstance(table, dict) or "type" not in table:
         raise TypeError(
-            "rebate_structures.high_sum_assured_rebate_table is not structured data "
-            "(still the old placeholder/prose string?) - can't build a formula from it"
+            "rebate_structures.high_sum_assured_rebate_table is not structured, typed data "
+            "(still the old placeholder/prose string, or extracted before trap 17's \"type\" "
+            "tag was added?) - can't build a formula from it"
         )
-    by_age_band_key = table[REBATE_SA_TYPE_KEY][REBATE_PREMIUM_TYPE_KEY]
+    return table
 
+
+def build_sa_bands_for_type_a(table):
+    """percent_of_tabular_premium: walks table["table"][REBATE_SA_TYPE_KEY][REBATE_PREMIUM_TYPE_KEY]
+    (this build's fixed sum_assured_type/premium_payment_option scope) down to each age
+    band's own "sa_bands" array - already numeric, extracted verbatim from Layer 1."""
+    by_age_band_key = table["table"][REBATE_SA_TYPE_KEY][REBATE_PREMIUM_TYPE_KEY]
     age_bands_out = []
     for b in AGE_BANDS:
-        sa_band_pcts = by_age_band_key[b["band"]]
-        sa_bands = []
-        for sa_key, pct in sa_band_pcts.items():
-            lo, hi = _parse_sa_band_key(sa_key)
-            sa_bands.append({"min": lo, "max": hi, "rebate_pct": pct})
-        sa_bands.sort(key=lambda x: x["min"])
+        sa_bands = [dict(x) for x in by_age_band_key[b["band"]]]
         age_bands_out.append({"band": b["band"], "age_min": b["age_min"], "age_max": b["age_max"], "sa_bands": sa_bands})
     return age_bands_out
 
@@ -204,15 +191,28 @@ def _empirical_ratios_by_age_band_and_sa(ground_truth_rows):
 
 
 def build_sa_scaling(ground_truth_rows):
-    """sa_scaling multiplier now comes directly from rebate_structures.high_sum_assured_rebate_table
-    (load_rebate_bands()) - a closed-form formula, not fit to scraped data, so it needs
-    zero scraping to extend to any sum_assured the table's own bands cover (corrected
-    2026-08-05 - see query/premium_lookup.py's module docstring for why the earlier
-    empirical-only approach was a mistaken workaround, not a real requirement).
-    Scraped ground truth is still used here, but only to attach a `qa_check` cross-check
-    onto each sa_band, flagging (not silently swallowing) any real disagreement between
-    the formula and what LIC's live calculator actually returned."""
-    age_bands = load_rebate_bands()
+    """sa_scaling comes directly from rebate_structures.high_sum_assured_rebate_table
+    (load_rebate_table()) - a closed-form formula, not fit to scraped data, so it needs
+    zero scraping to extend to any sum_assured the table's own bands cover. Only
+    "percent_of_tabular_premium" is wired up for this build script's own QA cross-check
+    below (876's shape, the only one with matching scraped ground truth so far) - a
+    different type still builds (query/premium_lookup.py's compute_sa_adjustment()
+    already has both formula branches), it just won't get a qa_check attached here
+    until that policy has its own scraped rows to check against. Scraped ground truth
+    is used only to attach `qa_check`, flagging (not silently swallowing) any real
+    disagreement between the formula and what LIC's live calculator actually returned -
+    never as the multiplier's own source."""
+    table = load_rebate_table()
+    rtype = table["type"]
+
+    if rtype != "percent_of_tabular_premium":
+        raise ValueError(
+            f"build_sa_scaling: rebate table type {rtype!r} isn't wired into this build "
+            f"script's fixed 876-scope constants (REBATE_SA_TYPE_KEY/REBATE_PREMIUM_TYPE_KEY/"
+            f"AGE_BANDS) - those assume a percent_of_tabular_premium shape"
+        )
+
+    age_bands = build_sa_bands_for_type_a(table)
     empirical_ratios = _empirical_ratios_by_age_band_and_sa(ground_truth_rows)
 
     for band in age_bands:
@@ -222,7 +222,7 @@ def build_sa_scaling(ground_truth_rows):
             # with no matching scraped SA just gets no qa_check, not a failure.
             checks = []
             for (b, sa), rs in sorted(empirical_ratios.items()):
-                if b != band["band"] or not (sa_band["min"] <= sa and (sa_band["max"] is None or sa < sa_band["max"])):
+                if b != band["band"] or not (sa_band["min"] <= sa and (sa_band["max"] is None or sa <= sa_band["max"])):
                     continue
                 formula_multiplier = (sa / REFERENCE_SUM_ASSURED) * (1 - sa_band["rebate_pct"] / 100)
                 empirical_multiplier = round(sum(rs) / len(rs), 4)
@@ -235,7 +235,7 @@ def build_sa_scaling(ground_truth_rows):
                 })
             sa_band["qa_check"] = checks
 
-    return {"reference_sum_assured": REFERENCE_SUM_ASSURED, "age_bands": age_bands}
+    return {"type": rtype, "reference_sum_assured": REFERENCE_SUM_ASSURED, "age_bands": age_bands}
 
 
 def main():
@@ -271,7 +271,7 @@ def main():
     for b in sa_scaling["age_bands"]:
         for sa_band in b["sa_bands"]:
             rebate_pct = sa_band["rebate_pct"]
-            max_str = f"<{sa_band['max']}" if sa_band["max"] is not None else "and above"
+            max_str = f"<={sa_band['max']}" if sa_band["max"] is not None else "and above"
             print(f"  {b['band']}: SA {sa_band['min']:>10} {max_str:>12} -> {rebate_pct}% rebate")
             for check in sa_band["qa_check"]:
                 status = "OK" if check["match"] else "MISMATCH"
