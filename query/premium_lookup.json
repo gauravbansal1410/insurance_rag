@@ -257,16 +257,46 @@
           "band": "up_to_30",
           "age_min": 0,
           "age_max": 30,
-          "points": [
+          "sa_bands": [
             {
-              "sum_assured": 10000000,
-              "multiplier": 1.64,
-              "sample_count": 5
+              "min": 5000000,
+              "max": 10000000,
+              "rebate_pct": 0,
+              "qa_check": []
             },
             {
-              "sum_assured": 20000000,
-              "multiplier": 2.8,
-              "sample_count": 6
+              "min": 10000000,
+              "max": 20000000,
+              "rebate_pct": 18,
+              "qa_check": [
+                {
+                  "sum_assured": 10000000,
+                  "formula_multiplier": 1.64,
+                  "empirical_multiplier": 1.64,
+                  "sample_count": 5,
+                  "match": true
+                }
+              ]
+            },
+            {
+              "min": 20000000,
+              "max": 50000000,
+              "rebate_pct": 30,
+              "qa_check": [
+                {
+                  "sum_assured": 20000000,
+                  "formula_multiplier": 2.8,
+                  "empirical_multiplier": 2.8,
+                  "sample_count": 6,
+                  "match": true
+                }
+              ]
+            },
+            {
+              "min": 50000000,
+              "max": null,
+              "rebate_pct": 37,
+              "qa_check": []
             }
           ]
         },
@@ -274,16 +304,46 @@
           "band": "31_to_45",
           "age_min": 31,
           "age_max": 999,
-          "points": [
+          "sa_bands": [
             {
-              "sum_assured": 10000000,
-              "multiplier": 1.68,
-              "sample_count": 10
+              "min": 5000000,
+              "max": 10000000,
+              "rebate_pct": 0,
+              "qa_check": []
             },
             {
-              "sum_assured": 20000000,
-              "multiplier": 2.88,
-              "sample_count": 14
+              "min": 10000000,
+              "max": 20000000,
+              "rebate_pct": 16,
+              "qa_check": [
+                {
+                  "sum_assured": 10000000,
+                  "formula_multiplier": 1.68,
+                  "empirical_multiplier": 1.68,
+                  "sample_count": 10,
+                  "match": true
+                }
+              ]
+            },
+            {
+              "min": 20000000,
+              "max": 50000000,
+              "rebate_pct": 28,
+              "qa_check": [
+                {
+                  "sum_assured": 20000000,
+                  "formula_multiplier": 2.88,
+                  "empirical_multiplier": 2.88,
+                  "sample_count": 14,
+                  "match": true
+                }
+              ]
+            },
+            {
+              "min": 50000000,
+              "max": null,
+              "rebate_pct": 33,
+              "qa_check": []
             }
           ]
         }
