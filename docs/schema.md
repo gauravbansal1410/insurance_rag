@@ -38,31 +38,41 @@ Produced by `query/build_premium_lookup.py` — **v1 pilot, policy 876 only, `pr
         "sa_scaling": {
           "reference_sum_assured": 5000000,
           "age_bands": [ { "band": "up_to_30" | "31_to_45", "age_min", "age_max",
-                            "points": [ { "sum_assured": int, "multiplier": number,
-                                          "sample_count": int }, ... ] }, ... ]
-        },                                  // empirical premium ratio relative to
-                                            // reference_sum_assured, averaged across
-                                            // every term sampled at that (age_band,
-                                            // sum_assured) — confirmed the ratio is
-                                            // constant across term within a band, so
-                                            // this is separable from the age_term_grid
-                                            // above, but NOT simple proportional
-                                            // scaling (real Rs 1Cr premium is ~1.6-1.7x
-                                            // of Rs 50L, not 2x; Rs 2Cr is ~2.8-2.9x,
-                                            // not 4x) — tried deriving this from
-                                            // rebate_structures.high_sum_assured_rebate_table's
-                                            // percentages directly first, didn't land
-                                            // exactly (implies an unmodeled fixed-cost
-                                            // component), so stored as empirical
-                                            // ratios instead. A sum_assured outside
-                                            // the known points for a given age's band
-                                            // is excluded, never extrapolated.
+                            "sa_bands": [ { "min": int, "max": int | null,
+                                            "rebate_pct": number,
+                                            "qa_check": [ { "sum_assured", "formula_multiplier",
+                                                            "empirical_multiplier", "sample_count",
+                                                            "match": bool }, ... ] }, ... ] }, ... ]
+        },                                  // multiplier = (sum_assured / reference_sum_assured)
+                                            // x (1 - rebate_pct/100) — a direct FORMULA parsed
+                                            // from Layer 1's own
+                                            // rebate_structures.high_sum_assured_rebate_table,
+                                            // not fit to scraped data. Corrected 2026-08-05: an
+                                            // earlier version of this artifact stored empirical
+                                            // multipliers instead, on the mistaken belief the
+                                            // rebate table's percentages didn't reproduce real
+                                            // ratios closely enough — that was a band-boundary
+                                            // bug in the check (sum_assured bands are
+                                            // lower-bound-inclusive — e.g. "1Cr_to_2Cr" applies
+                                            // AT Rs 1Cr itself, not "50L_to_1Cr" — not an
+                                            // unmodeled fixed-cost component as first assumed).
+                                            // Once read correctly the formula reproduces scraped
+                                            // ratios exactly, so this axis needs ZERO scraping —
+                                            // real ground truth is used only for the qa_check
+                                            // cross-check attached to each sa_band (all 4 checks
+                                            // pass exactly against 876's real data), and covers
+                                            // the policy's full sum_assured range (through the
+                                            // open-ended "and_above" band), not just the two SA
+                                            // points that happened to be scraped. Sum_assured
+                                            // below reference_sum_assured is excluded (shouldn't
+                                            // occur — eligibility_filter.py already enforces the
+                                            // real min_sum_assured upstream).
         "built_from": { ... }               // provenance: point/row counts from each
                                             // source, for a quick sanity check without
                                             // re-diffing the whole file
     } }
 
-Validated via `query/validate_premium_lookup.py` (leave-one-out against 876's own real points): median error 1.06%, mean 3.53% — the mean is pulled up by one real finding, not a defect: term 15 is the thinnest slice of the grid (only 4 scraped ages), so removing its one mid-range anchor leaves a wide age gap that a straight-line interpolation misjudges given the curve's real curvature (64.78% error on that single held-out point). Every other policy, and every other `premium_payment_option`/`sum_assured_type` combination on 876 itself, still uses the original live two-point linear interpolation in `query/premium_interpolation.py` — the dispatch is scope-guarded, not a global replacement (see `docs/query_architecture.md`). Extending this design to another policy is expected to reuse the *method* (separate sum_assured from age x term, bilinear the latter) but not 876's actual numbers — `rebate_structures.high_sum_assured_rebate_table`'s shape already differs per policy (see the extraction-rule caveat above), so each policy's real ground truth needs its own scrape.
+Validated via `query/validate_premium_lookup.py` (leave-one-out against 876's own real age x term points — the SA axis is no longer empirical, so isn't part of this check): median error 1.06%, mean 3.53% — the mean is pulled up by one real finding, not a defect: term 15 is the thinnest slice of the grid (only 4 scraped ages), so removing its one mid-range anchor leaves a wide age gap that a straight-line interpolation misjudges given the curve's real curvature (64.78% error on that single held-out point). Every other policy, and every other `premium_payment_option`/`sum_assured_type` combination on 876 itself, still uses the original live two-point linear interpolation in `query/premium_interpolation.py` — the dispatch is scope-guarded, not a global replacement (see `docs/query_architecture.md`). Extending the SA-scaling formula to another policy needs only that policy's own `rebate_structures` to be real structured data (not yet true for the other 6 term-assurance policies — see the extraction-rule caveat above) — no scraping required for that axis. The age x term surface, by contrast, still needs each policy's own real ground truth (brochures don't publish enough points, and the curve's shape isn't yet confirmed to transfer across policies — see `docs/query_architecture.md`'s open questions for that open thread).
 
 ## Ground-truth validation datasets (not extracted content — deliberately outside Layer 1/2/3)
 `docs/progress/ground-truth/` holds manually-scraped real data used to validate extraction/interpolation accuracy — never loaded into Qdrant, never treated as an extracted field. `876_scraped_premiums.csv`: real premium quotes pulled from LIC's live online quote calculator for policy 876 (Digi Term), schema designed to scale across policies (`category`, `gender`, `smoker_status`, `sum_assured_type`, split `ppt`/`policy_term`, `scraped_date`/`source` for provenance) — see `docs/query_architecture.md`'s open questions for what it's been used to confirm so far, and the premium-lookup artifact above for what it feeds.
