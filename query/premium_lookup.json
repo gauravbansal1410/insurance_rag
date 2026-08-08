@@ -688,19 +688,54 @@
           "min": 1000000,
           "max": 1450000,
           "rate_per_mille": 0.1,
-          "qa_check": []
+          "qa_check": [
+            {
+              "sum_assured": 1000000,
+              "age": 30,
+              "term": 20,
+              "formula_premium": 4090.0,
+              "actual_premium": 4090,
+              "match": true
+            }
+          ]
         },
         {
           "min": 1500000,
           "max": 1950000,
           "rate_per_mille": 0.2,
-          "qa_check": []
+          "qa_check": [
+            {
+              "sum_assured": 1500000,
+              "age": 45,
+              "term": 15,
+              "formula_premium": 12990.0,
+              "actual_premium": 12990,
+              "match": true
+            }
+          ]
         },
         {
           "min": 2000000,
           "max": null,
           "rate_per_mille": 0.25,
-          "qa_check": []
+          "qa_check": [
+            {
+              "sum_assured": 2500000,
+              "age": 30,
+              "term": 20,
+              "formula_premium": 9850.0,
+              "actual_premium": 9850,
+              "match": true
+            },
+            {
+              "sum_assured": 2500000,
+              "age": 45,
+              "term": 15,
+              "formula_premium": 21525.0,
+              "actual_premium": 21525,
+              "match": true
+            }
+          ]
         }
       ]
     },
