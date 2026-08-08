@@ -84,6 +84,25 @@ POLICIES = [
         # is per_mille_of_sum_assured_rupees, dimensions: [], so build_sa_scaling()
         # reads table["sa_bands"] directly with no age navigation at all.
     },
+    {
+        "policy_id": "875",
+        "layer1_path": REPO_ROOT / "extracted" / "layer1_875.json",
+        "ground_truth_csv": GROUND_TRUTH_DIR / "875_scraped_premiums.csv",
+        "reference_sum_assured": 5_000_000,  # 875's own sum_assured_min - 0% rebate band, same figure as 876's
+        "premium_payment_option": "regular",
+        "sum_assured_type": "level",
+        "scrape_date": date(2026, 8, 8),
+        # Same percent_of_tabular_premium shape and age-band key names as 876's entry
+        # (docs/schema.md) - confirmed by inspecting extracted/layer1_875.json's own
+        # rebate_structures.high_sum_assured_rebate_table directly, not assumed from
+        # 876's shape.
+        "age_bands": [
+            {"band": "up_to_30_years", "age_min": 0, "age_max": 30},
+            {"band": "31_to_45_years", "age_min": 31, "age_max": 999},
+        ],
+        "rebate_sa_type_key": "level_sum_assured",
+        "rebate_premium_type_key": "regular_limited_premium",
+    },
 ]
 
 
