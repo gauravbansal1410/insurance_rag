@@ -3,6 +3,7 @@
   "layer2": {
     "group_a_concern_tags": [
       "income_replacement",
+      "debt_linked_cover",
       "estate_legacy_planning"
     ],
     "group_b": {
@@ -13,7 +14,7 @@
       "payout_on_survival": [
         "none"
       ],
-      "payout_notes": "Death benefit payable as lump sum or in instalments as per option selected. No maturity benefit.",
+      "payout_notes": "Death benefit can be paid as a lump sum or in instalments if opted.",
       "is_participating": false,
       "builds_cash_value": false,
       "cash_value_loan_available": false,
@@ -27,12 +28,12 @@
       "min_term": 10,
       "max_term": 40,
       "compatible_riders": [
-        "LIC's Accident Benefit Rider"
+        "LIC\u2019s Accident Benefit Rider"
       ]
     }
   },
   "derivation_notes": {
-    "concern_tag_reasoning": "Selected income_replacement and estate_legacy_planning due to pure term assurance structure providing financial security on death to dependents. Other tags such as debt-linked, child education, or retirement do not specifically apply intrinsically from the product design.",
+    "concern_tag_reasoning": "The plan is a pure term assurance offering significant death benefits, making it suitable for income replacement, covering financial liabilities (debt-linked cover), and providing financial security to dependents (estate/legacy planning).",
     "ambiguous_calls": []
   }
 }
