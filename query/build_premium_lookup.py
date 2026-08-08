@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
-"""Builds query/premium_lookup.json - v1 pilot, policy 876 only, regular/level only
-(see query/premium_lookup.py for the interpolation design this feeds).
+"""Builds query/premium_lookup.json - one entry per policy in POLICIES below, each
+regular/level only for now (see query/premium_lookup.py for the interpolation design
+this feeds). Generalized 2026-08-08 from an earlier 876-only version (module-level
+constants) once policy 859 needed the same build with different scope values and a
+different rebate-table shape - every policy-specific value now lives in one POLICIES
+entry instead of module globals, so adding a policy is a new list entry, not a rewrite.
 
 Usage: python3 query/build_premium_lookup.py
 
-Merges two sources at the reference sum_assured (876's own sample-table baseline,
-Rs 50L - also 876's sum_assured_min, so no rebate applies there):
-  - extracted/layer1_876.json's own sample_illustrative_premiums (regular/level rows)
-  - docs/progress/ground-truth/876_scraped_premiums.csv (regular/level, SA=reference only)
+For each policy, merges two sources at its own reference sum_assured (that policy's
+own sample-table baseline, and also its sum_assured_min - the 0%-rebate band):
+  - extracted/layer1_<id>.json's own sample_illustrative_premiums (regular/level rows)
+  - docs/progress/ground-truth/<id>_scraped_premiums.csv (regular/level, SA=reference only)
 On an exact (age, term) collision, the scraped row wins (already cross-validated
-against the brochure's own baseline - see docs/progress/20260801-progress.md - so
-this is a tie-break rule, not a real conflict).
+against the brochure's own baseline for 876 - see docs/progress/20260801-progress.md -
+so this is a tie-break rule, not a real conflict).
 
 sa_scaling is a direct formula parsed from Layer 1's own
 rebate_structures.high_sum_assured_rebate_table, not an empirical table - see
@@ -35,61 +39,79 @@ from datetime import date
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-LAYER1_PATH = REPO_ROOT / "extracted" / "layer1_876.json"
-GROUND_TRUTH_CSV = REPO_ROOT / "docs" / "progress" / "ground-truth" / "876_scraped_premiums.csv"
+GROUND_TRUTH_DIR = REPO_ROOT / "docs" / "progress" / "ground-truth"
 OUT_PATH = REPO_ROOT / "query" / "premium_lookup.json"
 
-POLICY_ID = "876"
-REFERENCE_SUM_ASSURED = 5_000_000  # 876's own sum_assured_min - 0% rebate band
-PREMIUM_PAYMENT_OPTION = "regular"
-SUM_ASSURED_TYPE = "level"
-
-# Matches rebate_structures.high_sum_assured_rebate_table's own age-band key names for
-# level_sum_assured / regular_limited_premium (docs/schema.md, extracted/layer1_876.json) -
-# the extraction prompt requires explicit numeric sa_bands leaves (trap 17) but leaves the
-# age-band level's own key naming to mirror the document, so this mapping (which age range
-# a given key name means) is still policy-specific config, not something the build script
-# can infer from the key string alone.
-AGE_BANDS = [
-    {"band": "up_to_30_years", "age_min": 0, "age_max": 30},
-    {"band": "31_to_45_years", "age_min": 31, "age_max": 999},
+# One entry per policy this build script knows how to produce a lookup for.
+# age_bands/rebate_sa_type_key/rebate_premium_type_key are only meaningful for a
+# "percent_of_tabular_premium" rebate table (876's shape) - a "per_mille_of_sum_
+# assured_rupees" policy (859's shape) has no age split at all, so those keys are
+# simply absent from its entry rather than set to some placeholder value.
+POLICIES = [
+    {
+        "policy_id": "876",
+        "layer1_path": REPO_ROOT / "extracted" / "layer1_876.json",
+        "ground_truth_csv": GROUND_TRUTH_DIR / "876_scraped_premiums.csv",
+        "reference_sum_assured": 5_000_000,  # 876's own sum_assured_min - 0% rebate band
+        "premium_payment_option": "regular",
+        "sum_assured_type": "level",
+        # CSV was scraped 2026-08-01 - fixed here rather than read from the system
+        # clock, since age depends on this date.
+        "scrape_date": date(2026, 8, 1),
+        # Matches rebate_structures.high_sum_assured_rebate_table's own age-band key
+        # names for level_sum_assured / regular_limited_premium (docs/schema.md,
+        # extracted/layer1_876.json) - the extraction prompt requires explicit numeric
+        # sa_bands leaves (trap 17) but leaves the age-band level's own key naming to
+        # mirror the document, so this mapping (which age range a given key name means)
+        # is still policy-specific config, not something the build script can infer
+        # from the key string alone.
+        "age_bands": [
+            {"band": "up_to_30_years", "age_min": 0, "age_max": 30},
+            {"band": "31_to_45_years", "age_min": 31, "age_max": 999},
+        ],
+        "rebate_sa_type_key": "level_sum_assured",
+        "rebate_premium_type_key": "regular_limited_premium",
+    },
+    {
+        "policy_id": "859",
+        "layer1_path": REPO_ROOT / "extracted" / "layer1_859.json",
+        "ground_truth_csv": GROUND_TRUTH_DIR / "859_scraped_premiums.csv",
+        "reference_sum_assured": 500_000,  # 859's own sum_assured_min - Nil rebate band
+        "premium_payment_option": "regular",
+        "sum_assured_type": "level",
+        "scrape_date": date(2026, 8, 8),
+        # No age_bands/rebate_sa_type_key/rebate_premium_type_key - 859's rebate table
+        # is per_mille_of_sum_assured_rupees, dimensions: [], so build_sa_scaling()
+        # reads table["sa_bands"] directly with no age navigation at all.
+    },
 ]
 
-# Maps this build's fixed scope (module-level constants above) to
-# rebate_structures.high_sum_assured_rebate_table's own key names.
-REBATE_SA_TYPE_KEY = {"level": "level_sum_assured", "increasing": "increasing_sum_assured"}[SUM_ASSURED_TYPE]
-REBATE_PREMIUM_TYPE_KEY = {"regular": "regular_limited_premium", "single": "single_premium"}[PREMIUM_PAYMENT_OPTION]
 
-# CSV was scraped 2026-08-01 (docs/progress/ground-truth/876_scraped_premiums.csv) -
-# fixed here rather than read from the system clock, since age depends on this date.
-SCRAPE_DATE = date(2026, 8, 1)
-
-
-def _age_from_dob(dob_str):
+def _age_from_dob(dob_str, scrape_date):
     d, m, y = (int(p) for p in dob_str.split("/"))
-    age = SCRAPE_DATE.year - y
-    if (SCRAPE_DATE.month, SCRAPE_DATE.day) < (m, d):
+    age = scrape_date.year - y
+    if (scrape_date.month, scrape_date.day) < (m, d):
         age -= 1
     return age
 
 
-def _age_from_row(row):
+def _age_from_row(row, scrape_date):
     if row["dob"]:
-        return _age_from_dob(row["dob"])
+        return _age_from_dob(row["dob"], scrape_date)
     m = re.search(r"intended_age (\d+)", row["notes"])
     if m is None:
         raise ValueError(f"row has no dob and no intended_age note: {row}")
     return int(m.group(1))
 
 
-def _age_band(age):
-    for b in AGE_BANDS:
+def _age_band(age, age_bands):
+    for b in age_bands:
         if b["age_min"] <= age <= b["age_max"]:
             return b["band"]
     raise ValueError(f"age {age} doesn't fall in any known age band")
 
 
-def load_rebate_table():
+def load_rebate_table(cfg):
     """Reads rebate_structures.high_sum_assured_rebate_table as-is - the extraction
     prompt (docs/prompts/prompt_a_pdf.txt trap 17) requires this to already be typed
     ("type": "percent_of_tabular_premium" | "per_mille_of_sum_assured_rupees" | "other")
@@ -98,37 +120,37 @@ def load_rebate_table():
     just fails loudly if the field is still the old unstructured placeholder/prose
     shape (a real, still-possible state - see docs/schema.md's extraction-rule
     caveats for which policies haven't been re-extracted with the current prompt yet)."""
-    layer1 = json.loads(LAYER1_PATH.read_text())["layer1"]
+    layer1 = json.loads(cfg["layer1_path"].read_text())["layer1"]
     table = layer1["rebate_structures"]["high_sum_assured_rebate_table"]
     if not isinstance(table, dict) or "type" not in table:
         raise TypeError(
-            "rebate_structures.high_sum_assured_rebate_table is not structured, typed data "
-            "(still the old placeholder/prose string, or extracted before trap 17's \"type\" "
-            "tag was added?) - can't build a formula from it"
+            f"{cfg['policy_id']}: rebate_structures.high_sum_assured_rebate_table is not "
+            "structured, typed data (still the old placeholder/prose string, or extracted "
+            "before trap 17's \"type\" tag was added?) - can't build a formula from it"
         )
     return table
 
 
-def build_sa_bands_for_type_a(table):
-    """percent_of_tabular_premium: walks table["table"][REBATE_SA_TYPE_KEY][REBATE_PREMIUM_TYPE_KEY]
-    (this build's fixed sum_assured_type/premium_payment_option scope) down to each age
+def build_sa_bands_for_type_a(table, cfg):
+    """percent_of_tabular_premium: walks table["table"][rebate_sa_type_key][rebate_premium_type_key]
+    (this policy's fixed sum_assured_type/premium_payment_option scope) down to each age
     band's own "sa_bands" array - already numeric, extracted verbatim from Layer 1."""
-    by_age_band_key = table["table"][REBATE_SA_TYPE_KEY][REBATE_PREMIUM_TYPE_KEY]
+    by_age_band_key = table["table"][cfg["rebate_sa_type_key"]][cfg["rebate_premium_type_key"]]
     age_bands_out = []
-    for b in AGE_BANDS:
+    for b in cfg["age_bands"]:
         sa_bands = [dict(x) for x in by_age_band_key[b["band"]]]
         age_bands_out.append({"band": b["band"], "age_min": b["age_min"], "age_max": b["age_max"], "sa_bands": sa_bands})
     return age_bands_out
 
 
-def load_brochure_points():
-    layer1 = json.loads(LAYER1_PATH.read_text())["layer1"]
+def load_brochure_points(cfg):
+    layer1 = json.loads(cfg["layer1_path"].read_text())["layer1"]
     points = {}
     for row in layer1["sample_illustrative_premiums"]:
         if (
-            row["premium_payment_option"] == PREMIUM_PAYMENT_OPTION
-            and row.get("sum_assured_type", "level") == SUM_ASSURED_TYPE
-            and row["sum_assured"] == REFERENCE_SUM_ASSURED
+            row["premium_payment_option"] == cfg["premium_payment_option"]
+            and row.get("sum_assured_type", "level") == cfg["sum_assured_type"]
+            and row["sum_assured"] == cfg["reference_sum_assured"]
         ):
             points[(row["age"], row["term"])] = {
                 "age": row["age"], "term": row["term"],
@@ -137,19 +159,19 @@ def load_brochure_points():
     return points
 
 
-def load_ground_truth_rows():
-    rows = list(csv.DictReader(GROUND_TRUTH_CSV.open()))
+def load_ground_truth_rows(cfg):
+    rows = list(csv.DictReader(cfg["ground_truth_csv"].open()))
     parsed = []
     for r in rows:
         if (
-            r["policy_id"] != POLICY_ID
-            or r["premium_payment_option"] != PREMIUM_PAYMENT_OPTION
-            or r["sum_assured_type"] != SUM_ASSURED_TYPE
+            r["policy_id"] != cfg["policy_id"]
+            or r["premium_payment_option"] != cfg["premium_payment_option"]
+            or r["sum_assured_type"] != cfg["sum_assured_type"]
             or not r["yearly_premium"]
         ):
             continue
         parsed.append({
-            "age": _age_from_row(r),
+            "age": _age_from_row(r, cfg["scrape_date"]),
             "term": int(r["policy_term"]),
             "sum_assured": int(r["sum_assured"]),
             "premium": int(r["yearly_premium"]),
@@ -157,10 +179,10 @@ def load_ground_truth_rows():
     return parsed
 
 
-def build_age_term_grid(brochure_points, ground_truth_rows):
+def build_age_term_grid(brochure_points, ground_truth_rows, cfg):
     grid = dict(brochure_points)  # (age, term) -> point; scraped overwrites brochure below
     for r in ground_truth_rows:
-        if r["sum_assured"] != REFERENCE_SUM_ASSURED:
+        if r["sum_assured"] != cfg["reference_sum_assured"]:
             continue
         grid[(r["age"], r["term"])] = {
             "age": r["age"], "term": r["term"], "premium": r["premium"], "source": "scraped",
@@ -168,7 +190,7 @@ def build_age_term_grid(brochure_points, ground_truth_rows):
     return sorted(grid.values(), key=lambda p: (p["age"], p["term"]))
 
 
-def _empirical_ratios_by_age_band_and_sa(ground_truth_rows):
+def _empirical_ratios_by_age_band_and_sa(ground_truth_rows, cfg):
     """QA-only: real scraped ratio per (age_band, sum_assured), averaged across every
     term that has a same-age-and-SA sample (confirmed 2026-08 the ratio is constant
     across term within an age band, so averaging smooths sampling noise, doesn't blend
@@ -179,108 +201,126 @@ def _empirical_ratios_by_age_band_and_sa(ground_truth_rows):
     for r in ground_truth_rows:
         by_age_term[(r["age"], r["term"])][r["sum_assured"]] = r["premium"]
 
+    ref_sa = cfg["reference_sum_assured"]
     for (age, term), sa_premiums in by_age_term.items():
-        if REFERENCE_SUM_ASSURED not in sa_premiums:
+        if ref_sa not in sa_premiums:
             continue
-        baseline = sa_premiums[REFERENCE_SUM_ASSURED]
+        baseline = sa_premiums[ref_sa]
         for sa, premium in sa_premiums.items():
-            if sa == REFERENCE_SUM_ASSURED:
+            if sa == ref_sa:
                 continue
-            ratios[(_age_band(age), sa)].append(premium / baseline)
+            ratios[(_age_band(age, cfg["age_bands"]), sa)].append(premium / baseline)
     return ratios
 
 
-def build_sa_scaling(ground_truth_rows):
+def build_sa_scaling(ground_truth_rows, cfg):
     """sa_scaling comes directly from rebate_structures.high_sum_assured_rebate_table
     (load_rebate_table()) - a closed-form formula, not fit to scraped data, so it needs
-    zero scraping to extend to any sum_assured the table's own bands cover. Only
-    "percent_of_tabular_premium" is wired up for this build script's own QA cross-check
-    below (876's shape, the only one with matching scraped ground truth so far) - a
-    different type still builds (query/premium_lookup.py's compute_sa_adjustment()
-    already has both formula branches), it just won't get a qa_check attached here
-    until that policy has its own scraped rows to check against. Scraped ground truth
-    is used only to attach `qa_check`, flagging (not silently swallowing) any real
-    disagreement between the formula and what LIC's live calculator actually returned -
-    never as the multiplier's own source."""
-    table = load_rebate_table()
+    zero scraping to extend to any sum_assured the table's own bands cover. Dispatches
+    on the table's own "type" - both formula shapes query/premium_lookup.py's
+    compute_sa_adjustment() knows about are handled here, but only
+    "percent_of_tabular_premium" gets a qa_check cross-check against scraped
+    cross-SA rows (876's shape - the only policy scraped at more than one SA so far).
+    A "per_mille_of_sum_assured_rupees" policy (859) builds fine with no qa_check
+    attached, since its ground truth so far is all at the reference SA itself -
+    scraping a second SA for it later would enable the same QA cross-check, not
+    required for the formula to work correctly."""
+    table = load_rebate_table(cfg)
     rtype = table["type"]
+    ref_sa = cfg["reference_sum_assured"]
 
-    if rtype != "percent_of_tabular_premium":
-        raise ValueError(
-            f"build_sa_scaling: rebate table type {rtype!r} isn't wired into this build "
-            f"script's fixed 876-scope constants (REBATE_SA_TYPE_KEY/REBATE_PREMIUM_TYPE_KEY/"
-            f"AGE_BANDS) - those assume a percent_of_tabular_premium shape"
-        )
+    if rtype == "percent_of_tabular_premium":
+        age_bands = build_sa_bands_for_type_a(table, cfg)
+        empirical_ratios = _empirical_ratios_by_age_band_and_sa(ground_truth_rows, cfg)
 
-    age_bands = build_sa_bands_for_type_a(table)
-    empirical_ratios = _empirical_ratios_by_age_band_and_sa(ground_truth_rows)
+        for band in age_bands:
+            for sa_band in band["sa_bands"]:
+                # QA only makes sense for a scraped SA we actually have empirical
+                # ratios for - a sa_band with no matching scraped SA just gets no
+                # qa_check, not a failure.
+                checks = []
+                for (b, sa), rs in sorted(empirical_ratios.items()):
+                    if b != band["band"] or not (sa_band["min"] <= sa and (sa_band["max"] is None or sa <= sa_band["max"])):
+                        continue
+                    formula_multiplier = (sa / ref_sa) * (1 - sa_band["rebate_pct"] / 100)
+                    empirical_multiplier = round(sum(rs) / len(rs), 4)
+                    checks.append({
+                        "sum_assured": sa,
+                        "formula_multiplier": round(formula_multiplier, 4),
+                        "empirical_multiplier": empirical_multiplier,
+                        "sample_count": len(rs),
+                        "match": abs(formula_multiplier - empirical_multiplier) < 0.005,
+                    })
+                sa_band["qa_check"] = checks
 
-    for band in age_bands:
-        for sa_band in band["sa_bands"]:
-            # QA only makes sense for a scraped SA we actually have empirical ratios
-            # for (876's ground truth only covers exactly Rs 1Cr / Rs 2Cr) - a sa_band
-            # with no matching scraped SA just gets no qa_check, not a failure.
-            checks = []
-            for (b, sa), rs in sorted(empirical_ratios.items()):
-                if b != band["band"] or not (sa_band["min"] <= sa and (sa_band["max"] is None or sa <= sa_band["max"])):
-                    continue
-                formula_multiplier = (sa / REFERENCE_SUM_ASSURED) * (1 - sa_band["rebate_pct"] / 100)
-                empirical_multiplier = round(sum(rs) / len(rs), 4)
-                checks.append({
-                    "sum_assured": sa,
-                    "formula_multiplier": round(formula_multiplier, 4),
-                    "empirical_multiplier": empirical_multiplier,
-                    "sample_count": len(rs),
-                    "match": abs(formula_multiplier - empirical_multiplier) < 0.005,
-                })
-            sa_band["qa_check"] = checks
+        return {"type": rtype, "reference_sum_assured": ref_sa, "age_bands": age_bands}
 
-    return {"type": rtype, "reference_sum_assured": REFERENCE_SUM_ASSURED, "age_bands": age_bands}
+    if rtype == "per_mille_of_sum_assured_rupees":
+        sa_bands = [dict(x, qa_check=[]) for x in table["sa_bands"]]
+        return {"type": rtype, "reference_sum_assured": ref_sa, "sa_bands": sa_bands}
+
+    raise ValueError(
+        f"{cfg['policy_id']}: rebate table type {rtype!r} has no build_sa_scaling branch yet - "
+        f"add one above (and a matching formula in query/premium_lookup.py's "
+        f"compute_sa_adjustment()) before building a lookup that needs it"
+    )
+
+
+def build_policy_entry(cfg):
+    brochure_points = load_brochure_points(cfg)
+    ground_truth_rows = load_ground_truth_rows(cfg)
+
+    age_term_grid = build_age_term_grid(brochure_points, ground_truth_rows, cfg)
+    sa_scaling = build_sa_scaling(ground_truth_rows, cfg)
+
+    return {
+        "premium_payment_option": cfg["premium_payment_option"],
+        "sum_assured_type": cfg["sum_assured_type"],
+        "age_term_grid": age_term_grid,
+        "sa_scaling": sa_scaling,
+        "built_from": {
+            "layer1_brochure_points": len(brochure_points),
+            "ground_truth_csv": str(cfg["ground_truth_csv"].relative_to(REPO_ROOT)),
+            "ground_truth_rows_at_reference_sa": sum(
+                1 for r in ground_truth_rows if r["sum_assured"] == cfg["reference_sum_assured"]
+            ),
+            "merged_age_term_points": len(age_term_grid),
+        },
+    }
 
 
 def main():
-    brochure_points = load_brochure_points()
-    ground_truth_rows = load_ground_truth_rows()
+    out = {}
+    total_mismatches = 0
 
-    age_term_grid = build_age_term_grid(brochure_points, ground_truth_rows)
-    sa_scaling = build_sa_scaling(ground_truth_rows)
+    for cfg in POLICIES:
+        entry = build_policy_entry(cfg)
+        out[cfg["policy_id"]] = entry
+        sa_scaling = entry["sa_scaling"]
 
-    out = {
-        POLICY_ID: {
-            "premium_payment_option": PREMIUM_PAYMENT_OPTION,
-            "sum_assured_type": SUM_ASSURED_TYPE,
-            "age_term_grid": age_term_grid,
-            "sa_scaling": sa_scaling,
-            "built_from": {
-                "layer1_brochure_points": len(brochure_points),
-                "ground_truth_csv": str(GROUND_TRUTH_CSV.relative_to(REPO_ROOT)),
-                "ground_truth_rows_at_reference_sa": sum(
-                    1 for r in ground_truth_rows if r["sum_assured"] == REFERENCE_SUM_ASSURED
-                ),
-                "merged_age_term_points": len(age_term_grid),
-            },
-        }
-    }
+        print(f"{cfg['policy_id']}: {len(entry['age_term_grid'])} age/term points, "
+              f"sa_scaling type={sa_scaling['type']} (zero scraping needed for this axis)")
+
+        sa_band_groups = sa_scaling["age_bands"] if "age_bands" in sa_scaling else [{"band": None, "sa_bands": sa_scaling["sa_bands"]}]
+        for band in sa_band_groups:
+            for sa_band in band["sa_bands"]:
+                max_str = f"<={sa_band['max']}" if sa_band["max"] is not None else "and above"
+                label = f"{band['band']}: " if band["band"] else ""
+                if sa_scaling["type"] == "percent_of_tabular_premium":
+                    print(f"  {label}SA {sa_band['min']:>10} {max_str:>12} -> {sa_band['rebate_pct']}% rebate")
+                else:
+                    print(f"  {label}SA {sa_band['min']:>10} {max_str:>12} -> {sa_band['rate_per_mille']}%o of SA")
+                for check in sa_band["qa_check"]:
+                    status = "OK" if check["match"] else "MISMATCH"
+                    if not check["match"]:
+                        total_mismatches += 1
+                    print(f"    QA @ SA {check['sum_assured']:>10}: formula={check['formula_multiplier']}x "
+                          f"vs scraped={check['empirical_multiplier']}x (n={check['sample_count']}) [{status}]")
 
     OUT_PATH.write_text(json.dumps(out, indent=2) + "\n")
-    print(f"Wrote {OUT_PATH.relative_to(REPO_ROOT)}: "
-          f"{len(age_term_grid)} age/term points, "
-          f"sa_scaling now a formula from rebate_structures across "
-          f"{len(sa_scaling['age_bands'])} age bands (zero scraping needed for this axis)")
-    mismatches = 0
-    for b in sa_scaling["age_bands"]:
-        for sa_band in b["sa_bands"]:
-            rebate_pct = sa_band["rebate_pct"]
-            max_str = f"<={sa_band['max']}" if sa_band["max"] is not None else "and above"
-            print(f"  {b['band']}: SA {sa_band['min']:>10} {max_str:>12} -> {rebate_pct}% rebate")
-            for check in sa_band["qa_check"]:
-                status = "OK" if check["match"] else "MISMATCH"
-                if not check["match"]:
-                    mismatches += 1
-                print(f"    QA @ SA {check['sum_assured']:>10}: formula={check['formula_multiplier']}x "
-                      f"vs scraped={check['empirical_multiplier']}x (n={check['sample_count']}) [{status}]")
-    if mismatches:
-        print(f"\n{mismatches} QA MISMATCH(ES) - the rebate-table formula disagrees with real "
+    print(f"\nWrote {OUT_PATH.relative_to(REPO_ROOT)}: {len(out)} polic{'y' if len(out) == 1 else 'ies'}")
+    if total_mismatches:
+        print(f"\n{total_mismatches} QA MISMATCH(ES) - a rebate-table formula disagrees with real "
               f"scraped data somewhere above. Investigate before trusting this build.")
 
 
