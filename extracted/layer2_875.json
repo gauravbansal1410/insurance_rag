@@ -13,7 +13,7 @@
       "payout_on_survival": [
         "none"
       ],
-      "payout_notes": "Pure term assurance plan providing death benefit via lump sum or instalments, with no maturity benefit or cash value.",
+      "payout_notes": "Death benefit can be paid as a lump sum or in instalments as per the death benefit instalment option. No survival or maturity benefit is payable as it is a pure term assurance plan.",
       "is_participating": false,
       "builds_cash_value": false,
       "cash_value_loan_available": false,
@@ -30,7 +30,7 @@
     }
   },
   "derivation_notes": {
-    "concern_tag_reasoning": "Plan is a pure term assurance product designed to replace income and provide financial security upon death during the policy term, supporting estate and legacy planning.",
+    "concern_tag_reasoning": "As a standalone term assurance plan providing death benefits (with lump sum and instalment options), it serves as a tool for income replacement and estate/legacy protection for dependents in the case of untimely death. It does not build savings or provide retirement/investment returns.",
     "ambiguous_calls": []
   }
 }
