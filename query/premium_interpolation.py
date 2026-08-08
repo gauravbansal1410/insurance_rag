@@ -13,15 +13,17 @@ from pathlib import Path
 from eligibility_filter import bounds_ok  # sibling import - run as `python3 query/premium_interpolation.py`
 from premium_lookup import lookup_premium
 
-# v1 pilot precomputed premium lookup (docs/query_architecture.md open questions) -
-# policy 876, regular/level only, built by query/build_premium_lookup.py from real
-# scraped ground truth (docs/progress/ground-truth/876_scraped_premiums.csv), since
-# 876 is the only policy so far with both a real (non-placeholder) rebate table and
-# enough ground truth to validate a bilinear age x term surface against (see
-# query/validate_premium_lookup.py). Every other policy/payment-option/sum_assured_type
-# combination keeps the original live linear interpolation below untouched.
+# Precomputed premium lookup (docs/query_architecture.md open questions) - built by
+# query/build_premium_lookup.py from real scraped ground truth
+# (docs/progress/ground-truth/<policy_id>_scraped_premiums.csv) for whichever policies
+# have both a real (non-placeholder) rebate table and enough ground truth to validate a
+# bilinear age x term surface against (see query/validate_premium_lookup.py) - 876 and
+# 859 as of 2026-08-08. Dispatch below is scope-guarded per policy by each entry's own
+# stored premium_payment_option/sum_assured_type (no separate hardcoded scope constant
+# needed - generalized 2026-08-08 once 859 became a second entry), so a policy/option
+# combination missing from this table transparently falls through to the original live
+# linear interpolation further down, untouched.
 _PREMIUM_LOOKUP_PATH = Path(__file__).resolve().parent / "premium_lookup.json"
-_PREMIUM_LOOKUP_SCOPE = {"policy_id": "876", "premium_payment_option": "regular", "sum_assured_type": "level"}
 
 
 def _load_premium_lookup_table():
@@ -119,14 +121,14 @@ def interpolate_premium(profile, layer1_record):
     sum_assured_type = profile.get("sum_assured_type", "level")
     policy_id = layer1_record["policy_id"]
 
+    lookup_entry = _premium_lookup_table.get(policy_id)
     if (
-        policy_id == _PREMIUM_LOOKUP_SCOPE["policy_id"]
-        and profile["premium_payment_option"] == _PREMIUM_LOOKUP_SCOPE["premium_payment_option"]
-        and sum_assured_type == _PREMIUM_LOOKUP_SCOPE["sum_assured_type"]
-        and policy_id in _premium_lookup_table
+        lookup_entry is not None
+        and profile["premium_payment_option"] == lookup_entry["premium_payment_option"]
+        and sum_assured_type == lookup_entry["sum_assured_type"]
     ):
         return lookup_premium(
-            _premium_lookup_table[policy_id], profile["age"], profile["term"], profile["sum_assured"],
+            lookup_entry, profile["age"], profile["term"], profile["sum_assured"],
         )
 
     sample_table = layer1_record["layer1"]["sample_illustrative_premiums"]
