@@ -1,6 +1,6 @@
 {
   "policy_id": "878",
-  "plan_name": "LIC's Digi Credit Life",
+  "plan_name": "LIC\u2019s Digi Credit Life",
   "uin": "512N358V01",
   "plan_category": "term_assurance",
   "structural_variant": "credit_life",
@@ -16,7 +16,7 @@
     ],
     "sum_assured_min": 5000000,
     "sum_assured_max": 50000000,
-    "sum_assured_multiples": "Rs 50,00,000 to Rs 75,00,000 in multiples of Rs 1,00,000; Above Rs 75,00,000 to Rs 1,50,00,000 in multiples of Rs 25,00,000; Above Rs 1,50,00,000 to Rs 4,00,00,000 in multiples of Rs 50,00,000; Above Rs 4,00,00,000 in multiples of Rs 1,00,00,000",
+    "sum_assured_multiples": "Rs 1,00,000 for Rs 50,00,000 to Rs 75,00,000; Rs 25,00,000 for Above 75,00,000 to Rs 1,50,00,000; Rs 50,00,000 for Above Rs 1,50,00,000 to Rs 4,00,00,000; Rs 1,00,00,000 for Above 4,00,00,000",
     "age_at_entry_min": 18,
     "age_at_entry_max": 45,
     "age_at_maturity_min": 23,
@@ -24,12 +24,12 @@
     "policy_term_min": 5,
     "policy_term_max": 30,
     "death_benefit_formula": {
-      "regular_limited_premium": "Higher of 105% of Total Premiums Paid up to the date of death, or Absolute amount assured to be paid on death as specified in the Risk Cover Schedule.",
+      "regular_limited_premium": "Higher of 105% of Total Premiums Paid upto the date of death, or Absolute amount assured to be paid on death specified in the Risk Cover Schedule.",
       "single_premium": "Absolute amount assured to be paid on death as specified in the Risk Cover Schedule."
     },
     "maturity_benefit": "none",
     "surrender_value_applicable": false,
-    "policy_cancellation_value_formula": "Unexpired Risk Premium Value, if any, calculated based on policy type (Single or Limited Premium) and surrender formulas specified in policy document.",
+    "policy_cancellation_value_formula": "Unexpired Risk Premium Value, if any. For Single Premium: K * (100 \u2013 R) % * [(n - t) / n] * Ps * (Basic Sum Assured /1000). For Limited Premium: During PPT: Z * (100 \u2013 R) % * d * (Pppt \u2013 Pn) * (Basic Sum Assured /1000); After PPT (all premiums paid): Z * (100 \u2013 R) % * ppt * (Pppt \u2013 Pn) * [(n - t) / (n - ppt)] * (Basic Sum Assured /1000); After PPT (not all premiums paid): Z * (100 \u2013 R) % * d * (Pppt \u2013 Pn) * (Basic Sum Assured /1000).",
     "grace_period_days": {
       "yearly_halfyearly": 30,
       "monthly": 0
@@ -38,12 +38,117 @@
     "suicide_exclusion": {
       "months": 12,
       "payout_pct_single": 80,
-      "payout_pct_regular_limited": 80
+      "payout_pct_limited_regular": 80
     },
     "rebate_structures": {
-      "high_sum_assured_rebate_table": "High Sum Assured Rebate applies to Tabular Annual/Single Premium based on SA bands (Rs 50 Lakh to <Rs 1 Cr, Rs 1 Cr to <Rs 2 Cr, Rs 2 Cr to <Rs 5 Cr, Rs 5 Cr and above) and age bands (Upto 30 years, 31 to 45 years).",
+      "high_sum_assured_rebate_table": {
+        "type": "percent_of_tabular_premium",
+        "dimensions": [
+          "sum_assured_type",
+          "premium_payment_option_group",
+          "age_band"
+        ],
+        "table": {
+          "level_sum_assured": {
+            "limited_premium": {
+              "upto_30_years": [
+                {
+                  "min": 5000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 15
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 26
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 33
+                }
+              ],
+              "31_to_45_years": [
+                {
+                  "min": 5000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 14
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 25
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 32
+                }
+              ]
+            },
+            "single_premium": {
+              "upto_30_years": [
+                {
+                  "min": 5000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 15
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 27
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 34
+                }
+              ],
+              "31_to_45_years": [
+                {
+                  "min": 5000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 14
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 25
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 33
+                }
+              ]
+            }
+          }
+        },
+        "units": "percent rebate off tabular premium",
+        "source": "Brochure page 4-5"
+      },
       "online_sale_rebate_table": null,
-      "mode_loadings": "Premium Conversion Factors: Yearly = 1, Half-Yearly = 0.51"
+      "mode_loadings": "Yearly: 1, Half-Yearly: 0.51 (expressed as Premium Conversion Factor)"
     },
     "death_benefit_instalment_option": false,
     "sample_illustrative_premiums": [
@@ -54,87 +159,30 @@
         "premium_payment_option": "single",
         "payment_mode": "lump_sum",
         "distribution_channel": "online",
+        "sum_assured_type": "level",
         "premium_amount": 34550,
         "derived": false
       },
       {
-        "age": 30,
-        "sum_assured": 5000000,
-        "term": 25,
-        "premium_payment_option": "single",
-        "payment_mode": "lump_sum",
-        "distribution_channel": "online",
-        "premium_amount": 45500,
-        "derived": false
-      },
-      {
-        "age": 40,
-        "sum_assured": 5000000,
-        "term": 25,
-        "premium_payment_option": "single",
-        "payment_mode": "lump_sum",
-        "distribution_channel": "online",
-        "premium_amount": 88750,
-        "derived": false
-      },
-      {
         "age": 20,
         "sum_assured": 5000000,
         "term": 25,
         "premium_payment_option": "limited_ppt_5",
         "payment_mode": "annual",
         "distribution_channel": "online",
+        "sum_assured_type": "level",
         "premium_amount": 8050,
         "derived": false
       },
       {
-        "age": 30,
-        "sum_assured": 5000000,
-        "term": 25,
-        "premium_payment_option": "limited_ppt_5",
-        "payment_mode": "annual",
-        "distribution_channel": "online",
-        "premium_amount": 10500,
-        "derived": false
-      },
-      {
-        "age": 40,
-        "sum_assured": 5000000,
-        "term": 25,
-        "premium_payment_option": "limited_ppt_5",
-        "payment_mode": "annual",
-        "distribution_channel": "online",
-        "premium_amount": 20300,
-        "derived": false
-      },
-      {
         "age": 20,
         "sum_assured": 5000000,
         "term": 25,
         "premium_payment_option": "limited_ppt_10",
         "payment_mode": "annual",
         "distribution_channel": "online",
+        "sum_assured_type": "level",
         "premium_amount": 4800,
-        "derived": false
-      },
-      {
-        "age": 30,
-        "sum_assured": 5000000,
-        "term": 25,
-        "premium_payment_option": "limited_ppt_10",
-        "payment_mode": "annual",
-        "distribution_channel": "online",
-        "premium_amount": 6250,
-        "derived": false
-      },
-      {
-        "age": 40,
-        "sum_assured": 5000000,
-        "term": 25,
-        "premium_payment_option": "limited_ppt_10",
-        "payment_mode": "annual",
-        "distribution_channel": "online",
-        "premium_amount": 11900,
         "derived": false
       },
       {
@@ -144,6 +192,7 @@
         "premium_payment_option": "limited_ppt_15",
         "payment_mode": "annual",
         "distribution_channel": "online",
+        "sum_assured_type": "level",
         "premium_amount": 3800,
         "derived": false
       },
@@ -151,10 +200,77 @@
         "age": 30,
         "sum_assured": 5000000,
         "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 45500,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 10500,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 6250,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 25,
         "premium_payment_option": "limited_ppt_15",
         "payment_mode": "annual",
         "distribution_channel": "online",
+        "sum_assured_type": "level",
         "premium_amount": 4900,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 88750,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 20300,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "online",
+        "sum_assured_type": "level",
+        "premium_amount": 11900,
         "derived": false
       },
       {
@@ -164,22 +280,27 @@
         "premium_payment_option": "limited_ppt_15",
         "payment_mode": "annual",
         "distribution_channel": "online",
+        "sum_assured_type": "level",
         "premium_amount": 9250,
         "derived": false
       }
     ],
     "compatible_riders": [],
     "waiting_period_days": null,
-    "outstanding_loan_schedule_reference": "Risk Cover Schedule based on Basic Sum Assured, Policy Term, and chosen interest rate (6% to 12% p.a. effective on equated yearly repayment basis)."
+    "outstanding_loan_schedule_reference": "Risk Cover Schedule based on chosen Basic Sum Assured, Policy Term, and Interest Rate (6%, 7%, 8%, 9%, 10%, 11%, 12% p.a.)"
   },
   "extraction_notes": {
     "source_provenance": {
-      "policy_doc": "Authoritative for all terms, conditions, and rules.",
-      "brochure": "Authoritative for sample illustrative premium tables and plan number 878."
+      "policy_doc": "LIC's Digi Credit Life Policy Document (UIN: 512N358V01)",
+      "brochure": "LIC's Digi Credit Life Brochure (Plan No. 878, UIN: 512N358V01)"
     },
     "field_conflicts": [],
-    "low_confidence_fields": [],
+    "low_confidence_fields": [
+      "waiting_period_days",
+      "outstanding_loan_schedule_reference"
+    ],
     "fields_not_found": [
+      "layer1.online_sale_rebate_table",
       "layer1.waiting_period_days"
     ],
     "field_specific_notes": [
