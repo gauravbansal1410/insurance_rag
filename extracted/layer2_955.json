@@ -13,7 +13,7 @@
       "payout_on_survival": [
         "none"
       ],
-      "payout_notes": "Death benefit is paid as a lump sum or in instalments as per the death benefit instalment option. Maturity benefit is none.",
+      "payout_notes": "Death benefit payable as lump sum or instalments based on death benefit formula (highest of multiple criteria). No maturity benefit.",
       "is_participating": false,
       "builds_cash_value": false,
       "cash_value_loan_available": false,
@@ -32,7 +32,7 @@
     }
   },
   "derivation_notes": {
-    "concern_tag_reasoning": "LIC's New Jeevan Amar is a pure term assurance plan designed to replace income and provide financial security upon death to dependents (income_replacement and estate_legacy_planning). It does not build savings, offer maturity benefits, or include critical illness/medical riders natively.",
+    "concern_tag_reasoning": "The plan is a pure term assurance product providing financial protection upon death, which aligns with income replacement and estate/legacy planning. It is not a savings, retirement, or investment-linked product.",
     "ambiguous_calls": []
   }
 }
