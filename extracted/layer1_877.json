@@ -1,0 +1,314 @@
+{
+  "policy_id": "877",
+  "plan_name": "LIC\u2019s Yuva Credit Life",
+  "uin": "512N357V01",
+  "plan_category": "term_assurance",
+  "structural_variant": "credit_life",
+  "layer1": {
+    "premium_payment_options": [
+      "single",
+      "limited"
+    ],
+    "ppt_options": [
+      5,
+      10,
+      15
+    ],
+    "sum_assured_min": 5000000,
+    "sum_assured_max": 50000000,
+    "sum_assured_multiples": "50L to 75L: 1L; Above 75L to 1.5Cr: 25L; Above 1.5Cr to 4Cr: 50L; Above 4Cr: 1Cr",
+    "age_at_entry_min": 18,
+    "age_at_entry_max": 45,
+    "age_at_maturity_min": 23,
+    "age_at_maturity_max": 75,
+    "policy_term_min": 5,
+    "policy_term_max": 30,
+    "death_benefit_formula": {
+      "regular_limited_premium": "Higher of 105% of Total Premiums Paid up to date of death or Absolute amount assured to be paid on death as specified in Risk Cover Schedule",
+      "single_premium": "Absolute amount assured to be paid on death as specified in Risk Cover Schedule"
+    },
+    "maturity_benefit": "none",
+    "surrender_value_applicable": false,
+    "policy_cancellation_value_formula": "Unexpired Risk Premium Value, if any",
+    "grace_period_days": {
+      "yearly_halfyearly": 30,
+      "monthly": 0
+    },
+    "free_look_period_days": 30,
+    "suicide_exclusion": {
+      "months": 12,
+      "payout_pct_single": 80.0,
+      "payout_pct_regular_limited": 80.0
+    },
+    "rebate_structures": {
+      "high_sum_assured_rebate_table": {
+        "type": "percent_of_tabular_premium",
+        "dimensions": [
+          "sum_assured_type",
+          "premium_payment_option_group",
+          "age_band"
+        ],
+        "table": {
+          "level_sum_assured": {
+            "limited_premium": {
+              "up_to_30_years": [
+                {
+                  "min": 2000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 17
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 27
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 37
+                }
+              ],
+              "31_to_45_years": [
+                {
+                  "min": 2000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 15
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 25
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 35
+                }
+              ]
+            },
+            "single_premium": {
+              "up_to_30_years": [
+                {
+                  "min": 2000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 15
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 25
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 33
+                }
+              ],
+              "31_to_45_years": [
+                {
+                  "min": 2000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 14
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 24
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 31
+                }
+              ]
+            }
+          }
+        },
+        "units": "percent rebate off tabular premium",
+        "source": "Brochure Page 6"
+      },
+      "online_sale_rebate_table": null,
+      "mode_loadings": "Yearly: 1, Half-Yearly: 0.51"
+    },
+    "death_benefit_instalment_option": false,
+    "sample_illustrative_premiums": [
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 40900,
+        "derived": false
+      },
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 10100,
+        "derived": false
+      },
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 6100,
+        "derived": false
+      },
+      {
+        "age": 20,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_15",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 4850,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 53550,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 13150,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 7900,
+        "derived": false
+      },
+      {
+        "age": 30,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_15",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 6200,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "single",
+        "payment_mode": "lump_sum",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 103450,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_5",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 25100,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_10",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 14900,
+        "derived": false
+      },
+      {
+        "age": 40,
+        "sum_assured": 5000000,
+        "term": 25,
+        "premium_payment_option": "limited_ppt_15",
+        "payment_mode": "annual",
+        "distribution_channel": "offline",
+        "sum_assured_type": "level",
+        "premium_amount": 11650,
+        "derived": false
+      }
+    ],
+    "compatible_riders": [],
+    "waiting_period_days": null,
+    "outstanding_loan_schedule_reference": "Risk Cover Schedule based on chosen interest rate (6%, 7%, 8%, 9%, 10%, 11%, 12% p.a.)"
+  },
+  "extraction_notes": {
+    "source_provenance": {
+      "policy_doc": "LIC\u2019s Yuva Credit Life Policy Document (UIN: 512N357V01)",
+      "brochure": "LIC\u2019s Yuva Credit Life Brochure (Plan No. 877)"
+    },
+    "field_conflicts": [],
+    "low_confidence_fields": [],
+    "fields_not_found": [
+      "layer1.online_sale_rebate_table",
+      "layer1.waiting_period_days"
+    ],
+    "field_specific_notes": [
+      {
+        "field": "layer1.sum_assured_min",
+        "note": "For eligible lives age 21 to 45, Minimum Basic Sum Assured is Rs 20,00,000 where insurance need is based on approved sanctioned loan for specified purpose such as housing loan."
+      },
+      {
+        "field": "layer1.sample_illustrative_premiums[11].premium_payment_option",
+        "note": "Corrected from limited_ppt_10 to limited_ppt_15 after verifying against the brochure sample-illustrative-premium table directly (age 40 row: Single=1,03,450, PPT5=25,100, PPT10=14,900, PPT15=11,650) - the extraction mislabeled this specific cell differently across 3 separate runs (single, then limited_ppt_10), while the premium_amount itself (11650) was correct every time. A pre-existing (pre-2026-08-08) extraction of this same policy happened to have this cell correct, which is how the discrepancy was caught."
+      }
+    ]
+  }
+}
