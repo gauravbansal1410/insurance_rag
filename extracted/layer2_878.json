@@ -11,11 +11,11 @@
       "payout_on_survival": [
         "none"
       ],
-      "payout_notes": "Absolute amount assured paid on death as specified in the Risk Cover Schedule.",
+      "payout_notes": "Death benefit is paid as an absolute amount assured or higher of 105% of premiums paid, mapped to credit/loan risk cover schedules.",
       "is_participating": false,
       "builds_cash_value": false,
       "cash_value_loan_available": false,
-      "cover_basis": "decreasing_loan_linked"
+      "cover_basis": "fixed"
     },
     "group_c": {
       "min_age": 18,
@@ -28,7 +28,7 @@
     }
   },
   "derivation_notes": {
-    "concern_tag_reasoning": "Plan is explicitly structured as a credit life product linked to loans and repayment schedules, making debt_linked_cover the sole appropriate tag.",
+    "concern_tag_reasoning": "Plan is explicitly structured as a credit life insurance policy (structural_variant: credit_life) designed to cover outstanding loans, aligning with debt_linked_cover.",
     "ambiguous_calls": []
   }
 }
