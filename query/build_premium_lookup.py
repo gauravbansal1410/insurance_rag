@@ -213,18 +213,43 @@ def _empirical_ratios_by_age_band_and_sa(ground_truth_rows, cfg):
     return ratios
 
 
+def _per_mille_checks_by_sa(ground_truth_rows, ref_sa):
+    """QA-only, per_mille_of_sum_assured_rupees's equivalent of
+    _empirical_ratios_by_age_band_and_sa() above: for every ground-truth row not at
+    the reference SA, if a reference-SA row exists at the SAME (age, term), that pair
+    is a genuine end-to-end check of compute_sa_adjustment()'s formula (not just the
+    SA axis in isolation) - keyed by sum_assured so it can be attached per sa_band.
+    Grouped by exact (age, term) match rather than averaged like the percent-type
+    ratio check, since this formula subtracts an absolute Rupee amount rather than
+    applying a pure ratio, so it isn't age/term-invariant the same way a ratio is -
+    each sample carries its own age/term so a real mismatch can be traced to exactly
+    which query it came from. Used only to cross-check the formula, never as its
+    source."""
+    by_age_term = defaultdict(dict)  # (age, term) -> {sum_assured: premium}
+    for r in ground_truth_rows:
+        by_age_term[(r["age"], r["term"])][r["sum_assured"]] = r["premium"]
+
+    checks_by_sa = defaultdict(list)
+    for (age, term), sa_premiums in by_age_term.items():
+        if ref_sa not in sa_premiums:
+            continue
+        baseline = sa_premiums[ref_sa]
+        for sa, actual in sa_premiums.items():
+            if sa == ref_sa:
+                continue
+            checks_by_sa[sa].append({"age": age, "term": term, "baseline": baseline, "actual": actual})
+    return checks_by_sa
+
+
 def build_sa_scaling(ground_truth_rows, cfg):
     """sa_scaling comes directly from rebate_structures.high_sum_assured_rebate_table
     (load_rebate_table()) - a closed-form formula, not fit to scraped data, so it needs
     zero scraping to extend to any sum_assured the table's own bands cover. Dispatches
     on the table's own "type" - both formula shapes query/premium_lookup.py's
-    compute_sa_adjustment() knows about are handled here, but only
-    "percent_of_tabular_premium" gets a qa_check cross-check against scraped
-    cross-SA rows (876's shape - the only policy scraped at more than one SA so far).
-    A "per_mille_of_sum_assured_rupees" policy (859) builds fine with no qa_check
-    attached, since its ground truth so far is all at the reference SA itself -
-    scraping a second SA for it later would enable the same QA cross-check, not
-    required for the formula to work correctly."""
+    compute_sa_adjustment() knows about get a qa_check cross-check against scraped
+    cross-SA rows, when such rows exist (a sa_band with no matching scraped SA just
+    gets an empty qa_check, not a failure - true for both types until a policy has
+    ground truth at more than one sum_assured)."""
     table = load_rebate_table(cfg)
     rtype = table["type"]
     ref_sa = cfg["reference_sum_assured"]
@@ -256,7 +281,27 @@ def build_sa_scaling(ground_truth_rows, cfg):
         return {"type": rtype, "reference_sum_assured": ref_sa, "age_bands": age_bands}
 
     if rtype == "per_mille_of_sum_assured_rupees":
-        sa_bands = [dict(x, qa_check=[]) for x in table["sa_bands"]]
+        checks_by_sa = _per_mille_checks_by_sa(ground_truth_rows, ref_sa)
+        sa_bands = []
+        for raw_band in table["sa_bands"]:
+            band = dict(raw_band)
+            checks = []
+            for sa, samples in sorted(checks_by_sa.items()):
+                if not (band["min"] <= sa and (band["max"] is None or sa <= band["max"])):
+                    continue
+                for s in samples:
+                    rebate_rs = (band["rate_per_mille"] / 1000) * sa
+                    formula_premium = s["baseline"] * (sa / ref_sa) - rebate_rs
+                    checks.append({
+                        "sum_assured": sa,
+                        "age": s["age"],
+                        "term": s["term"],
+                        "formula_premium": round(formula_premium, 2),
+                        "actual_premium": s["actual"],
+                        "match": abs(formula_premium - s["actual"]) < max(1.0, 0.005 * s["actual"]),
+                    })
+            band["qa_check"] = checks
+            sa_bands.append(band)
         return {"type": rtype, "reference_sum_assured": ref_sa, "sa_bands": sa_bands}
 
     raise ValueError(
@@ -314,8 +359,12 @@ def main():
                     status = "OK" if check["match"] else "MISMATCH"
                     if not check["match"]:
                         total_mismatches += 1
-                    print(f"    QA @ SA {check['sum_assured']:>10}: formula={check['formula_multiplier']}x "
-                          f"vs scraped={check['empirical_multiplier']}x (n={check['sample_count']}) [{status}]")
+                    if "formula_multiplier" in check:
+                        print(f"    QA @ SA {check['sum_assured']:>10}: formula={check['formula_multiplier']}x "
+                              f"vs scraped={check['empirical_multiplier']}x (n={check['sample_count']}) [{status}]")
+                    else:
+                        print(f"    QA @ SA {check['sum_assured']:>10} (age={check['age']}, term={check['term']}): "
+                              f"formula={check['formula_premium']} vs scraped={check['actual_premium']} [{status}]")
 
     OUT_PATH.write_text(json.dumps(out, indent=2) + "\n")
     print(f"\nWrote {OUT_PATH.relative_to(REPO_ROOT)}: {len(out)} polic{'y' if len(out) == 1 else 'ies'}")
