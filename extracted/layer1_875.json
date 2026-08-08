@@ -1,6 +1,6 @@
 {
   "policy_id": "875",
-  "plan_name": "LIC\u2019s Yuva Term",
+  "plan_name": "LIC's Yuva Term",
   "uin": "512N355V02",
   "plan_category": "term_assurance",
   "structural_variant": "standalone",
@@ -16,7 +16,7 @@
     ],
     "sum_assured_min": 5000000,
     "sum_assured_max": 500000000,
-    "sum_assured_multiples": "Rs 1,00,000/- for 50L-75L; Rs 25,00,000/- for >75L-1.5Cr; Rs 50,00,000/- for >1.5Cr-4Cr; Rs 1,00,000,00/- for >4Cr",
+    "sum_assured_multiples": "From 50,00,000/- to 75,00,000/-: 1,00,000/-; Above 75,00,000/- to 1,50,00,000/-: 25,00,000/-; Above 1,50,00,000/- to 4,00,00,000/-: 50,00,000/-; Above 4,00,00,000/-: 1,00,00,000/-",
     "age_at_entry_min": 18,
     "age_at_entry_max": 45,
     "age_at_maturity_min": 33,
@@ -24,12 +24,12 @@
     "policy_term_min": 15,
     "policy_term_max": 40,
     "death_benefit_formula": {
-      "regular_limited_premium": "Highest of: 7 times of Annualised Premium; or 105% of Total Premiums Paid upto the date of death; or Absolute amount assured to be paid on death.",
-      "single_premium": "Higher of: 125% of Single Premium; or Absolute amount assured to be paid on death."
+      "regular_limited_premium": "Highest of: 7 times of Annualised Premium; 105% of Total Premiums Paid upto the date of death; Absolute amount assured to be paid on death.",
+      "single_premium": "Higher of: 125% of Single Premium; Absolute amount assured to be paid on death."
     },
     "maturity_benefit": "none",
     "surrender_value_applicable": false,
-    "policy_cancellation_value_formula": "Unexpired Risk Premium Value, if applicable under Single Premium or Limited Premium payment.",
+    "policy_cancellation_value_formula": "Unexpired Risk Premium Value, if applicable as per terms for Single or Limited premium payments.",
     "grace_period_days": {
       "yearly_halfyearly": 30,
       "monthly": 0
@@ -41,9 +41,208 @@
       "payout_pct_regular_limited": 80
     },
     "rebate_structures": {
-      "high_sum_assured_rebate_table": "Provided in brochure under Section 8 for Level and Increasing Sum Assured options across age bands and BSA tiers.",
+      "high_sum_assured_rebate_table": {
+        "type": "percent_of_tabular_premium",
+        "units": "percent rebate off tabular premium",
+        "source": "Brochure page 7",
+        "dimensions": [
+          "sum_assured_type",
+          "premium_payment_option_group",
+          "age_band"
+        ],
+        "table": {
+          "level_sum_assured": {
+            "regular_limited_premium": {
+              "up_to_30_years": [
+                {
+                  "min": 5000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 18
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 33
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 40
+                }
+              ],
+              "31_to_45_years": [
+                {
+                  "min": 5000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 16
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 31
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 37
+                }
+              ]
+            },
+            "single_premium": {
+              "up_to_30_years": [
+                {
+                  "min": 5000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 17
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 30
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 35
+                }
+              ],
+              "31_to_45_years": [
+                {
+                  "min": 5000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 15
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 28
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 32
+                }
+              ]
+            }
+          },
+          "increasing_sum_assured": {
+            "regular_limited_premium": {
+              "up_to_30_years": [
+                {
+                  "min": 5000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 16
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 29
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 36
+                }
+              ],
+              "31_to_50_years": [
+                {
+                  "min": 5000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 14
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 27
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 33
+                }
+              ]
+            },
+            "single_premium": {
+              "up_to_30_years": [
+                {
+                  "min": 5000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 15
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 28
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 33
+                }
+              ],
+              "31_to_45_years": [
+                {
+                  "min": 5000000,
+                  "max": 9999999,
+                  "rebate_pct": 0
+                },
+                {
+                  "min": 10000000,
+                  "max": 19999999,
+                  "rebate_pct": 14
+                },
+                {
+                  "min": 20000000,
+                  "max": 49999999,
+                  "rebate_pct": 27
+                },
+                {
+                  "min": 50000000,
+                  "max": null,
+                  "rebate_pct": 31
+                }
+              ]
+            }
+          }
+        }
+      },
       "online_sale_rebate_table": null,
-      "mode_loadings": "Premium Conversion rate: Yearly Nil, Half-Yearly 2%"
+      "mode_loadings": "Half-Yearly: 2%"
     },
     "death_benefit_instalment_option": true,
     "sample_illustrative_premiums": [
