@@ -1,0 +1,37 @@
+{
+  "policy_id": "877",
+  "layer2": {
+    "group_a_concern_tags": [
+      "debt_linked_cover",
+      "income_replacement"
+    ],
+    "group_b": {
+      "payout_on_death": [
+        "lump_sum"
+      ],
+      "payout_on_survival": [
+        "none"
+      ],
+      "payout_notes": "Absolute amount assured paid on death as specified in Risk Cover Schedule, or 105% of total premiums paid for regular/limited premium.",
+      "is_participating": false,
+      "builds_cash_value": false,
+      "cash_value_loan_available": false,
+      "cover_basis": "decreasing_loan_linked"
+    },
+    "group_c": {
+      "min_age": 18,
+      "max_age": 45,
+      "min_sum_assured": 5000000,
+      "max_sum_assured": 50000000,
+      "min_term": 5,
+      "max_term": 30,
+      "compatible_riders": []
+    }
+  },
+  "derivation_notes": {
+    "concern_tag_reasoning": "The plan is explicitly structured as a credit life insurance policy ('LIC's Yuva Credit Life') tied to loans, matching debt_linked_cover. It also provides pure term assurance protection, supporting income_replacement.",
+    "ambiguous_calls": [
+      "Cover basis is classified as decreasing_loan_linked due to the structural variant being credit_life with an outstanding loan schedule reference, despite the layer 1 sample table mentioning level sum assured scenarios."
+    ]
+  }
+}
