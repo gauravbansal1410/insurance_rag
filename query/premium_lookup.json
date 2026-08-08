@@ -356,5 +356,359 @@
       "ground_truth_rows_at_reference_sa": 39,
       "merged_age_term_points": 41
     }
+  },
+  "859": {
+    "premium_payment_option": "regular",
+    "sum_assured_type": "level",
+    "age_term_grid": [
+      {
+        "age": 18,
+        "term": 5,
+        "premium": 1810,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 10,
+        "premium": 1630,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 15,
+        "premium": 1615,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 20,
+        "premium": 1655,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 25,
+        "premium": 1740,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 30,
+        "premium": 1855,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 35,
+        "premium": 2015,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 40,
+        "premium": 2210,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 5,
+        "premium": 1830,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 10,
+        "premium": 1670,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 15,
+        "premium": 1705,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 20,
+        "premium": 1810,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 25,
+        "premium": 1975,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 30,
+        "premium": 2210,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 35,
+        "premium": 2490,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 40,
+        "premium": 2775,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 5,
+        "premium": 1895,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 10,
+        "premium": 1795,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 15,
+        "premium": 1900,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 20,
+        "premium": 2095,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 25,
+        "premium": 2385,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 30,
+        "premium": 2735,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 35,
+        "premium": 3095,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 40,
+        "premium": 3460,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 5,
+        "premium": 2095,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 10,
+        "premium": 2080,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 15,
+        "premium": 2305,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 20,
+        "premium": 2665,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 25,
+        "premium": 3105,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 30,
+        "premium": 3560,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 35,
+        "premium": 4030,
+        "source": "scraped"
+      },
+      {
+        "age": 40,
+        "term": 5,
+        "premium": 2490,
+        "source": "scraped"
+      },
+      {
+        "age": 40,
+        "term": 10,
+        "premium": 2640,
+        "source": "scraped"
+      },
+      {
+        "age": 40,
+        "term": 15,
+        "premium": 3095,
+        "source": "scraped"
+      },
+      {
+        "age": 40,
+        "term": 20,
+        "premium": 3650,
+        "source": "scraped"
+      },
+      {
+        "age": 40,
+        "term": 25,
+        "premium": 4220,
+        "source": "scraped"
+      },
+      {
+        "age": 40,
+        "term": 30,
+        "premium": 4815,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 5,
+        "premium": 3260,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 10,
+        "premium": 3730,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 15,
+        "premium": 4430,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 20,
+        "premium": 5135,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 25,
+        "premium": 5880,
+        "source": "scraped"
+      },
+      {
+        "age": 50,
+        "term": 5,
+        "premium": 4755,
+        "source": "scraped"
+      },
+      {
+        "age": 50,
+        "term": 10,
+        "premium": 5505,
+        "source": "scraped"
+      },
+      {
+        "age": 50,
+        "term": 15,
+        "premium": 6375,
+        "source": "scraped"
+      },
+      {
+        "age": 50,
+        "term": 20,
+        "premium": 7290,
+        "source": "scraped"
+      },
+      {
+        "age": 55,
+        "term": 5,
+        "premium": 6885,
+        "source": "scraped"
+      },
+      {
+        "age": 55,
+        "term": 10,
+        "premium": 7810,
+        "source": "scraped"
+      },
+      {
+        "age": 55,
+        "term": 15,
+        "premium": 8985,
+        "source": "scraped"
+      },
+      {
+        "age": 60,
+        "term": 5,
+        "premium": 9400,
+        "source": "scraped"
+      },
+      {
+        "age": 60,
+        "term": 10,
+        "premium": 10835,
+        "source": "scraped"
+      },
+      {
+        "age": 65,
+        "term": 5,
+        "premium": 13110,
+        "source": "scraped"
+      }
+    ],
+    "sa_scaling": {
+      "type": "per_mille_of_sum_assured_rupees",
+      "reference_sum_assured": 500000,
+      "sa_bands": [
+        {
+          "min": 500000,
+          "max": 950000,
+          "rate_per_mille": 0,
+          "qa_check": []
+        },
+        {
+          "min": 1000000,
+          "max": 1450000,
+          "rate_per_mille": 0.1,
+          "qa_check": []
+        },
+        {
+          "min": 1500000,
+          "max": 1950000,
+          "rate_per_mille": 0.2,
+          "qa_check": []
+        },
+        {
+          "min": 2000000,
+          "max": null,
+          "rate_per_mille": 0.25,
+          "qa_check": []
+        }
+      ]
+    },
+    "built_from": {
+      "layer1_brochure_points": 1,
+      "ground_truth_csv": "docs/progress/ground-truth/859_scraped_premiums.csv",
+      "ground_truth_rows_at_reference_sa": 52,
+      "merged_age_term_points": 52
+    }
   }
 }
