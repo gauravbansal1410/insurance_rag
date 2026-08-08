@@ -745,5 +745,289 @@
       "ground_truth_rows_at_reference_sa": 52,
       "merged_age_term_points": 52
     }
+  },
+  "875": {
+    "premium_payment_option": "regular",
+    "sum_assured_type": "level",
+    "age_term_grid": [
+      {
+        "age": 18,
+        "term": 15,
+        "premium": 4350,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 20,
+        "premium": 4450,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 25,
+        "premium": 4600,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 30,
+        "premium": 4900,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 35,
+        "premium": 5300,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 40,
+        "premium": 5850,
+        "source": "scraped"
+      },
+      {
+        "age": 20,
+        "term": 20,
+        "premium": 4550,
+        "source": "brochure"
+      },
+      {
+        "age": 25,
+        "term": 15,
+        "premium": 4700,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 20,
+        "premium": 4950,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 25,
+        "premium": 5400,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 30,
+        "premium": 6100,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 35,
+        "premium": 6950,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 40,
+        "premium": 7850,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 15,
+        "premium": 5350,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 20,
+        "premium": 5950,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 25,
+        "premium": 6850,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 30,
+        "premium": 8000,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 35,
+        "premium": 9200,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 40,
+        "premium": 10450,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 15,
+        "premium": 6800,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 20,
+        "premium": 8000,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 25,
+        "premium": 9500,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 30,
+        "premium": 11100,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 35,
+        "premium": 12750,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 40,
+        "premium": 14600,
+        "source": "scraped"
+      },
+      {
+        "age": 40,
+        "term": 15,
+        "premium": 9700,
+        "source": "scraped"
+      },
+      {
+        "age": 40,
+        "term": 20,
+        "premium": 11700,
+        "source": "scraped"
+      },
+      {
+        "age": 40,
+        "term": 25,
+        "premium": 13750,
+        "source": "scraped"
+      },
+      {
+        "age": 40,
+        "term": 30,
+        "premium": 15950,
+        "source": "scraped"
+      },
+      {
+        "age": 40,
+        "term": 35,
+        "premium": 18350,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 15,
+        "premium": 14900,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 20,
+        "premium": 17500,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 25,
+        "premium": 20300,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 30,
+        "premium": 23500,
+        "source": "scraped"
+      }
+    ],
+    "sa_scaling": {
+      "type": "percent_of_tabular_premium",
+      "reference_sum_assured": 5000000,
+      "age_bands": [
+        {
+          "band": "up_to_30_years",
+          "age_min": 0,
+          "age_max": 30,
+          "sa_bands": [
+            {
+              "min": 5000000,
+              "max": 9999999,
+              "rebate_pct": 0,
+              "qa_check": []
+            },
+            {
+              "min": 10000000,
+              "max": 19999999,
+              "rebate_pct": 18,
+              "qa_check": []
+            },
+            {
+              "min": 20000000,
+              "max": 49999999,
+              "rebate_pct": 33,
+              "qa_check": []
+            },
+            {
+              "min": 50000000,
+              "max": null,
+              "rebate_pct": 40,
+              "qa_check": []
+            }
+          ]
+        },
+        {
+          "band": "31_to_45_years",
+          "age_min": 31,
+          "age_max": 999,
+          "sa_bands": [
+            {
+              "min": 5000000,
+              "max": 9999999,
+              "rebate_pct": 0,
+              "qa_check": []
+            },
+            {
+              "min": 10000000,
+              "max": 19999999,
+              "rebate_pct": 16,
+              "qa_check": []
+            },
+            {
+              "min": 20000000,
+              "max": 49999999,
+              "rebate_pct": 31,
+              "qa_check": []
+            },
+            {
+              "min": 50000000,
+              "max": null,
+              "rebate_pct": 37,
+              "qa_check": []
+            }
+          ]
+        }
+      ]
+    },
+    "built_from": {
+      "layer1_brochure_points": 3,
+      "ground_truth_csv": "docs/progress/ground-truth/875_scraped_premiums.csv",
+      "ground_truth_rows_at_reference_sa": 33,
+      "merged_age_term_points": 34
+    }
   }
 }
