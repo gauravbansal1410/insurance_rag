@@ -103,6 +103,63 @@ POLICIES = [
         "rebate_sa_type_key": "level_sum_assured",
         "rebate_premium_type_key": "regular_limited_premium",
     },
+    {
+        "policy_id": "878",
+        "layer1_path": REPO_ROOT / "extracted" / "layer1_878.json",
+        "ground_truth_csv": GROUND_TRUTH_DIR / "878_scraped_premiums.csv",
+        "reference_sum_assured": 5_000_000,  # 878's own sum_assured_min - 0% rebate band
+        # credit_life - no Regular Premium option exists on this policy at all
+        # (confirmed against its own Coverage page, docs/progress/20260810-progress.md).
+        # Scraped under Limited Premium/PPT=10 instead - matches Layer 1's own
+        # sample_illustrative_premiums premium_payment_option labeling.
+        "premium_payment_option": "limited_ppt_10",
+        "sum_assured_type": "level",
+        "scrape_date": date(2026, 8, 11),
+        # 878's rebate table has its own key-naming quirks, confirmed by inspecting
+        # extracted/layer1_878.json directly rather than assumed from 876/875's shape:
+        # "limited_premium" (not "regular_limited_premium" - this policy has no Regular
+        # option at all) and "upto_30_years" (no underscore between "up" and "to",
+        # unlike 876/875's "up_to_30_years") - the extraction prompt lets the age-band
+        # key naming mirror the document, so this varies run to run, not just policy to
+        # policy (see docs/schema.md's 876 first-attempt caveat).
+        "age_bands": [
+            {"band": "upto_30_years", "age_min": 0, "age_max": 30},
+            {"band": "31_to_45_years", "age_min": 31, "age_max": 999},
+        ],
+        "rebate_sa_type_key": "level_sum_assured",
+        "rebate_premium_type_key": "limited_premium",
+    },
+]
+
+# Policies whose age x term grid is DERIVED from an already-built sibling's grid
+# (rescaled by a factor calibrated against this policy's own small set of real
+# scraped anchor points) rather than built from a full scrape of its own - only
+# valid because the sibling's curve *shape* was confirmed to match this policy's
+# own spot-check points closely first (see docs/query_architecture.md's shape-
+# transfer open question: 877 vs 878 matched within 0.1-2.7% at every point
+# checked). sa_scaling is still built normally from this policy's own real,
+# extracted rebate table - only the age x term axis is derived.
+DERIVED_POLICIES = [
+    {
+        "policy_id": "877",
+        "layer1_path": REPO_ROOT / "extracted" / "layer1_877.json",
+        "ground_truth_csv": GROUND_TRUTH_DIR / "877_scraped_premiums.csv",
+        "derive_age_term_from": "878",
+        "reference_sum_assured": 5_000_000,  # 877's own sum_assured_min - 0% rebate band
+        "premium_payment_option": "limited_ppt_10",  # no Regular option on this policy
+        "sum_assured_type": "level",
+        "scrape_date": date(2026, 8, 10),
+        # 877's own rebate table key naming - confirmed against extracted/layer1_877.json
+        # directly, NOT assumed to match 878's ("up_to_30_years" here vs 878's
+        # "upto_30_years" - the two extraction runs picked different spellings for
+        # conceptually the same band, see docs/schema.md's key-naming-varies caveat).
+        "age_bands": [
+            {"band": "up_to_30_years", "age_min": 0, "age_max": 30},
+            {"band": "31_to_45_years", "age_min": 31, "age_max": 999},
+        ],
+        "rebate_sa_type_key": "level_sum_assured",
+        "rebate_premium_type_key": "limited_premium",
+    },
 ]
 
 
@@ -353,6 +410,100 @@ def build_policy_entry(cfg):
     }
 
 
+def build_derived_age_term_grid(source_grid, anchor_rows, cfg):
+    """Rescales an already-built sibling policy's age_term_grid by a factor
+    calibrated against this policy's own small set of real scraped anchor points,
+    rather than building from a full scrape of its own - see DERIVED_POLICIES'
+    module comment for why this is only valid once shape-transfer is confirmed.
+    anchor_rows: this policy's own real scraped rows (same shape as
+    load_ground_truth_rows()'s output) - every one MUST land on an exact (age, term)
+    already in source_grid (the scrape was deliberately planned that way), so no
+    interpolation is needed to calibrate the scale factor. Real anchor values always
+    override the derived estimate at their own (age, term), same as scraped rows
+    already override brochure rows in build_age_term_grid(). Returns
+    (grid, scale_factor, per_anchor_ratios) - the last two are logged into the built
+    artifact's provenance, not silently discarded, so the calibration is auditable."""
+    source_by_point = {(p["age"], p["term"]): p["premium"] for p in source_grid}
+
+    ratios = []
+    for r in anchor_rows:
+        key = (r["age"], r["term"])
+        if key not in source_by_point:
+            raise ValueError(
+                f"{cfg['policy_id']}: anchor point (age={r['age']}, term={r['term']}) doesn't "
+                f"land on an exact point in {cfg['derive_age_term_from']}'s grid - the scrape "
+                f"plan was supposed to guarantee this, can't calibrate a scale factor without it"
+            )
+        ratios.append(r["premium"] / source_by_point[key])
+    scale = sum(ratios) / len(ratios)
+
+    grid = {
+        (p["age"], p["term"]): {
+            "age": p["age"], "term": p["term"],
+            "premium": round(p["premium"] * scale, 2),
+            "source": f"derived_from_{cfg['derive_age_term_from']}",
+        }
+        for p in source_grid
+    }
+    for r in anchor_rows:
+        grid[(r["age"], r["term"])] = {
+            "age": r["age"], "term": r["term"], "premium": r["premium"], "source": "scraped",
+        }
+    return sorted(grid.values(), key=lambda p: (p["age"], p["term"])), scale, ratios
+
+
+def build_derived_policy_entry(cfg, built_entries):
+    source_entry = built_entries[cfg["derive_age_term_from"]]
+    # Only reference-SA rows calibrate the age x term scale factor - any cross-SA QA
+    # rows (none exist for 877 yet) would otherwise skew the ratio, since they aren't
+    # comparable to the source grid's own reference-SA points.
+    anchor_rows = [r for r in load_ground_truth_rows(cfg) if r["sum_assured"] == cfg["reference_sum_assured"]]
+
+    age_term_grid, scale, ratios = build_derived_age_term_grid(source_entry["age_term_grid"], anchor_rows, cfg)
+    sa_scaling = build_sa_scaling(anchor_rows, cfg)
+
+    return {
+        "premium_payment_option": cfg["premium_payment_option"],
+        "sum_assured_type": cfg["sum_assured_type"],
+        "age_term_grid": age_term_grid,
+        "sa_scaling": sa_scaling,
+        "built_from": {
+            "derived_age_term_from": cfg["derive_age_term_from"],
+            "scale_factor": round(scale, 4),
+            "anchor_points": len(ratios),
+            "anchor_ratio_min": round(min(ratios), 4),
+            "anchor_ratio_max": round(max(ratios), 4),
+            "ground_truth_csv": str(cfg["ground_truth_csv"].relative_to(REPO_ROOT)),
+            "merged_age_term_points": len(age_term_grid),
+        },
+    }
+
+
+def _print_sa_scaling(policy_id, sa_scaling):
+    """Returns the count of QA mismatches printed, for main()'s running total."""
+    mismatches = 0
+    sa_band_groups = sa_scaling["age_bands"] if "age_bands" in sa_scaling else [{"band": None, "sa_bands": sa_scaling["sa_bands"]}]
+    for band in sa_band_groups:
+        for sa_band in band["sa_bands"]:
+            max_str = f"<={sa_band['max']}" if sa_band["max"] is not None else "and above"
+            label = f"{band['band']}: " if band["band"] else ""
+            if sa_scaling["type"] == "percent_of_tabular_premium":
+                print(f"  {label}SA {sa_band['min']:>10} {max_str:>12} -> {sa_band['rebate_pct']}% rebate")
+            else:
+                print(f"  {label}SA {sa_band['min']:>10} {max_str:>12} -> {sa_band['rate_per_mille']}%o of SA")
+            for check in sa_band["qa_check"]:
+                status = "OK" if check["match"] else "MISMATCH"
+                if not check["match"]:
+                    mismatches += 1
+                if "formula_multiplier" in check:
+                    print(f"    QA @ SA {check['sum_assured']:>10}: formula={check['formula_multiplier']}x "
+                          f"vs scraped={check['empirical_multiplier']}x (n={check['sample_count']}) [{status}]")
+                else:
+                    print(f"    QA @ SA {check['sum_assured']:>10} (age={check['age']}, term={check['term']}): "
+                          f"formula={check['formula_premium']} vs scraped={check['actual_premium']} [{status}]")
+    return mismatches
+
+
 def main():
     out = {}
     total_mismatches = 0
@@ -360,30 +511,19 @@ def main():
     for cfg in POLICIES:
         entry = build_policy_entry(cfg)
         out[cfg["policy_id"]] = entry
-        sa_scaling = entry["sa_scaling"]
-
         print(f"{cfg['policy_id']}: {len(entry['age_term_grid'])} age/term points, "
-              f"sa_scaling type={sa_scaling['type']} (zero scraping needed for this axis)")
+              f"sa_scaling type={entry['sa_scaling']['type']} (zero scraping needed for this axis)")
+        total_mismatches += _print_sa_scaling(cfg["policy_id"], entry["sa_scaling"])
 
-        sa_band_groups = sa_scaling["age_bands"] if "age_bands" in sa_scaling else [{"band": None, "sa_bands": sa_scaling["sa_bands"]}]
-        for band in sa_band_groups:
-            for sa_band in band["sa_bands"]:
-                max_str = f"<={sa_band['max']}" if sa_band["max"] is not None else "and above"
-                label = f"{band['band']}: " if band["band"] else ""
-                if sa_scaling["type"] == "percent_of_tabular_premium":
-                    print(f"  {label}SA {sa_band['min']:>10} {max_str:>12} -> {sa_band['rebate_pct']}% rebate")
-                else:
-                    print(f"  {label}SA {sa_band['min']:>10} {max_str:>12} -> {sa_band['rate_per_mille']}%o of SA")
-                for check in sa_band["qa_check"]:
-                    status = "OK" if check["match"] else "MISMATCH"
-                    if not check["match"]:
-                        total_mismatches += 1
-                    if "formula_multiplier" in check:
-                        print(f"    QA @ SA {check['sum_assured']:>10}: formula={check['formula_multiplier']}x "
-                              f"vs scraped={check['empirical_multiplier']}x (n={check['sample_count']}) [{status}]")
-                    else:
-                        print(f"    QA @ SA {check['sum_assured']:>10} (age={check['age']}, term={check['term']}): "
-                              f"formula={check['formula_premium']} vs scraped={check['actual_premium']} [{status}]")
+    for cfg in DERIVED_POLICIES:
+        entry = build_derived_policy_entry(cfg, out)
+        out[cfg["policy_id"]] = entry
+        bf = entry["built_from"]
+        print(f"{cfg['policy_id']}: {len(entry['age_term_grid'])} age/term points "
+              f"({bf['anchor_points']} real anchors, rest derived from {bf['derived_age_term_from']}'s "
+              f"grid x{bf['scale_factor']} - anchor ratios ranged {bf['anchor_ratio_min']}-{bf['anchor_ratio_max']}), "
+              f"sa_scaling type={entry['sa_scaling']['type']} (own real rebate table, not derived)")
+        total_mismatches += _print_sa_scaling(cfg["policy_id"], entry["sa_scaling"])
 
     OUT_PATH.write_text(json.dumps(out, indent=2) + "\n")
     print(f"\nWrote {OUT_PATH.relative_to(REPO_ROOT)}: {len(out)} polic{'y' if len(out) == 1 else 'ies'}")
