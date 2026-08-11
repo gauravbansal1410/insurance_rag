@@ -1260,6 +1260,387 @@
       "merged_age_term_points": 25
     }
   },
+  "954": {
+    "premium_payment_option": "regular",
+    "sum_assured_type": "level",
+    "age_term_grid": [
+      {
+        "age": 18,
+        "term": 10,
+        "premium": 3850,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 15,
+        "premium": 3850,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 20,
+        "premium": 3950,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 25,
+        "premium": 4150,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 30,
+        "premium": 4400,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 35,
+        "premium": 4800,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 40,
+        "premium": 5300,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 10,
+        "premium": 4000,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 15,
+        "premium": 4150,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 20,
+        "premium": 4400,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 25,
+        "premium": 4850,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 30,
+        "premium": 5500,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 35,
+        "premium": 6250,
+        "source": "scraped"
+      },
+      {
+        "age": 25,
+        "term": 40,
+        "premium": 7050,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 10,
+        "premium": 4400,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 15,
+        "premium": 4700,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 20,
+        "premium": 5250,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 25,
+        "premium": 6050,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 30,
+        "premium": 7100,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 35,
+        "premium": 8150,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 40,
+        "premium": 9250,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 10,
+        "premium": 5300,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 15,
+        "premium": 5950,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 20,
+        "premium": 7000,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 25,
+        "premium": 8300,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 30,
+        "premium": 9700,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 35,
+        "premium": 11150,
+        "source": "scraped"
+      },
+      {
+        "age": 35,
+        "term": 40,
+        "premium": 12800,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 10,
+        "premium": 10300,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 15,
+        "premium": 12500,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 20,
+        "premium": 14800,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 25,
+        "premium": 17300,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 30,
+        "premium": 20100,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 35,
+        "premium": 23400,
+        "source": "scraped"
+      },
+      {
+        "age": 50,
+        "term": 10,
+        "premium": 15900,
+        "source": "scraped"
+      },
+      {
+        "age": 50,
+        "term": 15,
+        "premium": 18750,
+        "source": "scraped"
+      },
+      {
+        "age": 50,
+        "term": 20,
+        "premium": 21900,
+        "source": "scraped"
+      },
+      {
+        "age": 50,
+        "term": 25,
+        "premium": 25600,
+        "source": "scraped"
+      },
+      {
+        "age": 50,
+        "term": 30,
+        "premium": 29950,
+        "source": "scraped"
+      },
+      {
+        "age": 55,
+        "term": 10,
+        "premium": 23500,
+        "source": "scraped"
+      },
+      {
+        "age": 55,
+        "term": 15,
+        "premium": 27400,
+        "source": "scraped"
+      },
+      {
+        "age": 55,
+        "term": 20,
+        "premium": 32250,
+        "source": "scraped"
+      },
+      {
+        "age": 55,
+        "term": 25,
+        "premium": 38050,
+        "source": "scraped"
+      },
+      {
+        "age": 60,
+        "term": 10,
+        "premium": 33500,
+        "source": "scraped"
+      },
+      {
+        "age": 60,
+        "term": 15,
+        "premium": 39900,
+        "source": "scraped"
+      },
+      {
+        "age": 60,
+        "term": 20,
+        "premium": 47800,
+        "source": "scraped"
+      },
+      {
+        "age": 65,
+        "term": 10,
+        "premium": 49550,
+        "source": "scraped"
+      },
+      {
+        "age": 65,
+        "term": 15,
+        "premium": 60300,
+        "source": "scraped"
+      }
+    ],
+    "sa_scaling": {
+      "type": "percent_of_tabular_premium",
+      "reference_sum_assured": 5000000,
+      "age_bands": [
+        {
+          "band": "upto_30_years",
+          "age_min": 0,
+          "age_max": 30,
+          "sa_bands": [
+            {
+              "min": 0,
+              "max": 9999999,
+              "rebate_pct": 0,
+              "qa_check": []
+            },
+            {
+              "min": 10000000,
+              "max": 19999999,
+              "rebate_pct": 13,
+              "qa_check": []
+            },
+            {
+              "min": 20000000,
+              "max": null,
+              "rebate_pct": 22,
+              "qa_check": []
+            }
+          ]
+        },
+        {
+          "band": "31_to_50_years",
+          "age_min": 31,
+          "age_max": 50,
+          "sa_bands": [
+            {
+              "min": 0,
+              "max": 9999999,
+              "rebate_pct": 0,
+              "qa_check": []
+            },
+            {
+              "min": 10000000,
+              "max": 19999999,
+              "rebate_pct": 11,
+              "qa_check": []
+            },
+            {
+              "min": 20000000,
+              "max": null,
+              "rebate_pct": 17,
+              "qa_check": []
+            }
+          ]
+        },
+        {
+          "band": "51_years_and_above",
+          "age_min": 51,
+          "age_max": 999,
+          "sa_bands": [
+            {
+              "min": 0,
+              "max": 9999999,
+              "rebate_pct": 0,
+              "qa_check": []
+            },
+            {
+              "min": 10000000,
+              "max": 19999999,
+              "rebate_pct": 6,
+              "qa_check": []
+            },
+            {
+              "min": 20000000,
+              "max": null,
+              "rebate_pct": 9,
+              "qa_check": []
+            }
+          ]
+        }
+      ]
+    },
+    "built_from": {
+      "layer1_brochure_points": 0,
+      "ground_truth_csv": "docs/progress/ground-truth/954_scraped_premiums.csv",
+      "ground_truth_rows_at_reference_sa": 48,
+      "merged_age_term_points": 48
+    }
+  },
   "877": {
     "premium_payment_option": "limited_ppt_10",
     "sum_assured_type": "level",
@@ -1491,6 +1872,390 @@
       "anchor_ratio_max": 1.2766,
       "ground_truth_csv": "docs/progress/ground-truth/877_scraped_premiums.csv",
       "merged_age_term_points": 25
+    }
+  },
+  "955": {
+    "premium_payment_option": "regular",
+    "sum_assured_type": "level",
+    "age_term_grid": [
+      {
+        "age": 18,
+        "term": 10,
+        "premium": 3293.72,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 18,
+        "term": 15,
+        "premium": 3293.72,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 18,
+        "term": 20,
+        "premium": 3350,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 25,
+        "premium": 3525,
+        "source": "scraped"
+      },
+      {
+        "age": 18,
+        "term": 30,
+        "premium": 3764.25,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 18,
+        "term": 35,
+        "premium": 4106.46,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 18,
+        "term": 40,
+        "premium": 4534.21,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 25,
+        "term": 10,
+        "premium": 3422.05,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 25,
+        "term": 15,
+        "premium": 3550.37,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 25,
+        "term": 20,
+        "premium": 3764.25,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 25,
+        "term": 25,
+        "premium": 4149.23,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 25,
+        "term": 30,
+        "premium": 4705.31,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 25,
+        "term": 35,
+        "premium": 5346.95,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 25,
+        "term": 40,
+        "premium": 6031.36,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 30,
+        "term": 10,
+        "premium": 3764.25,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 30,
+        "term": 15,
+        "premium": 4020.9,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 30,
+        "term": 20,
+        "premium": 4500,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 25,
+        "premium": 5200,
+        "source": "scraped"
+      },
+      {
+        "age": 30,
+        "term": 30,
+        "premium": 6074.13,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 30,
+        "term": 35,
+        "premium": 6972.42,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 30,
+        "term": 40,
+        "premium": 7913.48,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 35,
+        "term": 10,
+        "premium": 4534.21,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 35,
+        "term": 15,
+        "premium": 5090.29,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 35,
+        "term": 20,
+        "premium": 5988.58,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 35,
+        "term": 25,
+        "premium": 7100.75,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 35,
+        "term": 30,
+        "premium": 8298.46,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 35,
+        "term": 35,
+        "premium": 9538.95,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 35,
+        "term": 40,
+        "premium": 10950.55,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 45,
+        "term": 10,
+        "premium": 8811.77,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 45,
+        "term": 15,
+        "premium": 10693.9,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 45,
+        "term": 20,
+        "premium": 12800,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 25,
+        "premium": 14800,
+        "source": "scraped"
+      },
+      {
+        "age": 45,
+        "term": 30,
+        "premium": 17195.78,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 45,
+        "term": 35,
+        "premium": 20018.97,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 50,
+        "term": 10,
+        "premium": 13602.64,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 50,
+        "term": 15,
+        "premium": 16040.84,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 50,
+        "term": 20,
+        "premium": 18735.71,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 50,
+        "term": 25,
+        "premium": 21901.1,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 50,
+        "term": 30,
+        "premium": 25622.57,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 55,
+        "term": 10,
+        "premium": 20104.52,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 55,
+        "term": 15,
+        "premium": 23441.02,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 55,
+        "term": 20,
+        "premium": 27590.25,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 55,
+        "term": 25,
+        "premium": 32552.22,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 60,
+        "term": 10,
+        "premium": 28659.64,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 60,
+        "term": 15,
+        "premium": 34134.91,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 60,
+        "term": 20,
+        "premium": 40825,
+        "source": "scraped"
+      },
+      {
+        "age": 65,
+        "term": 10,
+        "premium": 42390.6,
+        "source": "derived_from_954"
+      },
+      {
+        "age": 65,
+        "term": 15,
+        "premium": 51587.35,
+        "source": "derived_from_954"
+      }
+    ],
+    "sa_scaling": {
+      "type": "percent_of_tabular_premium",
+      "reference_sum_assured": 2500000,
+      "age_bands": [
+        {
+          "band": "up_to_30_years",
+          "age_min": 0,
+          "age_max": 30,
+          "sa_bands": [
+            {
+              "min": 0,
+              "max": 5000000,
+              "rebate_pct": 0,
+              "qa_check": []
+            },
+            {
+              "min": 5000000,
+              "max": 10000000,
+              "rebate_pct": 13,
+              "qa_check": []
+            },
+            {
+              "min": 10000000,
+              "max": null,
+              "rebate_pct": 25,
+              "qa_check": []
+            }
+          ]
+        },
+        {
+          "band": "31_to_50_years",
+          "age_min": 31,
+          "age_max": 50,
+          "sa_bands": [
+            {
+              "min": 0,
+              "max": 5000000,
+              "rebate_pct": 0,
+              "qa_check": []
+            },
+            {
+              "min": 5000000,
+              "max": 10000000,
+              "rebate_pct": 11,
+              "qa_check": []
+            },
+            {
+              "min": 10000000,
+              "max": null,
+              "rebate_pct": 21,
+              "qa_check": []
+            }
+          ]
+        },
+        {
+          "band": "51_years_and_above",
+          "age_min": 51,
+          "age_max": 999,
+          "sa_bands": [
+            {
+              "min": 0,
+              "max": 5000000,
+              "rebate_pct": 0,
+              "qa_check": []
+            },
+            {
+              "min": 5000000,
+              "max": 10000000,
+              "rebate_pct": 6,
+              "qa_check": []
+            },
+            {
+              "min": 10000000,
+              "max": null,
+              "rebate_pct": 11,
+              "qa_check": []
+            }
+          ]
+        }
+      ]
+    },
+    "built_from": {
+      "derived_age_term_from": "954",
+      "scale_factor": 0.8555,
+      "anchor_points": 7,
+      "anchor_ratio_min": 0.8481,
+      "anchor_ratio_max": 0.8649,
+      "ground_truth_csv": "docs/progress/ground-truth/955_scraped_premiums.csv",
+      "merged_age_term_points": 48
     }
   }
 }
