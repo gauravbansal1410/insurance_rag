@@ -129,6 +129,38 @@ POLICIES = [
         "rebate_sa_type_key": "level_sum_assured",
         "rebate_premium_type_key": "limited_premium",
     },
+    {
+        "policy_id": "954",
+        "layer1_path": REPO_ROOT / "extracted" / "layer1_954.json",
+        "ground_truth_csv": GROUND_TRUTH_DIR / "954_scraped_premiums.csv",
+        "reference_sum_assured": 5_000_000,  # 954's own sum_assured_min - 0% rebate band
+        "premium_payment_option": "regular",
+        "sum_assured_type": "level",
+        # No SA=5M rows in Layer 1's own sample_illustrative_premiums (all at 1 crore) -
+        # this policy's age_term_grid is built entirely from the ground-truth CSV, zero
+        # brochure points merged in.
+        "scrape_date": date(2026, 8, 11),
+        # 954's rebate table has its own 3-way age-band split (unlike 876/875/878's 2-way
+        # up_to_30/31_to_45+ split) - confirmed against extracted/layer1_954.json directly:
+        # "upto_30_years" (no underscore, like 878's), "31_to_50_years", and
+        # "51_years_and_above" as a genuine third band, not folded into the second.
+        "age_bands": [
+            {"band": "upto_30_years", "age_min": 0, "age_max": 30},
+            {"band": "31_to_50_years", "age_min": 31, "age_max": 50},
+            {"band": "51_years_and_above", "age_min": 51, "age_max": 999},
+        ],
+        "rebate_sa_type_key": "level_sum_assured",
+        # No rebate_premium_type_key - 954's rebate table has only 2 dimensions
+        # (sum_assured_type, age_band), no premium_payment_option_group split at all
+        # (confirmed against extracted/layer1_954.json's own "dimensions" field) -
+        # single/regular/limited all share the same rebate %.
+        # age=40 (DOB 15/01/1986) is the one gap in this policy's grid - confirmed not a
+        # client-side bug (reproduced with incognito, cleared cookies, and a different
+        # browser, all still blocked on the live calculator's term dropdown for this
+        # specific DOB only), so left unscraped rather than forced. The build's own
+        # age-axis interpolation (query/premium_lookup.py) fills it from the real age=35
+        # and age=45 rows on either side - see docs/progress/20260811-progress.md.
+    },
 ]
 
 # Policies whose age x term grid is DERIVED from an already-built sibling's grid
@@ -159,6 +191,28 @@ DERIVED_POLICIES = [
         ],
         "rebate_sa_type_key": "level_sum_assured",
         "rebate_premium_type_key": "limited_premium",
+    },
+    {
+        "policy_id": "955",
+        "layer1_path": REPO_ROOT / "extracted" / "layer1_955.json",
+        "ground_truth_csv": GROUND_TRUTH_DIR / "955_scraped_premiums.csv",
+        "derive_age_term_from": "954",
+        "reference_sum_assured": 2_500_000,  # 955's own sum_assured_min - 0% rebate band
+        "premium_payment_option": "regular",
+        "sum_assured_type": "level",
+        "scrape_date": date(2026, 8, 10),
+        # 955's rebate table is the same 2-dim shape as 954's (sum_assured_type/age_band
+        # only, no premium_payment_option_group split) - confirmed against
+        # extracted/layer1_955.json directly. Age-band key spelling differs from 954's
+        # though: "up_to_30_years" (underscore) here vs 954's "upto_30_years" (no
+        # underscore) - same key-naming-varies-per-extraction-run caveat as 877 vs 878.
+        "age_bands": [
+            {"band": "up_to_30_years", "age_min": 0, "age_max": 30},
+            {"band": "31_to_50_years", "age_min": 31, "age_max": 50},
+            {"band": "51_years_and_above", "age_min": 51, "age_max": 999},
+        ],
+        "rebate_sa_type_key": "level_sum_assured",
+        # No rebate_premium_type_key - same 2-dim shape as 954, see above.
     },
 ]
 
@@ -208,10 +262,19 @@ def load_rebate_table(cfg):
 
 
 def build_sa_bands_for_type_a(table, cfg):
-    """percent_of_tabular_premium: walks table["table"][rebate_sa_type_key][rebate_premium_type_key]
-    (this policy's fixed sum_assured_type/premium_payment_option scope) down to each age
-    band's own "sa_bands" array - already numeric, extracted verbatim from Layer 1."""
-    by_age_band_key = table["table"][cfg["rebate_sa_type_key"]][cfg["rebate_premium_type_key"]]
+    """percent_of_tabular_premium: walks table["table"][rebate_sa_type_key] down to each age
+    band's own "sa_bands" array - already numeric, extracted verbatim from Layer 1.
+    table["dimensions"] tells us whether there's a premium_payment_option_group level in
+    between (876/875/877/878's shape - 3 dims, rebate % varies by premium type) or not
+    (954's shape - 2 dims, "sum_assured_type"/"age_band" only, single/regular/limited all
+    share one rebate %) - read from the table's own dimensions rather than assumed from
+    rebate_premium_type_key being set, since a policy with no premium-type split has no
+    such key to give."""
+    by_sa_type = table["table"][cfg["rebate_sa_type_key"]]
+    if "premium_payment_option_group" in table["dimensions"]:
+        by_age_band_key = by_sa_type[cfg["rebate_premium_type_key"]]
+    else:
+        by_age_band_key = by_sa_type
     age_bands_out = []
     for b in cfg["age_bands"]:
         sa_bands = [dict(x) for x in by_age_band_key[b["band"]]]
