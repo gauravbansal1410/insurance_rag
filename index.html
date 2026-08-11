@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Insurance RAG — find a plan</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f5f2;
+    --panel: #ffffff;
+    --border: #ddd8ce;
+    --text: #232019;
+    --muted: #6b6558;
+    --accent: #8a5a3b;
+    --accent-text: #ffffff;
+    --bubble-user: #ece7dd;
+    --bubble-assistant: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1914;
+      --panel: #262319;
+      --border: #3a3629;
+      --text: #ece7dc;
+      --muted: #a39a86;
+      --accent: #c98a5e;
+      --accent-text: #1b1914;
+      --bubble-user: #33301f;
+      --bubble-assistant: #262319;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .app {
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  header {
+    padding: 18px 20px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-size: 1.1rem;
+    margin: 0 0 2px;
+  }
+  header p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  #thread {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .msg {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    line-height: 1.45;
+    font-size: 0.95rem;
+    white-space: pre-wrap;
+    border: 1px solid var(--border);
+  }
+  .msg.assistant {
+    background: var(--bubble-assistant);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .msg.user {
+    background: var(--bubble-user);
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .msg.error {
+    border-color: #b3564a;
+    color: #b3564a;
+  }
+  .candidates {
+    align-self: flex-start;
+    max-width: 85%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .candidate {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    background: var(--panel);
+  }
+  .candidate .policy { font-weight: 600; }
+  .candidate .premium { color: var(--muted); }
+  form {
+    display: flex;
+    gap: 8px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    font-size: 0.95rem;
+  }
+  input[type="text"]:focus { outline: 2px solid var(--accent); }
+  button {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .typing { color: var(--muted); font-style: italic; font-size: 0.85rem; align-self: flex-start; }
+  .restart-row { padding: 0 20px 12px; }
+  .restart-row button { background: transparent; color: var(--muted); border: 1px solid var(--border); font-size: 0.8rem; padding: 6px 12px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Find a term insurance plan</h1>
+    <p>Answer a few questions — no jargon needed, just what matters to you.</p>
+  </header>
+  <div id="thread"></div>
+  <div class="restart-row" id="restartRow" style="display:none;">
+    <button id="restartBtn" type="button">Start over</button>
+  </div>
+  <form id="composer">
+    <input type="text" id="input" autocomplete="off" placeholder="Type your answer…" autofocus>
+    <button type="submit" id="sendBtn">Send</button>
+  </form>
+</div>
+
+<script>
+// Fill in your n8n production webhook URL (from the imported
+// insurance_rag_frontend_webhook.json workflow — n8n's default production path is
+// https://<your-n8n-domain>/webhook/<path>, e.g.
+// https://gaurav-n8n.duckdns.org/webhook/insurance-rag-frontend).
+const WEBHOOK_URL = "https://gaurav-n8n.duckdns.org/webhook/insurance-rag-frontend";
+
+const thread = document.getElementById("thread");
+const composer = document.getElementById("composer");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("sendBtn");
+const restartRow = document.getElementById("restartRow");
+const restartBtn = document.getElementById("restartBtn");
+
+let sessionId = null;
+let done = false;
+
+function addMessage(text, role) {
+  const el = document.createElement("div");
+  el.className = "msg " + role;
+  el.textContent = text;
+  thread.appendChild(el);
+  thread.scrollTop = thread.scrollHeight;
+  return el;
+}
+
+function addCandidates(top3) {
+  if (!top3 || top3.length === 0) return;
+  const wrap = document.createElement("div");
+  wrap.className = "candidates";
+  for (const c of top3) {
+    const row = document.createElement("div");
+    row.className = "candidate";
+    row.innerHTML =
+      '<span class="policy">Policy ' + c.policy_id + '</span> — ' +
+      '<span class="premium">₹' + Math.round(c.premium_amount).toLocaleString("en-IN") + '/yr</span>';
+    wrap.appendChild(row);
+  }
+  thread.appendChild(wrap);
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function setBusy(busy) {
+  input.disabled = busy;
+  sendBtn.disabled = busy;
+}
+
+async function callWebhook(message) {
+  const resp = await fetch(WEBHOOK_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: sessionId, message: message }),
+  });
+  if (!resp.ok) {
+    throw new Error("Request failed (" + resp.status + ")");
+  }
+  return resp.json();
+}
+
+async function start() {
+  sessionId = crypto.randomUUID();
+  done = false;
+  thread.innerHTML = "";
+  restartRow.style.display = "none";
+  setBusy(true);
+  const typing = addMessage("…", "typing");
+  try {
+    const data = await callWebhook(null);
+    typing.remove();
+    addMessage(data.reply, "assistant");
+  } catch (err) {
+    typing.remove();
+    addMessage("Couldn't reach the server: " + err.message, "error");
+  }
+  setBusy(false);
+  input.focus();
+}
+
+composer.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (done) return;
+  const text = input.value.trim();
+  if (!text) return;
+  addMessage(text, "user");
+  input.value = "";
+  setBusy(true);
+  const typing = addMessage("…", "typing");
+  try {
+    const data = await callWebhook(text);
+    typing.remove();
+    addMessage(data.reply, "assistant");
+    if (data.done) {
+      done = true;
+      addCandidates(data.top3);
+      restartRow.style.display = "block";
+    }
+  } catch (err) {
+    typing.remove();
+    addMessage("Couldn't reach the server: " + err.message, "error");
+  }
+  setBusy(false);
+  if (!done) input.focus();
+});
+
+restartBtn.addEventListener("click", start);
+
+start();
+</script>
+</body>
+</html>
