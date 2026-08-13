@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>premium lookup — age × term explorer</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --border:         rgba(11,11,11,0.10);
+    --empty-fill: #eeece7;
+    --empty-text: #b6b3ab;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .viz-root {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --border:         rgba(255,255,255,0.10);
+      --empty-fill: #232321;
+      --empty-text: #55534d;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --border:         rgba(255,255,255,0.10);
+    --empty-fill: #232321;
+    --empty-text: #55534d;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); }
+  .viz-root {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--page);
+    color: var(--text-primary);
+    padding: 40px 24px 64px;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; }
+
+  .eyebrow {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text-muted); margin: 0 0 8px;
+  }
+  h1 { font-size: 22px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .subtitle { font-size: 13.5px; color: var(--text-secondary); line-height: 1.55; max-width: 72ch; margin: 0 0 20px; }
+  .subtitle code {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 12.5px;
+    background: var(--empty-fill);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .policy-picker {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 22px;
+  }
+  .policy-picker label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .policy-picker select {
+    font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--text-primary);
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 32px 8px 12px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23898781'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor: pointer;
+  }
+  .policy-picker select:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 1px; }
+  .policy-meta { font-size: 12.5px; color: var(--text-muted); }
+  .policy-meta b { color: var(--text-secondary); font-weight: 600; }
+
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 26px 20px;
+  }
+
+  .card-head {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .card-title { font-size: 14.5px; font-weight: 600; }
+  .card-title .muted { color: var(--text-muted); font-weight: 400; }
+
+  .view-toggle { display: flex; gap: 2px; background: var(--empty-fill); border-radius: 8px; padding: 2px; }
+  .view-toggle button {
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    padding: 5px 12px; border: none; border-radius: 6px;
+    background: transparent; color: var(--text-secondary); cursor: pointer;
+  }
+  .view-toggle button[aria-pressed="true"] { background: var(--surface-1); color: var(--text-primary); box-shadow: 0 1px 2px var(--border); }
+
+  .grid-scroll { overflow-x: auto; }
+  table.heatmap { border-collapse: separate; border-spacing: 3px; font-variant-numeric: tabular-nums; }
+  table.heatmap th, table.heatmap td { text-align: center; }
+  table.heatmap thead th { font-size: 11px; font-weight: 600; color: var(--text-muted); padding: 0 0 6px; }
+  table.heatmap thead th.axis-label, table.heatmap tbody th.axis-label { font-weight: 700; color: var(--text-secondary); }
+  table.heatmap tbody th { font-size: 12px; font-weight: 600; color: var(--text-muted); padding: 0 8px 0 0; white-space: nowrap; }
+  .cell {
+    width: 58px; height: 40px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    cursor: default; position: relative; border: 1.5px solid transparent;
+  }
+  .cell.derived { border-style: dashed; border-color: rgba(0,0,0,0.28); }
+  :root:not([data-theme="light"]) .cell.derived,
+  [data-theme="dark"] .cell.derived { border-color: rgba(255,255,255,0.35); }
+  .cell.empty { background: var(--empty-fill); color: var(--empty-text); font-weight: 400; border: none; }
+  .cell:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 1px; }
+
+  .axis-caption { font-size: 11.5px; color: var(--text-muted); text-align: center; margin-top: 4px; }
+
+  .legend-row { display: flex; align-items: center; gap: 10px; margin: 20px 2px 4px; }
+  .legend-label { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  .legend-bar {
+    flex: 1; height: 10px; border-radius: 5px;
+    background: linear-gradient(to right, #cde2fb, #86b6ef, #3987e5, #1c5cab, #0d366b);
+  }
+  .legend-note { font-size: 11.5px; color: var(--text-muted); margin-top: 10px; display: flex; align-items: center; gap: 6px; }
+  .legend-note .swatch { width: 14px; height: 14px; border-radius: 4px; border: 1.5px dashed rgba(0,0,0,0.28); flex-shrink: 0; }
+  :root:not([data-theme="light"]) .legend-note .swatch,
+  [data-theme="dark"] .legend-note .swatch { border-color: rgba(255,255,255,0.35); }
+
+  .tooltip {
+    position: fixed; pointer-events: none;
+    background: var(--text-primary); color: var(--surface-1);
+    font-size: 12px; line-height: 1.5; padding: 8px 11px; border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.18); z-index: 10; opacity: 0;
+    transform: translate(-50%, calc(-100% - 10px));
+    transition: opacity 0.08s ease; white-space: nowrap;
+  }
+  .tooltip.visible { opacity: 1; }
+  .tooltip .t-title { font-weight: 700; margin-bottom: 2px; }
+  .tooltip .t-row { color: var(--text-secondary); }
+  .tooltip .t-flag { color: #86b6ef; }
+
+  table.plain { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.plain th, table.plain td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--gridline); font-variant-numeric: tabular-nums; }
+  table.plain th { color: var(--text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; }
+  table.plain td.num { text-align: right; }
+  .plain-scroll { max-height: 480px; overflow-y: auto; }
+
+  .trend-scroll { overflow-x: auto; }
+  svg.trend { display: block; }
+  .trend-axis-label { font-size: 11px; fill: var(--text-muted); font-family: inherit; }
+  .trend-gridline { stroke: var(--gridline); stroke-width: 1; }
+  .trend-line { fill: none; stroke-width: 2; }
+  .trend-point { cursor: default; }
+  .trend-point.scraped { }
+  .trend-point.derived { fill: var(--surface-1); stroke-width: 1.5; }
+  .trend-endlabel { font-size: 10.5px; font-weight: 600; font-family: ui-monospace, "SF Mono", Consolas, monospace; }
+
+  footer { max-width: 920px; margin: 22px auto 0; font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <div class="wrap">
+    <p class="eyebrow">query/premium_lookup.json</p>
+    <h1 id="policy-title">—</h1>
+    <p class="subtitle" id="policy-subtitle"></p>
+
+    <div class="policy-picker">
+      <label for="policy-select">Policy</label>
+      <select id="policy-select"></select>
+      <span class="policy-meta" id="policy-meta"></span>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title" id="card-title">Annual premium (₹)<span class="muted"> — hover for detail</span></div>
+        <div class="view-toggle" role="group" aria-label="View">
+          <button type="button" id="btn-grid" aria-pressed="true">Grid</button>
+          <button type="button" id="btn-trend" aria-pressed="false">Trend</button>
+          <button type="button" id="btn-table" aria-pressed="false">Table</button>
+        </div>
+      </div>
+
+      <div id="grid-view">
+        <div class="grid-scroll"><table class="heatmap" id="heatmap"></table></div>
+        <p class="axis-caption">Policy term (years) →</p>
+        <div class="legend-row">
+          <span class="legend-label" id="legend-min"></span>
+          <div class="legend-bar"></div>
+          <span class="legend-label" id="legend-max"></span>
+        </div>
+        <div class="legend-note" id="derived-note" style="display:none;">
+          <span class="swatch"></span> Dashed border = derived from a same-family sibling's grid (shape-transfer), not this policy's own scraped data
+        </div>
+      </div>
+
+      <div id="trend-view" style="display:none;">
+        <p class="axis-caption" style="text-align:left; margin: 0 0 12px;">One line per entry age — color shows age (light = youngest, dark = oldest). Hollow points are derived values, filled points are real/scraped.</p>
+        <div class="trend-scroll"><svg class="trend" id="trend-svg"></svg></div>
+      </div>
+
+      <div id="table-view" style="display:none;">
+        <div class="plain-scroll">
+          <table class="plain">
+            <thead><tr><th>Age</th><th>Term</th><th>Premium (₹)</th><th>Source</th></tr></thead>
+            <tbody id="plain-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip" role="tooltip"></div>
+
+<footer>Source: <code>query/premium_lookup.json</code>, built by <code>query/build_premium_lookup.py</code> from each policy's real scraped ground truth (<code>docs/progress/ground-truth/*_scraped_premiums.csv</code>) — see <code>docs/schema.md</code>'s premium-lookup artifact section for how each entry was built or derived.</footer>
+
+<script>
+const RAW = {"876":{"plan_name":"LIC's Digi Term","premium_payment_option":"regular","sum_assured_type":"level","reference_sum_assured":5000000,"age_at_maturity_max":75,"grid":[{"age":18,"term":15,"premium":3400,"source":"scraped"},{"age":18,"term":20,"premium":3500,"source":"scraped"},{"age":18,"term":25,"premium":3650,"source":"scraped"},{"age":18,"term":30,"premium":3900,"source":"scraped"},{"age":18,"term":35,"premium":4200,"source":"scraped"},{"age":18,"term":40,"premium":4650,"source":"scraped"},{"age":20,"term":15,"premium":3450,"source":"scraped"},{"age":20,"term":20,"premium":3600,"source":"scraped"},{"age":20,"term":25,"premium":3800,"source":"scraped"},{"age":20,"term":30,"premium":4100,"source":"scraped"},{"age":20,"term":35,"premium":4500,"source":"scraped"},{"age":20,"term":40,"premium":5050,"source":"scraped"},{"age":26,"term":20,"premium":4050,"source":"scraped"},{"age":26,"term":25,"premium":4500,"source":"scraped"},{"age":26,"term":30,"premium":5150,"source":"scraped"},{"age":26,"term":35,"premium":5900,"source":"scraped"},{"age":26,"term":40,"premium":6700,"source":"scraped"},{"age":27,"term":30,"premium":5400,"source":"scraped"},{"age":29,"term":30,"premium":6050,"source":"scraped"},{"age":30,"term":20,"premium":4700,"source":"brochure"},{"age":30,"term":30,"premium":6450,"source":"scraped"},{"age":31,"term":15,"premium":4350,"source":"scraped"},{"age":31,"term":20,"premium":4950,"source":"scraped"},{"age":31,"term":25,"premium":5850,"source":"scraped"},{"age":31,"term":30,"premium":6850,"source":"scraped"},{"age":31,"term":35,"premium":7900,"source":"scraped"},{"age":31,"term":40,"premium":9000,"source":"scraped"},{"age":35,"term":20,"premium":6400,"source":"scraped"},{"age":35,"term":25,"premium":7650,"source":"scraped"},{"age":35,"term":30,"premium":8950,"source":"scraped"},{"age":35,"term":35,"premium":10350,"source":"scraped"},{"age":35,"term":40,"premium":11900,"source":"scraped"},{"age":39,"term":20,"premium":8650,"source":"scraped"},{"age":39,"term":25,"premium":10300,"source":"scraped"},{"age":39,"term":30,"premium":12000,"source":"scraped"},{"age":39,"term":35,"premium":13850,"source":"scraped"},{"age":40,"term":20,"premium":9400,"source":"brochure"},{"age":45,"term":15,"premium":11900,"source":"scraped"},{"age":45,"term":20,"premium":14100,"source":"scraped"},{"age":45,"term":25,"premium":16450,"source":"scraped"},{"age":45,"term":30,"premium":19150,"source":"scraped"}]},"859":{"plan_name":"LIC's Saral Jeevan Bima","premium_payment_option":"regular","sum_assured_type":"level","reference_sum_assured":500000,"age_at_maturity_max":70,"grid":[{"age":18,"term":5,"premium":1810,"source":"scraped"},{"age":18,"term":10,"premium":1630,"source":"scraped"},{"age":18,"term":15,"premium":1615,"source":"scraped"},{"age":18,"term":20,"premium":1655,"source":"scraped"},{"age":18,"term":25,"premium":1740,"source":"scraped"},{"age":18,"term":30,"premium":1855,"source":"scraped"},{"age":18,"term":35,"premium":2015,"source":"scraped"},{"age":18,"term":40,"premium":2210,"source":"scraped"},{"age":25,"term":5,"premium":1830,"source":"scraped"},{"age":25,"term":10,"premium":1670,"source":"scraped"},{"age":25,"term":15,"premium":1705,"source":"scraped"},{"age":25,"term":20,"premium":1810,"source":"scraped"},{"age":25,"term":25,"premium":1975,"source":"scraped"},{"age":25,"term":30,"premium":2210,"source":"scraped"},{"age":25,"term":35,"premium":2490,"source":"scraped"},{"age":25,"term":40,"premium":2775,"source":"scraped"},{"age":30,"term":5,"premium":1895,"source":"scraped"},{"age":30,"term":10,"premium":1795,"source":"scraped"},{"age":30,"term":15,"premium":1900,"source":"scraped"},{"age":30,"term":20,"premium":2095,"source":"scraped"},{"age":30,"term":25,"premium":2385,"source":"scraped"},{"age":30,"term":30,"premium":2735,"source":"scraped"},{"age":30,"term":35,"premium":3095,"source":"scraped"},{"age":30,"term":40,"premium":3460,"source":"scraped"},{"age":35,"term":5,"premium":2095,"source":"scraped"},{"age":35,"term":10,"premium":2080,"source":"scraped"},{"age":35,"term":15,"premium":2305,"source":"scraped"},{"age":35,"term":20,"premium":2665,"source":"scraped"},{"age":35,"term":25,"premium":3105,"source":"scraped"},{"age":35,"term":30,"premium":3560,"source":"scraped"},{"age":35,"term":35,"premium":4030,"source":"scraped"},{"age":40,"term":5,"premium":2490,"source":"scraped"},{"age":40,"term":10,"premium":2640,"source":"scraped"},{"age":40,"term":15,"premium":3095,"source":"scraped"},{"age":40,"term":20,"premium":3650,"source":"scraped"},{"age":40,"term":25,"premium":4220,"source":"scraped"},{"age":40,"term":30,"premium":4815,"source":"scraped"},{"age":45,"term":5,"premium":3260,"source":"scraped"},{"age":45,"term":10,"premium":3730,"source":"scraped"},{"age":45,"term":15,"premium":4430,"source":"scraped"},{"age":45,"term":20,"premium":5135,"source":"scraped"},{"age":45,"term":25,"premium":5880,"source":"scraped"},{"age":50,"term":5,"premium":4755,"source":"scraped"},{"age":50,"term":10,"premium":5505,"source":"scraped"},{"age":50,"term":15,"premium":6375,"source":"scraped"},{"age":50,"term":20,"premium":7290,"source":"scraped"},{"age":55,"term":5,"premium":6885,"source":"scraped"},{"age":55,"term":10,"premium":7810,"source":"scraped"},{"age":55,"term":15,"premium":8985,"source":"scraped"},{"age":60,"term":5,"premium":9400,"source":"scraped"},{"age":60,"term":10,"premium":10835,"source":"scraped"},{"age":65,"term":5,"premium":13110,"source":"scraped"}]},"875":{"plan_name":"LIC's Yuva Term","premium_payment_option":"regular","sum_assured_type":"level","reference_sum_assured":5000000,"age_at_maturity_max":75,"grid":[{"age":18,"term":15,"premium":4350,"source":"scraped"},{"age":18,"term":20,"premium":4450,"source":"scraped"},{"age":18,"term":25,"premium":4600,"source":"scraped"},{"age":18,"term":30,"premium":4900,"source":"scraped"},{"age":18,"term":35,"premium":5300,"source":"scraped"},{"age":18,"term":40,"premium":5850,"source":"scraped"},{"age":20,"term":20,"premium":4550,"source":"brochure"},{"age":25,"term":15,"premium":4700,"source":"scraped"},{"age":25,"term":20,"premium":4950,"source":"scraped"},{"age":25,"term":25,"premium":5400,"source":"scraped"},{"age":25,"term":30,"premium":6100,"source":"scraped"},{"age":25,"term":35,"premium":6950,"source":"scraped"},{"age":25,"term":40,"premium":7850,"source":"scraped"},{"age":30,"term":15,"premium":5350,"source":"scraped"},{"age":30,"term":20,"premium":5950,"source":"scraped"},{"age":30,"term":25,"premium":6850,"source":"scraped"},{"age":30,"term":30,"premium":8000,"source":"scraped"},{"age":30,"term":35,"premium":9200,"source":"scraped"},{"age":30,"term":40,"premium":10450,"source":"scraped"},{"age":35,"term":15,"premium":6800,"source":"scraped"},{"age":35,"term":20,"premium":8000,"source":"scraped"},{"age":35,"term":25,"premium":9500,"source":"scraped"},{"age":35,"term":30,"premium":11100,"source":"scraped"},{"age":35,"term":35,"premium":12750,"source":"scraped"},{"age":35,"term":40,"premium":14600,"source":"scraped"},{"age":40,"term":15,"premium":9700,"source":"scraped"},{"age":40,"term":20,"premium":11700,"source":"scraped"},{"age":40,"term":25,"premium":13750,"source":"scraped"},{"age":40,"term":30,"premium":15950,"source":"scraped"},{"age":40,"term":35,"premium":18350,"source":"scraped"},{"age":45,"term":15,"premium":14900,"source":"scraped"},{"age":45,"term":20,"premium":17500,"source":"scraped"},{"age":45,"term":25,"premium":20300,"source":"scraped"},{"age":45,"term":30,"premium":23500,"source":"scraped"}]},"878":{"plan_name":"LIC\u2019s Digi Credit Life","premium_payment_option":"limited_ppt_10","sum_assured_type":"level","reference_sum_assured":5000000,"age_at_maturity_max":75,"grid":[{"age":18,"term":15,"premium":3350,"source":"scraped"},{"age":18,"term":20,"premium":4050,"source":"scraped"},{"age":18,"term":25,"premium":4700,"source":"scraped"},{"age":18,"term":30,"premium":5350,"source":"scraped"},{"age":20,"term":25,"premium":4800,"source":"brochure"},{"age":25,"term":15,"premium":3500,"source":"scraped"},{"age":25,"term":20,"premium":4350,"source":"scraped"},{"age":25,"term":25,"premium":5250,"source":"scraped"},{"age":25,"term":30,"premium":6200,"source":"scraped"},{"age":30,"term":15,"premium":3900,"source":"scraped"},{"age":30,"term":20,"premium":4950,"source":"scraped"},{"age":30,"term":25,"premium":6250,"source":"scraped"},{"age":30,"term":30,"premium":7750,"source":"scraped"},{"age":35,"term":15,"premium":4700,"source":"scraped"},{"age":35,"term":20,"premium":6300,"source":"scraped"},{"age":35,"term":25,"premium":8300,"source":"scraped"},{"age":35,"term":30,"premium":10550,"source":"scraped"},{"age":40,"term":15,"premium":6300,"source":"scraped"},{"age":40,"term":20,"premium":8900,"source":"scraped"},{"age":40,"term":25,"premium":11900,"source":"scraped"},{"age":40,"term":30,"premium":15250,"source":"scraped"},{"age":45,"term":15,"premium":9500,"source":"scraped"},{"age":45,"term":20,"premium":13450,"source":"scraped"},{"age":45,"term":25,"premium":17800,"source":"scraped"},{"age":45,"term":30,"premium":22600,"source":"scraped"}]},"512N351V02":{"plan_name":"LIC\u2019s New Tech-Term","premium_payment_option":"regular","sum_assured_type":"level","reference_sum_assured":5000000,"age_at_maturity_max":80,"grid":[{"age":18,"term":10,"premium":3850,"source":"scraped"},{"age":18,"term":15,"premium":3850,"source":"scraped"},{"age":18,"term":20,"premium":3950,"source":"scraped"},{"age":18,"term":25,"premium":4150,"source":"scraped"},{"age":18,"term":30,"premium":4400,"source":"scraped"},{"age":18,"term":35,"premium":4800,"source":"scraped"},{"age":18,"term":40,"premium":5300,"source":"scraped"},{"age":25,"term":10,"premium":4000,"source":"scraped"},{"age":25,"term":15,"premium":4150,"source":"scraped"},{"age":25,"term":20,"premium":4400,"source":"scraped"},{"age":25,"term":25,"premium":4850,"source":"scraped"},{"age":25,"term":30,"premium":5500,"source":"scraped"},{"age":25,"term":35,"premium":6250,"source":"scraped"},{"age":25,"term":40,"premium":7050,"source":"scraped"},{"age":30,"term":10,"premium":4400,"source":"scraped"},{"age":30,"term":15,"premium":4700,"source":"scraped"},{"age":30,"term":20,"premium":5250,"source":"scraped"},{"age":30,"term":25,"premium":6050,"source":"scraped"},{"age":30,"term":30,"premium":7100,"source":"scraped"},{"age":30,"term":35,"premium":8150,"source":"scraped"},{"age":30,"term":40,"premium":9250,"source":"scraped"},{"age":35,"term":10,"premium":5300,"source":"scraped"},{"age":35,"term":15,"premium":5950,"source":"scraped"},{"age":35,"term":20,"premium":7000,"source":"scraped"},{"age":35,"term":25,"premium":8300,"source":"scraped"},{"age":35,"term":30,"premium":9700,"source":"scraped"},{"age":35,"term":35,"premium":11150,"source":"scraped"},{"age":35,"term":40,"premium":12800,"source":"scraped"},{"age":45,"term":10,"premium":10300,"source":"scraped"},{"age":45,"term":15,"premium":12500,"source":"scraped"},{"age":45,"term":20,"premium":14800,"source":"scraped"},{"age":45,"term":25,"premium":17300,"source":"scraped"},{"age":45,"term":30,"premium":20100,"source":"scraped"},{"age":45,"term":35,"premium":23400,"source":"scraped"},{"age":50,"term":10,"premium":15900,"source":"scraped"},{"age":50,"term":15,"premium":18750,"source":"scraped"},{"age":50,"term":20,"premium":21900,"source":"scraped"},{"age":50,"term":25,"premium":25600,"source":"scraped"},{"age":50,"term":30,"premium":29950,"source":"scraped"},{"age":55,"term":10,"premium":23500,"source":"scraped"},{"age":55,"term":15,"premium":27400,"source":"scraped"},{"age":55,"term":20,"premium":32250,"source":"scraped"},{"age":55,"term":25,"premium":38050,"source":"scraped"},{"age":60,"term":10,"premium":33500,"source":"scraped"},{"age":60,"term":15,"premium":39900,"source":"scraped"},{"age":60,"term":20,"premium":47800,"source":"scraped"},{"age":65,"term":10,"premium":49550,"source":"scraped"},{"age":65,"term":15,"premium":60300,"source":"scraped"}]},"877":{"plan_name":"LIC\u2019s Yuva Credit Life","premium_payment_option":"limited_ppt_10","sum_assured_type":"level","reference_sum_assured":5000000,"age_at_maturity_max":75,"grid":[{"age":18,"term":15,"premium":4227.62,"source":"derived_from_878"},{"age":18,"term":20,"premium":5150,"source":"scraped"},{"age":18,"term":25,"premium":6000,"source":"scraped"},{"age":18,"term":30,"premium":6751.57,"source":"derived_from_878"},{"age":20,"term":25,"premium":6057.48,"source":"derived_from_878"},{"age":25,"term":15,"premium":4416.91,"source":"derived_from_878"},{"age":25,"term":20,"premium":5489.59,"source":"derived_from_878"},{"age":25,"term":25,"premium":6625.37,"source":"derived_from_878"},{"age":25,"term":30,"premium":7824.25,"source":"derived_from_878"},{"age":30,"term":15,"premium":4921.71,"source":"derived_from_878"},{"age":30,"term":20,"premium":6300,"source":"scraped"},{"age":30,"term":25,"premium":7900,"source":"scraped"},{"age":30,"term":30,"premium":9780.31,"source":"derived_from_878"},{"age":35,"term":15,"premium":5931.29,"source":"derived_from_878"},{"age":35,"term":20,"premium":7950.45,"source":"derived_from_878"},{"age":35,"term":25,"premium":10474.4,"source":"derived_from_878"},{"age":35,"term":30,"premium":13313.84,"source":"derived_from_878"},{"age":40,"term":15,"premium":7950.45,"source":"derived_from_878"},{"age":40,"term":20,"premium":11231.58,"source":"derived_from_878"},{"age":40,"term":25,"premium":15017.51,"source":"derived_from_878"},{"age":40,"term":30,"premium":19245.13,"source":"derived_from_878"},{"age":45,"term":15,"premium":11988.77,"source":"derived_from_878"},{"age":45,"term":20,"premium":16750,"source":"scraped"},{"age":45,"term":25,"premium":22100,"source":"scraped"},{"age":45,"term":30,"premium":28520.65,"source":"derived_from_878"}]},"512N350V02":{"plan_name":"LIC's New Jeevan Amar","premium_payment_option":"regular","sum_assured_type":"level","reference_sum_assured":2500000,"age_at_maturity_max":80,"grid":[{"age":18,"term":10,"premium":3293.72,"source":"derived_from_954"},{"age":18,"term":15,"premium":3293.72,"source":"derived_from_954"},{"age":18,"term":20,"premium":3350,"source":"scraped"},{"age":18,"term":25,"premium":3525,"source":"scraped"},{"age":18,"term":30,"premium":3764.25,"source":"derived_from_954"},{"age":18,"term":35,"premium":4106.46,"source":"derived_from_954"},{"age":18,"term":40,"premium":4534.21,"source":"derived_from_954"},{"age":25,"term":10,"premium":3422.05,"source":"derived_from_954"},{"age":25,"term":15,"premium":3550.37,"source":"derived_from_954"},{"age":25,"term":20,"premium":3764.25,"source":"derived_from_954"},{"age":25,"term":25,"premium":4149.23,"source":"derived_from_954"},{"age":25,"term":30,"premium":4705.31,"source":"derived_from_954"},{"age":25,"term":35,"premium":5346.95,"source":"derived_from_954"},{"age":25,"term":40,"premium":6031.36,"source":"derived_from_954"},{"age":30,"term":10,"premium":3764.25,"source":"derived_from_954"},{"age":30,"term":15,"premium":4020.9,"source":"derived_from_954"},{"age":30,"term":20,"premium":4500,"source":"scraped"},{"age":30,"term":25,"premium":5200,"source":"scraped"},{"age":30,"term":30,"premium":6074.13,"source":"derived_from_954"},{"age":30,"term":35,"premium":6972.42,"source":"derived_from_954"},{"age":30,"term":40,"premium":7913.48,"source":"derived_from_954"},{"age":35,"term":10,"premium":4534.21,"source":"derived_from_954"},{"age":35,"term":15,"premium":5090.29,"source":"derived_from_954"},{"age":35,"term":20,"premium":5988.58,"source":"derived_from_954"},{"age":35,"term":25,"premium":7100.75,"source":"derived_from_954"},{"age":35,"term":30,"premium":8298.46,"source":"derived_from_954"},{"age":35,"term":35,"premium":9538.95,"source":"derived_from_954"},{"age":35,"term":40,"premium":10950.55,"source":"derived_from_954"},{"age":45,"term":10,"premium":8811.77,"source":"derived_from_954"},{"age":45,"term":15,"premium":10693.9,"source":"derived_from_954"},{"age":45,"term":20,"premium":12800,"source":"scraped"},{"age":45,"term":25,"premium":14800,"source":"scraped"},{"age":45,"term":30,"premium":17195.78,"source":"derived_from_954"},{"age":45,"term":35,"premium":20018.97,"source":"derived_from_954"},{"age":50,"term":10,"premium":13602.64,"source":"derived_from_954"},{"age":50,"term":15,"premium":16040.84,"source":"derived_from_954"},{"age":50,"term":20,"premium":18735.71,"source":"derived_from_954"},{"age":50,"term":25,"premium":21901.1,"source":"derived_from_954"},{"age":50,"term":30,"premium":25622.57,"source":"derived_from_954"},{"age":55,"term":10,"premium":20104.52,"source":"derived_from_954"},{"age":55,"term":15,"premium":23441.02,"source":"derived_from_954"},{"age":55,"term":20,"premium":27590.25,"source":"derived_from_954"},{"age":55,"term":25,"premium":32552.22,"source":"derived_from_954"},{"age":60,"term":10,"premium":28659.64,"source":"derived_from_954"},{"age":60,"term":15,"premium":34134.91,"source":"derived_from_954"},{"age":60,"term":20,"premium":40825,"source":"scraped"},{"age":65,"term":10,"premium":42390.6,"source":"derived_from_954"},{"age":65,"term":15,"premium":51587.35,"source":"derived_from_954"}]}};
+
+const SHORT_LABEL = {
+  "512N351V02": "954 — LIC's New Tech-Term",
+  "512N350V02": "955 — LIC's New Jeevan Amar",
+};
+const POLICY_ORDER = ["859", "875", "876", "877", "878", "512N351V02", "512N350V02"];
+
+const RAMP = ["#cde2fb","#b7d3f6","#9ec5f4","#86b6ef","#6da7ec","#5598e7","#3987e5","#2a78d6","#256abf","#1c5cab","#184f95","#104281","#0d366b"];
+
+function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n>>16)&255, (n>>8)&255, n&255];
+}
+function lerpColor(t) {
+  t = Math.max(0, Math.min(1, t));
+  const idx = t * (RAMP.length - 1);
+  const i0 = Math.floor(idx), i1 = Math.min(i0 + 1, RAMP.length - 1);
+  const f = idx - i0;
+  const c0 = hexToRgb(RAMP[i0]), c1 = hexToRgb(RAMP[i1]);
+  return [
+    Math.round(c0[0] + (c1[0]-c0[0])*f),
+    Math.round(c0[1] + (c1[1]-c0[1])*f),
+    Math.round(c0[2] + (c1[2]-c0[2])*f),
+  ];
+}
+function luminance([r,g,b]) {
+  const a = [r,g,b].map(v => { v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); });
+  return 0.2126*a[0] + 0.7152*a[1] + 0.0722*a[2];
+}
+function rgbCss([r,g,b]) { return `rgb(${r},${g},${b})`; }
+function fmtRupee(n) { return "₹" + n.toLocaleString("en-IN"); }
+
+const tooltip = document.getElementById("tooltip");
+function showTooltip(e, html) {
+  tooltip.innerHTML = html;
+  tooltip.classList.add("visible");
+  moveTooltip(e);
+}
+function moveTooltip(e) {
+  const rect = e.currentTarget.getBoundingClientRect();
+  tooltip.style.left = (rect.left + rect.width/2) + "px";
+  tooltip.style.top = rect.top + "px";
+}
+function hideTooltip() { tooltip.classList.remove("visible"); }
+
+// ---------- Policy picker ----------
+const select = document.getElementById("policy-select");
+const orderedIds = POLICY_ORDER.filter(id => id in RAW);
+for (const id of orderedIds) {
+  const opt = document.createElement("option");
+  opt.value = id;
+  opt.textContent = SHORT_LABEL[id] || `${id} — ${RAW[id].plan_name}`;
+  select.appendChild(opt);
+}
+select.addEventListener("change", () => renderPolicy(select.value));
+
+// ---------- Grid (heatmap) ----------
+function renderGrid(policy) {
+  const grid = policy.grid;
+  const ages = [...new Set(grid.map(d => d.age))].sort((a,b) => a-b);
+  const terms = [...new Set(grid.map(d => d.term))].sort((a,b) => a-b);
+  const lookup = new Map(grid.map(d => [`${d.age}_${d.term}`, d]));
+  const premiums = grid.map(d => d.premium);
+  const MIN = Math.min(...premiums), MAX = Math.max(...premiums);
+  const anyDerived = grid.some(d => d.source.startsWith("derived_from"));
+
+  const table = document.getElementById("heatmap");
+  table.innerHTML = "";
+  const thead = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  headRow.innerHTML = '<th class="axis-label">Age ↓</th>' + terms.map(t => `<th>${t}</th>`).join("");
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  for (const age of ages) {
+    const tr = document.createElement("tr");
+    const th = document.createElement("th");
+    th.textContent = age;
+    tr.appendChild(th);
+    for (const term of terms) {
+      const td = document.createElement("td");
+      const key = `${age}_${term}`;
+      const rec = lookup.get(key);
+      if (rec) {
+        const t = (rec.premium - MIN) / (MAX - MIN || 1);
+        const rgb = lerpColor(t);
+        const textColor = luminance(rgb) > 0.42 ? "#0b0b0b" : "#ffffff";
+        const isDerived = rec.source.startsWith("derived_from");
+        const div = document.createElement("div");
+        div.className = "cell" + (isDerived ? " derived" : "");
+        div.style.background = rgbCss(rgb);
+        div.style.color = textColor;
+        div.tabIndex = 0;
+        div.textContent = rec.premium.toLocaleString("en-IN");
+        const html = `<div class="t-title">Age ${age}, ${term}-year term</div><div class="t-row">${fmtRupee(rec.premium)}/yr</div><div class="t-row">source: ${rec.source}</div>`;
+        div.addEventListener("pointerenter", (e) => showTooltip(e, html));
+        div.addEventListener("pointermove", moveTooltip);
+        div.addEventListener("pointerleave", hideTooltip);
+        div.addEventListener("focus", (e) => showTooltip(e, html));
+        div.addEventListener("blur", hideTooltip);
+        td.appendChild(div);
+      } else {
+        const div = document.createElement("div");
+        div.className = "cell empty";
+        div.textContent = "—";
+        td.appendChild(div);
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+
+  document.getElementById("legend-min").textContent = fmtRupee(MIN);
+  document.getElementById("legend-max").textContent = fmtRupee(MAX);
+  document.getElementById("derived-note").style.display = anyDerived ? "flex" : "none";
+}
+
+// ---------- Table (plain) ----------
+function renderTable(policy) {
+  const body = document.getElementById("plain-body");
+  body.innerHTML = "";
+  const sorted = [...policy.grid].sort((a,b) => a.age - b.age || a.term - b.term);
+  for (const d of sorted) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${d.age}</td><td>${d.term}</td><td class="num">${d.premium.toLocaleString("en-IN")}</td><td>${d.source}</td>`;
+    body.appendChild(tr);
+  }
+}
+
+// ---------- Trend (SVG line chart) ----------
+function renderTrend(policy) {
+  const grid = policy.grid;
+  const ages = [...new Set(grid.map(d => d.age))].sort((a,b) => a-b);
+  const terms = [...new Set(grid.map(d => d.term))].sort((a,b) => a-b);
+  const ageMin = ages[0], ageMax = ages[ages.length-1];
+  const termMin = terms[0], termMax = terms[terms.length-1];
+  const premiums = grid.map(d => d.premium);
+  const pMin = Math.min(...premiums), pMax = Math.max(...premiums);
+
+  const svg = document.getElementById("trend-svg");
+  svg.innerHTML = "";
+  const W = Math.max(640, terms.length * 70), H = 380;
+  const M = { top: 16, right: 56, bottom: 36, left: 64 };
+  svg.setAttribute("width", W);
+  svg.setAttribute("height", H);
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+  const plotW = W - M.left - M.right, plotH = H - M.top - M.bottom;
+  const xScale = (term) => M.left + (terms.length === 1 ? plotW/2 : (term - termMin) / (termMax - termMin) * plotW);
+  const yPad = (pMax - pMin) * 0.06 || 1;
+  const yScale = (p) => M.top + plotH - (p - (pMin - yPad)) / ((pMax + yPad) - (pMin - yPad)) * plotH;
+
+  const ns = "http://www.w3.org/2000/svg";
+  function el(tag, attrs) {
+    const e = document.createElementNS(ns, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  // Gridlines + y-axis labels (4 ticks)
+  const ticks = 4;
+  for (let i = 0; i <= ticks; i++) {
+    const val = (pMin - yPad) + ((pMax + yPad) - (pMin - yPad)) * (i / ticks);
+    const y = yScale(val);
+    svg.appendChild(el("line", { x1: M.left, x2: W - M.right, y1: y, y2: y, class: "trend-gridline" }));
+    const label = el("text", { x: M.left - 8, y: y + 4, "text-anchor": "end", class: "trend-axis-label" });
+    label.textContent = Math.round(val).toLocaleString("en-IN");
+    svg.appendChild(label);
+  }
+  // x-axis labels
+  for (const term of terms) {
+    const label = el("text", { x: xScale(term), y: H - M.bottom + 20, "text-anchor": "middle", class: "trend-axis-label" });
+    label.textContent = term;
+    svg.appendChild(label);
+  }
+  const xCaption = el("text", { x: M.left + plotW/2, y: H - 4, "text-anchor": "middle", class: "trend-axis-label" });
+  xCaption.textContent = "Policy term (years)";
+  svg.appendChild(xCaption);
+
+  // One line per age
+  for (const age of ages) {
+    const points = grid.filter(d => d.age === age).sort((a,b) => a.term - b.term);
+    if (points.length === 0) continue;
+    const t = (age - ageMin) / (ageMax - ageMin || 1);
+    const rgb = lerpColor(t);
+    const stroke = rgbCss(rgb);
+
+    const path = points.map((p,i) => `${i === 0 ? "M" : "L"} ${xScale(p.term).toFixed(1)} ${yScale(p.premium).toFixed(1)}`).join(" ");
+    svg.appendChild(el("path", { d: path, class: "trend-line", stroke }));
+
+    for (const p of points) {
+      const isDerived = p.source.startsWith("derived_from");
+      const c = el("circle", {
+        cx: xScale(p.term), cy: yScale(p.premium), r: isDerived ? 3.5 : 4,
+        class: "trend-point " + (isDerived ? "derived" : "scraped"),
+        fill: isDerived ? undefined : stroke,
+        stroke: stroke,
+      });
+      if (isDerived) c.setAttribute("fill", "var(--surface-1)");
+      const html = `<div class="t-title">Age ${age}, ${p.term}-year term</div><div class="t-row">${fmtRupee(p.premium)}/yr</div><div class="t-row">source: ${p.source}</div>`;
+      c.addEventListener("pointerenter", (e) => showTooltip(e, html));
+      c.addEventListener("pointermove", moveTooltip);
+      c.addEventListener("pointerleave", hideTooltip);
+      svg.appendChild(c);
+    }
+
+    // Direct end-label at the last point of the line
+    const last = points[points.length - 1];
+    const endLabel = el("text", {
+      x: xScale(last.term) + 8, y: yScale(last.premium) + 4,
+      class: "trend-endlabel", fill: stroke,
+    });
+    endLabel.textContent = "age " + age;
+    svg.appendChild(endLabel);
+  }
+}
+
+// ---------- Orchestration ----------
+function renderPolicy(pid) {
+  const policy = RAW[pid];
+  select.value = pid;
+  document.getElementById("policy-title").textContent =
+    (SHORT_LABEL[pid] ? SHORT_LABEL[pid].split(" — ")[1] : policy.plan_name) + ` (policy ${pid})`;
+
+  const grid = policy.grid;
+  const ages = [...new Set(grid.map(d => d.age))].sort((a,b) => a-b);
+  const terms = [...new Set(grid.map(d => d.term))].sort((a,b) => a-b);
+  const scrapedCount = grid.filter(d => !d.source.startsWith("derived_from")).length;
+  const derivedCount = grid.length - scrapedCount;
+
+  let sourceText = `${grid.length} real points`;
+  if (derivedCount > 0) {
+    sourceText = `${scrapedCount} real scraped points + ${derivedCount} derived from a same-family sibling's grid (shape-transfer)`;
+  }
+
+  document.getElementById("policy-subtitle").innerHTML =
+    `${policy.premium_payment_option} premium, ${policy.sum_assured_type} sum assured, reference sum assured ${fmtRupee(policy.reference_sum_assured)}. ` +
+    `${sourceText} — every cell shown is one of these real values directly, never interpolated (bilinear interpolation only happens at query time, for an age/term the grid doesn't already have). ` +
+    `Blank grid cells aren't missing data — <code>age + term</code> can't exceed this policy's own <code>age_at_maturity_max</code> (${policy.age_at_maturity_max}), which is why the grid narrows as age increases.`;
+
+  document.getElementById("policy-meta").textContent =
+    `ages ${ages[0]}–${ages[ages.length-1]} · terms ${terms[0]}–${terms[terms.length-1]} · ${grid.length} points`;
+
+  renderGrid(policy);
+  renderTable(policy);
+  renderTrend(policy);
+}
+
+// ---------- View toggle ----------
+const btnGrid = document.getElementById("btn-grid");
+const btnTrend = document.getElementById("btn-trend");
+const btnTable = document.getElementById("btn-table");
+const gridView = document.getElementById("grid-view");
+const trendView = document.getElementById("trend-view");
+const tableView = document.getElementById("table-view");
+function setView(which) {
+  gridView.style.display = which === "grid" ? "" : "none";
+  trendView.style.display = which === "trend" ? "" : "none";
+  tableView.style.display = which === "table" ? "" : "none";
+  btnGrid.setAttribute("aria-pressed", String(which === "grid"));
+  btnTrend.setAttribute("aria-pressed", String(which === "trend"));
+  btnTable.setAttribute("aria-pressed", String(which === "table"));
+}
+btnGrid.addEventListener("click", () => setView("grid"));
+btnTrend.addEventListener("click", () => setView("trend"));
+btnTable.addEventListener("click", () => setView("table"));
+
+renderPolicy(orderedIds[0]);
+</script>
+</body>
+</html>
