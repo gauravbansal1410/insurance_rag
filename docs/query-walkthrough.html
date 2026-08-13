@@ -391,16 +391,20 @@
     <div class="step marker-server">
       <div class="step-rail"><div class="step-num">0</div></div>
       <div class="step-card">
-        <div class="step-head"><span class="step-title">User answers a question</span><span class="step-file">index.html → n8n → main.py</span></div>
+        <div class="step-head"><span class="step-title">User answers a question — turn 4 of 6</span><span class="step-file">index.html → n8n → main.py</span></div>
         <span class="step-tag">server</span>
 
         <div class="field-block">
-          <p class="field-label">Input — the exact request the frontend sends</p>
+          <p class="process-text" style="margin-bottom:10px;"><strong>This walkthrough shows one representative turn, not the first one.</strong> The full conversation is 6 questions, answered one per turn: age (31) → cover (10000000) → concern (1, income replacement) → <strong>term (30) ← shown below</strong> → payment option (regular) → budget (20000). Turn 4 (term) is the one picked here because it's where the interesting thing happens — the answer gets checked against real data before it's accepted (see step 1). Turn 1 (age) is just a number with nothing yet to validate against.</p>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Input — the exact request the frontend sends for this one turn (answering "term")</p>
 <pre class="code">POST https://gaurav-n8n.duckdns.org/webhook/insurance-rag-frontend
 Content-Type: application/json
 
 {"session_id": "a31be9f1-acf0-4dcb-9fa9-1df136d7c980", "message": "30"}</pre>
-          <p class="note">This is the turn where the user answers the "policy term" question with 30 — age (31), cover (10000000), and concern_tags (income_replacement) were already answered in the 3 turns before this one. session_id is generated once by <code>crypto.randomUUID()</code> at the start of the conversation and reused for every turn.</p>
+          <p class="note">session_id is generated once by <code>crypto.randomUUID()</code> at the start of the conversation and reused for every turn, including the 3 that already happened before this one.</p>
         </div>
 
         <div class="field-block">
@@ -421,7 +425,7 @@ Content-Type: application/json
     <div class="step marker-function">
       <div class="step-rail"><div class="step-num">1</div></div>
       <div class="step-card">
-        <div class="step-head"><span class="step-title">Session handler</span><span class="step-file">chat_session.fill_next_field()</span></div>
+        <div class="step-head"><span class="step-title">Session handler — same turn 4 of 6</span><span class="step-file">chat_session.fill_next_field()</span></div>
         <span class="step-tag">function</span>
 
         <div class="field-block">
