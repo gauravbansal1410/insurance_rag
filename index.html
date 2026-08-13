@@ -108,13 +108,15 @@
   .candidate .rank { font-weight: 600; color: var(--accent); }
   .candidate .policy { font-weight: 600; }
   .candidate .premium { color: var(--muted); }
-  form {
-    display: flex;
-    gap: 8px;
+  #composerArea {
     padding: 14px 20px;
     border-top: 1px solid var(--border);
   }
-  input[type="text"] {
+  form {
+    display: flex;
+    gap: 8px;
+  }
+  input[type="text"], input[type="number"] {
     flex: 1;
     padding: 10px 14px;
     border-radius: 10px;
@@ -123,7 +125,7 @@
     color: var(--text);
     font-size: 0.95rem;
   }
-  input[type="text"]:focus { outline: 2px solid var(--accent); }
+  input[type="text"]:focus, input[type="number"]:focus { outline: 2px solid var(--accent); }
   button {
     padding: 10px 18px;
     border-radius: 10px;
@@ -137,6 +139,31 @@
   .typing { color: var(--muted); font-style: italic; font-size: 0.85rem; align-self: flex-start; }
   .restart-row { padding: 0 20px 12px; }
   .restart-row button { background: transparent; color: var(--muted); border: 1px solid var(--border); font-size: 0.8rem; padding: 6px 12px; }
+  .option-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .option-buttons button {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .option-buttons button:hover:not(:disabled) { border-color: var(--accent); }
+  .checkbox-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .checkbox-list label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  .checkbox-list input { width: 16px; height: 16px; }
 </style>
 </head>
 <body>
@@ -149,10 +176,7 @@
   <div class="restart-row" id="restartRow" style="display:none;">
     <button id="restartBtn" type="button">Start over</button>
   </div>
-  <form id="composer">
-    <input type="text" id="input" autocomplete="off" placeholder="Type your answer…" autofocus>
-    <button type="submit" id="sendBtn">Send</button>
-  </form>
+  <div id="composerArea"></div>
 </div>
 
 <script>
@@ -163,14 +187,13 @@
 const WEBHOOK_URL = "https://gaurav-n8n.duckdns.org/webhook/insurance-rag-frontend";
 
 const thread = document.getElementById("thread");
-const composer = document.getElementById("composer");
-const input = document.getElementById("input");
-const sendBtn = document.getElementById("sendBtn");
+const composerArea = document.getElementById("composerArea");
 const restartRow = document.getElementById("restartRow");
 const restartBtn = document.getElementById("restartBtn");
 
 let sessionId = null;
 let done = false;
+let busy = false;
 
 function addMessage(text, role) {
   const el = document.createElement("div");
@@ -199,9 +222,9 @@ function addCandidates(top3) {
   thread.scrollTop = thread.scrollHeight;
 }
 
-function setBusy(busy) {
-  input.disabled = busy;
-  sendBtn.disabled = busy;
+function setBusy(b) {
+  busy = b;
+  composerArea.querySelectorAll("input, button").forEach((el) => (el.disabled = b));
 }
 
 async function callWebhook(message) {
@@ -216,50 +239,151 @@ async function callWebhook(message) {
   return resp.json();
 }
 
-async function start() {
-  sessionId = crypto.randomUUID();
-  done = false;
-  thread.innerHTML = "";
-  restartRow.style.display = "none";
+// Central submit path every widget type below funnels through - displayText is what shows
+// in the user's own chat bubble (e.g. selected labels), messageText is the raw value sent
+// to /chat (must match what service/chat_session.py's _parse_field() expects for that
+// field - each render*() function below builds this correctly per field type).
+async function submitAnswer(displayText, messageText) {
+  if (done || busy) return;
+  addMessage(displayText, "user");
   setBusy(true);
   const typing = addMessage("…", "typing");
   try {
-    const data = await callWebhook(null);
-    typing.remove();
-    addMessage(data.reply, "assistant");
-  } catch (err) {
-    typing.remove();
-    addMessage("Couldn't reach the server: " + err.message, "error");
-  }
-  setBusy(false);
-  input.focus();
-}
-
-composer.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  if (done) return;
-  const text = input.value.trim();
-  if (!text) return;
-  addMessage(text, "user");
-  input.value = "";
-  setBusy(true);
-  const typing = addMessage("…", "typing");
-  try {
-    const data = await callWebhook(text);
+    const data = await callWebhook(messageText);
     typing.remove();
     addMessage(data.reply, "assistant");
     if (data.done) {
       done = true;
       addCandidates(data.top3);
       restartRow.style.display = "block";
+      composerArea.innerHTML = "";
+    } else {
+      renderComposer(data.field);
     }
   } catch (err) {
     typing.remove();
     addMessage("Couldn't reach the server: " + err.message, "error");
   }
   setBusy(false);
-  if (!done) input.focus();
-});
+}
+
+// Widget renderers - one per _field_meta() "type" (service/chat_session.py). Each builds
+// its own DOM into composerArea and wires submission through submitAnswer() above, so the
+// backend's real, currently-valid options (term/premium_payment_option) drive what's
+// selectable at all, instead of a free-text box a user can type anything into - added
+// 2026-08-13 in response to a user pushback on continuing to patch free-text parsing edge
+// cases one at a time ("we can't keep building more for every case").
+
+function renderTextInput(field) {
+  composerArea.innerHTML =
+    '<form id="textForm"><input type="text" id="textInput" autocomplete="off" ' +
+    'placeholder="Type your answer…" autofocus><button type="submit">Send</button></form>';
+  const form = document.getElementById("textForm");
+  const textInput = document.getElementById("textInput");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const value = textInput.value.trim();
+    if (!value) return;
+    submitAnswer(value, value);
+  });
+  textInput.focus();
+}
+
+function renderNumberInput(field) {
+  const attrs = [];
+  if (field.min !== undefined && field.min !== null) attrs.push('min="' + field.min + '"');
+  if (field.max !== undefined && field.max !== null) attrs.push('max="' + field.max + '"');
+  if (field.step !== undefined && field.step !== null) attrs.push('step="' + field.step + '"');
+  composerArea.innerHTML =
+    '<form id="numForm"><input type="number" id="numInput" autocomplete="off" ' +
+    attrs.join(" ") + ' autofocus><button type="submit">Send</button></form>';
+  const form = document.getElementById("numForm");
+  const numInput = document.getElementById("numInput");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const value = numInput.value.trim();
+    if (!value) return;
+    submitAnswer(value, value);
+  });
+  numInput.focus();
+}
+
+function renderSelectButtons(field) {
+  const wrap = document.createElement("div");
+  wrap.className = "option-buttons";
+  for (const opt of field.options) {
+    const isObj = typeof opt === "object" && opt !== null;
+    const value = isObj ? opt.value : opt;
+    const label = isObj ? opt.label : String(opt);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = label;
+    btn.addEventListener("click", () => submitAnswer(label, String(value)));
+    wrap.appendChild(btn);
+  }
+  composerArea.innerHTML = "";
+  composerArea.appendChild(wrap);
+}
+
+function renderMultiSelect(field) {
+  const list = document.createElement("div");
+  list.className = "checkbox-list";
+  for (const opt of field.options) {
+    const label = document.createElement("label");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = String(opt.value);
+    checkbox.dataset.label = opt.label;
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(opt.label));
+    list.appendChild(label);
+  }
+  const continueBtn = document.createElement("button");
+  continueBtn.type = "button";
+  continueBtn.textContent = "Continue";
+  continueBtn.addEventListener("click", () => {
+    const checked = Array.from(list.querySelectorAll("input:checked"));
+    if (checked.length === 0) return;
+    const messageText = checked.map((c) => c.value).join(",");
+    const displayText = checked.map((c) => c.dataset.label).join(", ");
+    submitAnswer(displayText, messageText);
+  });
+  composerArea.innerHTML = "";
+  composerArea.appendChild(list);
+  composerArea.appendChild(continueBtn);
+}
+
+function renderComposer(field) {
+  if (!field || field.type === "text") {
+    renderTextInput(field);
+  } else if (field.type === "number") {
+    renderNumberInput(field);
+  } else if (field.type === "select") {
+    renderSelectButtons(field);
+  } else if (field.type === "multiselect") {
+    renderMultiSelect(field);
+  } else {
+    renderTextInput(field);
+  }
+}
+
+async function start() {
+  sessionId = crypto.randomUUID();
+  done = false;
+  thread.innerHTML = "";
+  restartRow.style.display = "none";
+  composerArea.innerHTML = "";
+  const typing = addMessage("…", "typing");
+  try {
+    const data = await callWebhook(null);
+    typing.remove();
+    addMessage(data.reply, "assistant");
+    renderComposer(data.field);
+  } catch (err) {
+    typing.remove();
+    addMessage("Couldn't reach the server: " + err.message, "error");
+  }
+}
 
 restartBtn.addEventListener("click", start);
 
