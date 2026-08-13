@@ -49,6 +49,8 @@ See `CLAUDE.md`'s "Build & Run Commands" section for full details, including how
 - [`docs/evaluation_architecture.md`](docs/evaluation_architecture.md) — golden set, trace log, LLM judge (not yet built).
 - [`docs/schema.md`](docs/schema.md) — data layer model (Layer 1/2/3), Layer 1/2 field schemas, and the extraction-rule caveats found so far (worth reading before touching extraction prompts — several are non-obvious document-formatting traps).
 - [`docs/infra-baseline.md`](docs/infra-baseline.md) — infrastructure/deployment baseline.
+- [`docs/pipeline-flow.html`](docs/pipeline-flow.html) — visual diagram of both pipelines (ingestion + query) with real examples and built/not-built status per step. Open directly in a browser.
+- [`docs/query-walkthrough.html`](docs/query-walkthrough.html) — a query-time-only walkthrough (input → process → output per step, traced against the real code) built for explaining the project out loud, e.g. in an interview. Open directly in a browser.
 - [`docs/prompts/`](docs/prompts/) — the production extraction/derivation/narrative-generation prompts, plus an `appendix/` of deprecated variants kept for reference.
 - [`docs/progress/`](docs/progress/) — dated session logs with testing detail behind the decisions in the docs above.
 - [`n8n/`](n8n/) — the n8n workflow (Chat Trigger → HTTP Request → Set) that calls `service/`, plus import/deployment notes.
