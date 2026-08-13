@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>insurance_rag — pipeline flow</title>
 <style>
   :root {
@@ -31,6 +32,7 @@
     }
   }
   * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
     margin: 0;
     background: var(--bg);
@@ -38,6 +40,9 @@
     font-family: -apple-system, "Inter", "Segoe UI", Helvetica, Arial, sans-serif;
     padding: 40px 32px 80px;
     -webkit-font-smoothing: antialiased;
+  }
+  @media (max-width: 640px) {
+    body { padding: 24px 16px 56px; }
   }
   .wrap { max-width: 100%; }
   h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
@@ -61,16 +66,28 @@
   .swatch { width: 20px; height: 10px; border-radius: 3px; flex-shrink: 0; border: 1.5px solid var(--text-muted); }
   .swatch.dashed { border-style: dashed; }
 
+  /* Single horizontally-scrolling row per section - card and its example text are one
+     flex item (.step-col) stacked vertically, not two separately-scrolling rows. An
+     earlier version used two independent .row/.example-row containers, each with its own
+     overflow-x: auto - they could scroll out of sync with each other (two visible
+     scrollbars, examples drifting out from under their own cards once either row was
+     scrolled) - confirmed a real bug 2026-08-13, not just a visual nitpick. One scroll
+     container per section removes the possibility entirely. */
   .row {
-    display: flex; align-items: stretch; gap: 0;
-    overflow-x: auto; padding: 8px 4px 20px;
+    display: flex; align-items: flex-start; gap: 0;
+    overflow-x: auto; overflow-y: hidden; padding: 8px 4px 20px;
+    scrollbar-width: thin;
+  }
+  .step-col {
+    width: 210px; flex-shrink: 0; box-sizing: border-box;
+    display: flex; flex-direction: column; gap: 10px;
   }
   .card {
     background: var(--card);
     border: 1.5px solid var(--border);
     border-radius: 14px;
     padding: 14px 16px;
-    width: 210px;
+    width: 100%;
     flex-shrink: 0;
     position: relative;
     box-sizing: border-box;
@@ -78,15 +95,10 @@
   .card .title { font-size: 13.5px; font-weight: 600; line-height: 1.35; margin-bottom: 4px; }
   .card .subtitle { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
 
-  .example-row {
-    display: flex; align-items: flex-start; gap: 0;
-    overflow-x: auto; padding: 0 4px 20px;
-    margin-top: -8px;
-  }
-  .example-slot { width: 210px; flex-shrink: 0; box-sizing: border-box; padding: 0 2px; }
   .example {
     font-size: 12.5px; font-style: italic; color: var(--text-muted); line-height: 1.4;
     overflow-wrap: break-word;
+    padding: 0 2px;
   }
   .arrow-spacer { min-width: 34px; flex-shrink: 0; }
 
@@ -104,6 +116,10 @@
   .arrow {
     display: flex; align-items: center; justify-content: center;
     min-width: 34px; flex-shrink: 0; color: var(--arrow); font-size: 18px;
+    /* .row's items are top-aligned now (mixed-height columns: card+example vs a plain
+       arrow) - this approximates vertical-centering the arrow against the card above it
+       (not the taller card+example column), close enough for a typical 2-3 line card. */
+    align-self: flex-start; margin-top: 34px;
   }
 </style>
 </head>
@@ -124,7 +140,6 @@
       <span class="legend-item"><span class="swatch dashed"></span>Not built</span>
     </div>
     <div class="row" id="ingestion-row"></div>
-    <div class="example-row" id="ingestion-examples"></div>
   </section>
 
   <section>
@@ -139,7 +154,6 @@
       <span class="legend-item"><span class="swatch dashed"></span>Not built</span>
     </div>
     <div class="row" id="query-row"></div>
-    <div class="example-row" id="query-examples"></div>
   </section>
 
   <section>
@@ -191,15 +205,29 @@ function statusClass(step) {
   return step.built ? '' : 'not-built';
 }
 
-function renderRow(containerId, steps, arrowsBetweenAll = true) {
+// Each step renders as one .step-col (card, then its example text stacked underneath,
+// both in the SAME flex item) inside a single scrollable .row - not two separately
+// scrollable rows synced by matching widths, which could (and did - found 2026-08-13)
+// drift out of sync with each other, showing two independent scrollbars and letting an
+// example's text end up under the wrong card once either row was scrolled independently.
+function renderRow(containerId, steps) {
   const container = document.getElementById(containerId);
   steps.forEach((step, i) => {
+    const col = document.createElement('div');
+    col.className = 'step-col';
     const card = document.createElement('div');
     card.className = `card ${step.actor} ${statusClass(step)}`;
     card.innerHTML = `<div class="title">${step.title}</div>` +
       (step.subtitle ? `<div class="subtitle">${step.subtitle}</div>` : '');
-    container.appendChild(card);
-    if (i < steps.length - 1 && arrowsBetweenAll) {
+    col.appendChild(card);
+    if (step.example) {
+      const example = document.createElement('div');
+      example.className = 'example';
+      example.textContent = step.example;
+      col.appendChild(example);
+    }
+    container.appendChild(col);
+    if (i < steps.length - 1) {
       const arrow = document.createElement('div');
       arrow.className = 'arrow';
       arrow.textContent = '→';
@@ -208,30 +236,8 @@ function renderRow(containerId, steps, arrowsBetweenAll = true) {
   });
 }
 
-// Renders a second row of example text underneath, one slot per card, with
-// blank spacers where the arrows are so each example lines up under its card.
-function renderExampleRow(containerId, steps) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  steps.forEach((step, i) => {
-    const slot = document.createElement('div');
-    slot.className = 'example-slot';
-    if (step.example) {
-      slot.innerHTML = `<div class="example">${step.example}</div>`;
-    }
-    container.appendChild(slot);
-    if (i < steps.length - 1) {
-      const spacer = document.createElement('div');
-      spacer.className = 'arrow-spacer';
-      container.appendChild(spacer);
-    }
-  });
-}
-
 renderRow('ingestion-row', ingestionSteps);
-renderExampleRow('ingestion-examples', ingestionSteps);
 renderRow('query-row', queryOtherSteps);
-renderExampleRow('query-examples', queryOtherSteps);
 renderRow('eval-row', evalSteps);
 </script>
 </body>
