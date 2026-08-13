@@ -105,6 +105,7 @@
     font-size: 0.85rem;
     background: var(--panel);
   }
+  .candidate .rank { font-weight: 600; color: var(--accent); }
   .candidate .policy { font-weight: 600; }
   .candidate .premium { color: var(--muted); }
   form {
@@ -187,8 +188,10 @@ function addCandidates(top3) {
   for (const c of top3) {
     const row = document.createElement("div");
     row.className = "candidate";
+    const label = c.plan_name ? c.plan_name : "Policy " + c.policy_id;
     row.innerHTML =
-      '<span class="policy">Policy ' + c.policy_id + '</span> — ' +
+      '<span class="rank">Rank ' + c.rank + '</span> — ' +
+      '<span class="policy">' + label + '</span> — ' +
       '<span class="premium">₹' + Math.round(c.premium_amount).toLocaleString("en-IN") + '/yr</span>';
     wrap.appendChild(row);
   }
