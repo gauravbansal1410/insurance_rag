@@ -15,6 +15,8 @@
 # elsewhere (docs/ingestion_architecture.md step 2).
 
 import os
+import re
+
 from google import genai
 from google.genai import types
 
@@ -22,14 +24,31 @@ DEFAULT_MODEL = "gemini-flash-lite-latest"
 PROMPT_PATH = os.path.join(os.path.dirname(__file__), "..", "docs", "prompts", "prompt_c_narrative.txt")
 
 
+def plan_name_for(layer1_record, policy_id):
+    # `plan_name` is a TOP-LEVEL field on each extracted/layer1_<id>.json (alongside
+    # policy_id/uin/plan_category), NOT nested under the "layer1" sub-object where the rest
+    # of the extracted fields live - confirmed 2026-08-13 that this function's original
+    # version (`layer1_record["layer1"].get("plan_name")`) was reading the wrong path and
+    # always silently getting None, since day one. Went unnoticed because the `or` fallback
+    # to policy_id quietly "worked" (Gemini still named the plan correctly in its narrative
+    # body, sourced from the grounding chunks rather than this hint) - only surfaced once
+    # this function started being used for something that shows its return value directly
+    # (deterministic headings, the frontend's candidate list) instead of just as one hint
+    # among many in a prompt. The `or` here still matters for its original, real reason:
+    # `.get("plan_name", default)` only falls back when the KEY is missing, not when it's
+    # present with value None - confirmed 2026-08-01 that plan_name was None (not absent)
+    # for all 7 term-assurance records at the time, a real extraction gap since fixed (see
+    # docs/schema.md) but the defensive fallback is cheap insurance against a future
+    # extraction regressing the same way. Public (not _plan_name) as of 2026-08-13 - reused
+    # by run_query_pipeline.py's top3 output so the frontend can show a real plan name
+    # instead of a raw policy_id (a LIC UIN for some policies, e.g. 954/955 - not something
+    # a user should ever have to read).
+    return layer1_record.get("plan_name") or policy_id
+
+
 def _format_candidate(rank, candidate, layer1_record, layer2_record, chunks):
     group_b = layer2_record["layer2"]["group_b"]
-    # `.get("plan_name", default)` only falls back when the KEY is missing, not when it's
-    # present with value None - confirmed 2026-08-01 that plan_name is None (not absent) for
-    # all 7 term-assurance Layer 1 records, a real extraction gap, not a rare edge case. The
-    # `or` here catches both missing-key and None-value cases; `.get("plan_name", ...)` alone
-    # let the literal string "Plan name: None" leak into the Gemini prompt.
-    plan_name = layer1_record["layer1"].get("plan_name") or candidate["policy_id"]
+    plan_name = plan_name_for(layer1_record, candidate["policy_id"])
     grounding = "\n\n".join(
         f"[{c.payload['section_name']}]\n{c.payload['chunk_text']}" for c in chunks
     ) or "(no source excerpts retrieved for this plan)"
@@ -72,6 +91,34 @@ def build_prompt(profile, ranked_top3, layer1_records, layer2_records, chunks_by
     return template.replace("{{profile}}", profile_text).replace("{{candidates}}", candidates_text)
 
 
+def _relabel_headings(text, ranked_top3, layer1_records):
+    """Deterministically rewrites each '### <heading>' line to '### Rank N — <plan name>',
+    in candidate order, instead of trusting Gemini's own heading text to actually be the
+    real plan name. **Confirmed 2026-08-13 this can't be trusted**: despite the prompt
+    explicitly instructing "use ONLY the real plan name... never the policy_id", real output
+    still headed every candidate with its raw policy_id (e.g. "### 512N351V02", a LIC UIN a
+    user should never have to read) - an instruction-following miss, not a rare fluke. Rank
+    and plan name are both already known deterministically before the narrative call even
+    happens (rank from list order, name from Layer 1), so there's no reason to depend on
+    free-text model output for either - same bias toward determinism the rest of this
+    pipeline already follows elsewhere (docs/query_architecture.md).
+
+    Only rewrites when the number of '### ' headings found matches len(ranked_top3) exactly
+    - if Gemini's actual output structure doesn't match what the prompt asked for (extra,
+    missing, or nested headings), returns text unchanged rather than risking a garbled
+    rewrite; a wrong-but-readable heading beats a corrupted document."""
+    parts = re.split(r"(?m)^### .*$", text)
+    if len(parts) - 1 != len(ranked_top3):
+        return text
+
+    rebuilt = [parts[0]]
+    for i, (candidate, body) in enumerate(zip(ranked_top3, parts[1:])):
+        plan_name = plan_name_for(layer1_records[candidate["policy_id"]], candidate["policy_id"])
+        rebuilt.append(f"### Rank {i + 1} — {plan_name}")
+        rebuilt.append(body)
+    return "".join(rebuilt)
+
+
 def generate_narrative(profile, ranked_top3, layer1_records, layer2_records, chunks_by_policy,
                         model=None, api_key=None):
     """ranked_top3: rank_candidates()'s output, sliced to the top 3. chunks_by_policy:
@@ -100,7 +147,7 @@ def generate_narrative(profile, ranked_top3, layer1_records, layer2_records, chu
         # phrasing is fine and even desirable, but 0.3 stays well short of "creative."
         config=types.GenerateContentConfig(temperature=0.3),
     )
-    return response.text
+    return _relabel_headings(response.text, ranked_top3, layer1_records)
 
 
 if __name__ == "__main__":
