@@ -19,7 +19,7 @@ from premium_interpolation import filter_by_budget
 from narrative_retrieval import retrieve_narrative_chunks
 from rerank_and_sort import rank_candidates, rerank_chunks, max_rerank_score_by_policy
 from precomputed_relevance import lookup_relevance_by_policy
-from narrative_generation import generate_narrative
+from narrative_generation import generate_narrative, plan_name_for
 from concern_tags import synthesize_query_text
 
 TOP_N = 3
@@ -101,13 +101,15 @@ def run_query(profile, layer1_records, layer2_records, precomputed, voyage_clien
         "excluded": excluded_log,
         "top3": [
             {
+                "rank": i + 1,
                 "policy_id": c["policy_id"],
+                "plan_name": plan_name_for(layer1_records[c["policy_id"]], c["policy_id"]),
                 "premium_amount": c["premium_amount"],
                 "concern_match_count": c["concern_match_count"],
                 "relevance_tier": c.get("relevance_tier"),
                 "rerank_score": c.get("rerank_score"),
             }
-            for c in top3
+            for i, c in enumerate(top3)
         ],
         "narrative": narrative,
     }
