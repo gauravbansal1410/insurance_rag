@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>insurance_rag — how ingestion works</title>
+<style>
+  :root {
+    --bg: #EEF2F6;
+    --surface: #FFFFFF;
+    --surface-2: #E3E9EF;
+    --code-bg: #1B2430;
+    --code-text: #DCE4EC;
+    --code-border: #2E3B48;
+    --ink: #15212C;
+    --ink-muted: #5A6C7C;
+    --ink-faint: #8695A3;
+    --border: #D2DAE2;
+    --spine: #B6C2CD;
+    --accent: #C05A2A;
+    --accent-soft: #F4E2D6;
+    --server: #24796B;
+    --server-soft: #DCEEEA;
+    --external: #6858A8;
+    --external-soft: #E7E3F5;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12181E;
+      --surface: #1A2229;
+      --surface-2: #212B33;
+      --code-bg: #0E1319;
+      --code-text: #D3DBE2;
+      --code-border: #29323C;
+      --ink: #E7ECF0;
+      --ink-muted: #96A5B2;
+      --ink-faint: #6B7A87;
+      --border: #2B3740;
+      --spine: #3A4750;
+      --accent: #E08152;
+      --accent-soft: #3A2A20;
+      --server: #4FAF9C;
+      --server-soft: #1C332F;
+      --external: #9C8FDA;
+      --external-soft: #2A2640;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12181E;
+    --surface: #1A2229;
+    --surface-2: #212B33;
+    --code-bg: #0E1319;
+    --code-text: #D3DBE2;
+    --code-border: #29323C;
+    --ink: #E7ECF0;
+    --ink-muted: #96A5B2;
+    --ink-faint: #6B7A87;
+    --border: #2B3740;
+    --spine: #3A4750;
+    --accent: #E08152;
+    --accent-soft: #3A2A20;
+    --server: #4FAF9C;
+    --server-soft: #1C332F;
+    --external: #9C8FDA;
+    --external-soft: #2A2640;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    padding: 0 0 80px;
+  }
+  .page { max-width: 920px; margin: 0 auto; padding: 48px 28px 0; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-size: 28px;
+    line-height: 1.18;
+    margin: 0 0 14px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .pitch {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-muted);
+    max-width: 70ch;
+    margin: 0 0 8px;
+  }
+  .pitch strong { color: var(--ink); font-weight: 600; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 18px;
+    margin: 28px 0 24px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 7px; }
+  .legend-swatch { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+  .legend-swatch.you { background: var(--accent-soft); border: 1.5px solid var(--accent); }
+  .legend-swatch.function { background: var(--surface-2); border: 1.5px solid var(--ink-faint); }
+  .legend-swatch.server { background: var(--server-soft); border: 1.5px solid var(--server); }
+  .legend-swatch.external { background: var(--external-soft); border: 1.5px solid var(--external); }
+
+  .example-banner {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 8px;
+    margin: 0 0 40px;
+    padding: 13px 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .example-banner .ex-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-right: 4px;
+  }
+  .example-banner .ex-chip {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+  }
+
+  h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-weight: 700;
+    color: var(--ink-faint);
+    margin: 0 0 16px;
+  }
+
+  .timeline { position: relative; }
+  .step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 0 18px;
+    padding-bottom: 6px;
+  }
+  .step-rail { position: relative; display: flex; justify-content: center; }
+  .step-rail::before {
+    content: "";
+    position: absolute;
+    top: 0; bottom: -6px;
+    width: 2px;
+    background: var(--spine);
+  }
+  .step:last-child .step-rail::before { display: none; }
+  .step-num {
+    position: relative;
+    z-index: 1;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--ink-faint);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-muted);
+    margin-top: 2px;
+  }
+  .step.marker-you .step-num { border-color: var(--accent); color: var(--accent); }
+  .step.marker-server .step-num { border-color: var(--server); color: var(--server); }
+  .step.marker-external .step-num { border-color: var(--external); color: var(--external); }
+
+  .step-card {
+    min-width: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 22px 22px;
+    margin-bottom: 26px;
+  }
+  .step-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .step-title { font-size: 16px; font-weight: 700; }
+  .step-file {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+  .step-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 5px;
+    margin-bottom: 14px;
+  }
+  .step.marker-you .step-tag { background: var(--accent-soft); color: var(--accent); }
+  .step.marker-server .step-tag { background: var(--server-soft); color: var(--server); }
+  .step.marker-external .step-tag { background: var(--external-soft); color: var(--external); }
+  .step.marker-function .step-tag { background: var(--surface-2); color: var(--ink-muted); }
+
+  .field-block { margin-top: 16px; }
+  .field-block .field-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 6px;
+  }
+  .field-block .process-text { font-size: 13.5px; line-height: 1.6; color: var(--ink); }
+  .field-block .process-text code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--surface-2);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .field-block .note {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--ink-faint);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  pre.code {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border: 1px solid var(--code-border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre;
+    margin: 0;
+  }
+  pre.code.scrollable { max-height: 460px; overflow-y: auto; }
+
+  footer {
+    max-width: 920px;
+    margin: 40px auto 0;
+    padding: 0 28px;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="eyebrow">insurance_rag — ingestion walkthrough</p>
+  <h1>What happens between uploading a policy PDF and it being queryable</h1>
+  <p class="pitch">
+    The one-time, admin-triggered half of this project — turning two raw PDFs into
+    structured JSON, a searchable vector index, and precomputed relevance scores.
+    <strong>Runs once per policy, not per query</strong> — this is what
+    <code>chunking/ingest_policy.sh</code> does end to end. Every input and output shown
+    below is the literal, real value produced by actually running <strong>LIC's Saral
+    Jeevan Bima (policy 859)</strong> through the live pipeline — nothing paraphrased.
+  </p>
+
+  <div class="legend">
+    <span class="legend-item"><span class="legend-swatch you"></span>You, manually</span>
+    <span class="legend-item"><span class="legend-swatch function"></span>Python function call (in-process)</span>
+    <span class="legend-item"><span class="legend-swatch server"></span>Hits a persistent server</span>
+    <span class="legend-item"><span class="legend-swatch external"></span>Live call to a third-party API</span>
+  </div>
+
+  <div class="example-banner">
+    <span class="ex-label">Running example, used at every step below</span>
+    <span class="ex-chip">policy 859</span>
+    <span class="ex-chip">LIC's Saral Jeevan Bima</span>
+    <span class="ex-chip">UIN 512N341V01</span>
+    <span class="ex-chip">policy_doc: 14 pages</span>
+    <span class="ex-chip">brochure: 16 pages</span>
+  </div>
+
+  <h2>One policy, step by step</h2>
+
+  <div class="timeline">
+
+    <div class="step marker-you">
+      <div class="step-rail"><div class="step-num">1</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Upload PDFs to the repo</span><span class="step-file">raw_pdfs/term_assurance_plans/</span></div>
+        <span class="step-tag">you</span>
+
+        <div class="field-block">
+          <p class="field-label">Input — the two source PDFs, as downloaded from LIC</p>
+<pre class="code">policy_doc_859_LIC_saral_jeevan_bima.pdf   (14 pages)
+brochure_859_LIC_saral_jeevan_bima.pdf     (16 pages)</pre>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Process</p>
+          <p class="process-text">Both files are placed in <code>raw_pdfs/term_assurance_plans/</code> and committed — this is public LIC material with no PII, so it's fine to store directly in this public repo (see README's stated constraints).</p>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Output — exact paths, now readable by every downstream step</p>
+<pre class="code">raw_pdfs/term_assurance_plans/policy_doc_859_LIC_saral_jeevan_bima.pdf
+raw_pdfs/term_assurance_plans/brochure_859_LIC_saral_jeevan_bima.pdf</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step marker-external">
+      <div class="step-rail"><div class="step-num">2</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Layer 1 extraction</span><span class="step-file">extraction_test/run_layer1_extraction.py</span></div>
+        <span class="step-tag">external</span>
+
+        <div class="field-block">
+          <p class="field-label">Input — the exact command run</p>
+<pre class="code">python3 extraction_test/run_layer1_extraction.py \
+  docs/prompts/prompt_a_pdf.txt \
+  extracted/layer1_859.json \
+  gemini-flash-lite-latest \
+  raw_pdfs/term_assurance_plans/policy_doc_859_LIC_saral_jeevan_bima.pdf \
+  raw_pdfs/term_assurance_plans/brochure_859_LIC_saral_jeevan_bima.pdf</pre>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Process</p>
+          <p class="process-text">Both PDFs are uploaded via Gemini's Files API and attached <em>natively</em> to the prompt — not converted to text first — since testing found this meaningfully more reliable at catching every table, especially where two tables share one heading with no visual break in flattened text. One call, <code>temperature=0</code>, <code>response_mime_type="application/json"</code>, category-specific schema from <code>prompt_a_pdf.txt</code>.</p>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Output — the exact, complete file written to extracted/layer1_859.json</p>
+<pre class="code scrollable">{
+  "policy_id": "859",
+  "plan_name": "LIC's Saral Jeevan Bima",
+  "uin": "512N341V01",
+  "plan_category": "term_assurance",
+  "structural_variant": "standalone",
+  "layer1": {
+    "premium_payment_options": ["single", "regular", "limited"],
+    "ppt_options": [5, 10],
+    "sum_assured_min": 500000,
+    "sum_assured_max": 2500000,
+    "sum_assured_multiples": "Rs. 50,000/-",
+    "age_at_entry_min": 18,
+    "age_at_entry_max": 65,
+    "age_at_maturity_min": null,
+    "age_at_maturity_max": 70,
+    "policy_term_min": 5,
+    "policy_term_max": 40,
+    "death_benefit_formula": {
+      "regular_limited_premium": "Sum Assured on Death which is the highest of: (a) 10 times of annualized premium; or (b) 105% of all the premiums paid as on the date of death; or (c) Absolute amount assured to be paid on death.",
+      "single_premium": "Sum Assured on Death which is the higher of: (a) 125% of Single Premium or (b) Absolute amount assured to be paid on death."
+    },
+    "maturity_benefit": "none",
+    "surrender_value_applicable": false,
+    "policy_cancellation_value_formula": "Single Premium Policies: =70% x Single Premium paid x Unexpired Policy Term / Original Policy Term. Limited Premium Payment Term (5 or 10 years): =70% x Total Premiums Paid x Unexpired Policy Term / Original Policy Term",
+    "grace_period_days": { "yearly_halfyearly": 30, "monthly": 15 },
+    "free_look_period_days": 30,
+    "suicide_exclusion": { "months": 12, "payout_pct_single": 90, "payout_pct_regular_limited": 80 },
+    "rebate_structures": {
+      "high_sum_assured_rebate_table": {
+        "type": "per_mille_of_sum_assured_rupees",
+        "dimensions": [],
+        "sa_bands": [
+          { "min": 500000, "max": 950000, "rate_per_mille": 0 },
+          { "min": 1000000, "max": 1450000, "rate_per_mille": 0.1 },
+          { "min": 1500000, "max": 1950000, "rate_per_mille": 0.2 },
+          { "min": 2000000, "max": null, "rate_per_mille": 0.25 }
+        ],
+        "units": "per-mille of Basic Sum Assured, rebate paid as a Rupee deduction",
+        "source": "brochure page 6"
+      },
+      "online_sale_rebate_table": "Single Premium: 2.00%, 5 to 9 years PPT: 5.00%, 10 to 14 years PPT: 6.00%, 15 years and above PPT: 7.00%",
+      "mode_loadings": "Yearly mode: NIL, Half-yearly mode: 2% of Tabular annual premium, Monthly (ECS/NACH): 3% of Tabular annual premium"
+    },
+    "death_benefit_instalment_option": false,
+    "sample_illustrative_premiums": [
+      { "age": 30, "sum_assured": 500000, "term": 20, "premium_payment_option": "regular", "payment_mode": "annual", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 2095, "derived": false },
+      { "age": 30, "sum_assured": 500000, "term": 20, "premium_payment_option": "limited_ppt_10", "payment_mode": "annual", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 3010, "derived": false },
+      { "age": 30, "sum_assured": 500000, "term": 20, "premium_payment_option": "limited_ppt_5", "payment_mode": "annual", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 4955, "derived": false },
+      { "age": 30, "sum_assured": 500000, "term": 20, "premium_payment_option": "single", "payment_mode": "lump_sum", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 20310, "derived": false },
+      { "age": 25, "sum_assured": 1000000, "term": 25, "premium_payment_option": "single", "payment_mode": "lump_sum", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 41610, "derived": false },
+      { "age": 25, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "annual", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 3850, "derived": false },
+      { "age": 25, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "half_yearly", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 1965, "derived": false },
+      { "age": 25, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "monthly", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 331, "derived": false },
+      { "age": 30, "sum_assured": 1000000, "term": 25, "premium_payment_option": "single", "payment_mode": "lump_sum", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 52260, "derived": false },
+      { "age": 30, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "annual", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 4670, "derived": false },
+      { "age": 30, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "half_yearly", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 2383, "derived": false },
+      { "age": 30, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "monthly", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 401, "derived": false },
+      { "age": 35, "sum_assured": 1000000, "term": 25, "premium_payment_option": "single", "payment_mode": "lump_sum", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 70840, "derived": false },
+      { "age": 35, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "annual", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 6110, "derived": false },
+      { "age": 35, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "half_yearly", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 3117, "derived": false },
+      { "age": 35, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "monthly", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 525, "derived": false },
+      { "age": 40, "sum_assured": 1000000, "term": 25, "premium_payment_option": "single", "payment_mode": "lump_sum", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 98630, "derived": false },
+      { "age": 40, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "annual", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 8340, "derived": false },
+      { "age": 40, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "half_yearly", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 4254, "derived": false },
+      { "age": 40, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "monthly", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 716, "derived": false },
+      { "age": 45, "sum_assured": 1000000, "term": 25, "premium_payment_option": "single", "payment_mode": "lump_sum", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 138230, "derived": false },
+      { "age": 45, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "annual", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 11660, "derived": false },
+      { "age": 45, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "half_yearly", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 5948, "derived": false },
+      { "age": 45, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "monthly", "distribution_channel": "offline", "sum_assured_type": "level", "premium_amount": 1001, "derived": false },
+      { "age": 25, "sum_assured": 1000000, "term": 25, "premium_payment_option": "single", "payment_mode": "lump_sum", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 40776, "derived": false },
+      { "age": 25, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "annual", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 3574, "derived": false },
+      { "age": 25, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "half_yearly", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 1826, "derived": false },
+      { "age": 25, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "monthly", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 308, "derived": false },
+      { "age": 30, "sum_assured": 1000000, "term": 25, "premium_payment_option": "single", "payment_mode": "lump_sum", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 51213, "derived": false },
+      { "age": 30, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "annual", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 4336, "derived": false },
+      { "age": 30, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "half_yearly", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 2216, "derived": false },
+      { "age": 30, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "monthly", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 373, "derived": false },
+      { "age": 35, "sum_assured": 1000000, "term": 25, "premium_payment_option": "single", "payment_mode": "lump_sum", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 69421, "derived": false },
+      { "age": 35, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "annual", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 5675, "derived": false },
+      { "age": 35, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "half_yearly", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 2900, "derived": false },
+      { "age": 35, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "monthly", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 488, "derived": false },
+      { "age": 40, "sum_assured": 1000000, "term": 25, "premium_payment_option": "single", "payment_mode": "lump_sum", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 96655, "derived": false },
+      { "age": 40, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "annual", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 7749, "derived": false },
+      { "age": 40, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "half_yearly", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 3959, "derived": false },
+      { "age": 40, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "monthly", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 667, "derived": false },
+      { "age": 45, "sum_assured": 1000000, "term": 25, "premium_payment_option": "single", "payment_mode": "lump_sum", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 135463, "derived": false },
+      { "age": 45, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "annual", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 10837, "derived": false },
+      { "age": 45, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "half_yearly", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 5536, "derived": false },
+      { "age": 45, "sum_assured": 1000000, "term": 25, "premium_payment_option": "regular", "payment_mode": "monthly", "distribution_channel": "online", "sum_assured_type": "level", "premium_amount": 932, "derived": false }
+    ],
+    "compatible_riders": [],
+    "waiting_period_days": 45,
+    "outstanding_loan_schedule_reference": null
+  },
+  "extraction_notes": {
+    "source_provenance": { "policy_doc": "PDF 1, 14 pages", "brochure": "PDF 2, 16 pages" },
+    "field_conflicts": [
+      {
+        "field": "layer1.free_look_period_days",
+        "policy_doc_value": "30",
+        "brochure_value": "15 30"
+      }
+    ],
+    "low_confidence_fields": ["layer1.rebate_structures.high_sum_assured_rebate_table"],
+    "fields_not_found": [],
+    "field_specific_notes": [
+      {
+        "field": "layer1.rebate_structures.high_sum_assured_rebate_table",
+        "note": "possible ‰/%o encoding ambiguity — verify against source PDF before using in calculations."
+      },
+      {
+        "field": "layer1.free_look_period_days",
+        "note": "Brochure page 9 contains a redline/tracked-change artifact showing '15 30 days', policy_doc authoritatively confirms 30 days."
+      }
+    ]
+  }
+}</pre>
+          <p class="note">Two real, useful things this extraction flagged on its own: a genuine conflict between the two source documents on <code>free_look_period_days</code> (resolved by trusting policy_doc, per the redline-artifact rule in docs/schema.md's extraction-rule caveats), and a low-confidence flag on the rebate table (a printed "%o" is a likely corrupted per-mille symbol, not literal percent) — both surfaced in <code>extraction_notes</code> rather than silently guessed at.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step marker-external">
+      <div class="step-rail"><div class="step-num">3</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Layer 2 derivation</span><span class="step-file">extraction_test/run_layer2_derivation.py</span></div>
+        <span class="step-tag">external</span>
+
+        <div class="field-block">
+          <p class="field-label">Input — the exact command run</p>
+<pre class="code">python3 extraction_test/run_layer2_derivation.py \
+  docs/prompts/prompt_b.txt \
+  extracted/layer2_859.json \
+  gemini-flash-lite-latest \
+  layer1_json=extracted/layer1_859.json</pre>
+          <p class="note">Note what's NOT an input here: neither PDF. This call only ever sees step 2's own output JSON — never the source documents again.</p>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Process</p>
+          <p class="process-text">One Gemini call, <code>temperature=0</code>, prompted (<code>prompt_b.txt</code>) to normalize Layer 1's raw fields into the fixed decision-layer shape the query pipeline actually filters against: concern tags from a closed 8-tag vocabulary, and Group B/C fields.</p>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Output — the exact, complete file written to extracted/layer2_859.json</p>
+<pre class="code">{
+  "policy_id": "859",
+  "layer2": {
+    "group_a_concern_tags": [
+      "income_replacement",
+      "debt_linked_cover",
+      "estate_legacy_planning"
+    ],
+    "group_b": {
+      "payout_on_death": ["lump_sum"],
+      "payout_on_survival": ["none"],
+      "payout_notes": "Sum Assured on Death paid as a lump sum based on formula rules.",
+      "is_participating": false,
+      "builds_cash_value": true,
+      "cash_value_loan_available": false,
+      "cover_basis": "fixed"
+    },
+    "group_c": {
+      "min_age": 18,
+      "max_age": 65,
+      "min_sum_assured": 500000,
+      "max_sum_assured": 2500000,
+      "min_term": 5,
+      "max_term": 40,
+      "compatible_riders": []
+    }
+  },
+  "derivation_notes": {
+    "concern_tag_reasoning": "Standard pure term insurance product providing financial protection upon death, which aligns with income replacement, debt-linked cover, and estate/legacy planning.",
+    "ambiguous_calls": []
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step marker-function">
+      <div class="step-rail"><div class="step-num">4</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Chunking</span><span class="step-file">chunking/chunk_policy_doc.py</span></div>
+        <span class="step-tag">function</span>
+
+        <div class="field-block">
+          <p class="field-label">Input — the exact command run</p>
+<pre class="code">python3 chunking/chunk_policy_doc.py 859 term_assurance \
+  raw_pdfs/term_assurance_plans/policy_doc_859_LIC_saral_jeevan_bima.pdf \
+  chunking/chunks_859.json</pre>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Process</p>
+          <p class="process-text">Splits along the policy_doc's own PART/ANNEXURE headers — structure the document itself defines, not fixed character counts. Sections judged too short to carry real retrievable content get dropped rather than kept as noise.</p>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Output — the exact result: 9 real chunks kept, 2 dropped</p>
+<pre class="code">kept (9):
+  PART_A       9,186 chars
+  PART_B      10,103 chars
+  PART_C       3,952 chars
+  PART_D       7,941 chars
+  PART_F       6,050 chars
+  PART_G       4,459 chars
+  ANNEXURE_1   6,180 chars
+  ANNEXURE_2   6,230 chars
+  ANNEXURE_3   4,762 chars
+
+dropped_sections:
+  PREAMBLE   ( 33 words — too short to carry retrievable content)
+  PART_E     (  2 words — likely a near-empty placeholder heading)</pre>
+          <p class="field-label" style="margin-top:16px;">Full, complete, unedited text of the smallest kept chunk (PART_C) — exactly what step 5 embeds and step 6 loads for this section:</p>
+<pre class="code scrollable">1)    The following are the benefits under the policy:
+      a) Death Benefit:
+          i) On death of the Life Assured during the Policy Term, provided the policy is in force, the "Sum
+             Assured on Death" along with accrued additions, if any, shall be payable to the nominee/beneficiary.
+          ii) "Sum Assured on Death" is defined as the highest of:
+              a) 10 times of Annualized Premium; or
+              b) 105% of all the premiums paid as on the date of death; or
+              c) Absolute amount assured to be paid on death.
+             In case of Single Premium, "Sum Assured on Death" is defined as the higher of:
+              a) 125% of Single Premium; or
+              b) Absolute amount assured to be paid on death.
+          iii) The intimation of death under the policy should be given in writing to the office of the Corporation
+               where the policy is serviced.
+      b) Maturity Benefit: No benefit is payable on Maturity under this plan.
+      c) Surrender Benefit: This being a pure term insurance plan, no surrender benefit is payable under
+         this plan. However, in case the Policyholder has opted for premium payment under Limited Premium
+         Payment (5 or 10 years) or Single Premium payment option and has paid the premiums for at least the
+         first two consecutive years for Limited Premium Payment or one year for Single Premium, the policy
+         acquires a Surrender Value on payment of all due premiums, and the policy can be surrendered any
+         time during the policy term.
+         The Guaranteed Surrender Value shall be as under:
+          i) For Single Premium Policies: 70% x Single Premium paid x (Unexpired Policy Term / Original Policy Term)
+          ii) For Limited Premium Payment Policies (5 or 10 years): 70% x Total Premiums Paid x (Unexpired
+              Policy Term / Original Policy Term)
+         The Corporation may also pay Special Surrender Value in place of Guaranteed Surrender Value provided
+         the Special Surrender Value is higher than the Guaranteed Surrender Value.
+      d) Rider Benefit: No rider is available under this plan.
+
+2)    Grace period for payment of premium: A grace period of 30 days will be allowed for payment of
+      yearly or half-yearly premiums and 15 days for monthly premiums. If premium is not paid before the
+      expiry of the days of grace, the policy lapses.
+
+3)    Free Look Period: If the Policyholder is not satisfied with the "Terms and Conditions" of the policy, the
+      policy can be returned within 30 days from the date of receipt of the policy document, stating the
+      reasons for objections. The amount refunded will be the premium deposited after deducting proportionate
+      risk premium for the period of cover, stamp duty charges, and medical examination costs, if any.</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step marker-external">
+      <div class="step-rail"><div class="step-num">5</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Embedding</span><span class="step-file">chunking/embed_and_load_layer3.py</span></div>
+        <span class="step-tag">external</span>
+
+        <div class="field-block">
+          <p class="field-label">Input — the exact command run, and the text actually embedded for PART_C</p>
+<pre class="code">python3 chunking/embed_and_load_layer3.py insurance_rag_layer3 chunking/chunks_859.json
+
+# For PART_C specifically:
+voyage_client.embed(
+    texts=["1)    The following are the benefits under the policy: ... [full 3,952-char PART_C text above]"],
+    model="voyage-law-2",
+    input_type="document",
+)</pre>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Process</p>
+          <p class="process-text">Every chunk's full text is embedded individually (batched and paced to stay inside Voyage's free-tier 3 RPM / 10K TPM cap — real minutes, not seconds, for a full category). <code>input_type="document"</code> here — a live query at retrieval time uses <code>input_type="query"</code> instead, since Voyage's embedding scheme is asymmetric between the two.</p>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Output — the real 1024-dimension vector this call returned for PART_C</p>
+<pre class="code">length: 1024
+
+first 8 values:
+[-0.020372, -0.016695, -0.02182, -0.002971, -0.031676, -0.047574, 0.001998, -0.00856]
+
+last 4 values:
+[0.043928, 0.031703, 0.017518, -0.007474]</pre>
+          <p class="note">The other 1,012 dimensions are real too — showing all 1024 wouldn't be any more informative than this slice, just longer.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step marker-server">
+      <div class="step-rail"><div class="step-num">6</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Load into Qdrant</span><span class="step-file">chunking/embed_and_load_layer3.py</span></div>
+        <span class="step-tag">server</span>
+
+        <div class="field-block">
+          <p class="field-label">Input</p>
+          <p class="process-text">All 9 of 859's chunks, each paired with its own real vector from step 5 — the same call as step 5, this is what it does with the result rather than a separate script.</p>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Process</p>
+          <p class="process-text"><code>qdrant_client.upsert()</code> writes one point per chunk into the shared <code>insurance_rag_layer3</code> collection (every category's chunks live in this one collection together — narrative retrieval filters by <code>policy_id</code> at query time, per docs/schema.md). Point id is deterministic (derived from policy_id + section_name via uuid5), so re-running ingestion for the same policy overwrites rather than duplicates.</p>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Output — the exact real point now stored for 859/PART_C</p>
+<pre class="code">{
+  "id": "b0ed29ba-a458-53a6-acb8-de0b6d2a5fed",
+  "payload": {
+    "chunk_id": "859_PART_C",
+    "policy_id": "859",
+    "category": "term_assurance",
+    "source_doc": "policy_doc",
+    "section_name": "PART_C",
+    "section_title": "...",
+    "word_count": "...",
+    "chunk_text": "1)    The following are the benefits under the policy: ..."
+  },
+  "vector": [-0.020372, -0.016695, ...1022 more real values..., 0.017518, -0.007474]
+}</pre>
+          <p class="field-label" style="margin-top:16px;">Real collection-wide confirmation, queried directly from the live Qdrant instance</p>
+<pre class="code">collection: insurance_rag_layer3
+points_count: 63
+vector config: size=1024, distance=Cosine</pre>
+          <p class="note">63 points total = all 7 term-assurance policies' chunks combined (9 for 859 like this example, 63 across the whole category as of this ingestion pass) — confirms 859's 9 points landed correctly alongside the other 6 policies' chunks, not overwriting them.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step marker-external">
+      <div class="step-rail"><div class="step-num">7</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Precompute rerank scores</span><span class="step-file">chunking/precompute_rerank_scores.py</span></div>
+        <span class="step-tag">external</span>
+
+        <div class="field-block">
+          <p class="field-label">Input — the exact command run</p>
+<pre class="code">python3 chunking/precompute_rerank_scores.py chunking/chunks_859.json</pre>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Process</p>
+          <p class="process-text">For each of the 8 fixed concern tags (query/concern_tags.py), one live Voyage rerank call (<code>rerank-2.5-lite</code>) scores every candidate chunk against that tag's canonical phrase. Results are merged into <code>chunking/precomputed_rerank_scores.json</code> and checkpointed to disk after every tag, not just once at the end — confirmed necessary after a real ~1.5-hour job was silently killed mid-run once (docs/progress/20260731-progress.md). This is exactly what removes the need for a live rerank call at query time (step 4 of the query walkthrough).</p>
+        </div>
+
+        <div class="field-block">
+          <p class="field-label">Output — 859's 9 real chunks scored against 2 of the 8 tags (the other 6 follow the same shape)</p>
+<pre class="code">income_replacement:
+  859_PART_A       0.3984375
+  859_PART_B       0.365234375
+  859_PART_C       0.466796875
+  859_PART_D       0.333984375
+  859_PART_F       0.39453125
+  859_PART_G       0.2734375
+  859_ANNEXURE_1   0.345703125
+  859_ANNEXURE_2   0.515625
+  859_ANNEXURE_3   0.310546875
+
+debt_linked_cover:
+  859_PART_A       0.26953125
+  859_PART_B       0.26953125
+  859_PART_C       0.26953125
+  859_PART_D       0.28125
+  859_PART_F       0.267578125
+  859_PART_G       0.26171875
+  859_ANNEXURE_1   0.298828125
+  859_ANNEXURE_2   0.306640625
+  859_ANNEXURE_3   0.2451171875</pre>
+          <p class="note">This is the exact source data step 4 of the query-time walkthrough reads at query time — 859_ANNEXURE_2 scoring highest on income_replacement (0.5156) is why, if 859 were a survivor in a real query about replacing income, its relevance score would come from that specific chunk.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<footer>Every value on this page came from actually running policy 859 through the live ingestion pipeline (extraction_test/*.py, chunking/*.py) — not paraphrased from the architecture docs. <code>chunking/ingest_policy.sh</code> runs steps 4-7 above for one new policy in a single command; steps 2-3 (extraction) run first via <code>extraction_test/run_pipeline.sh</code>, which <code>ingest_policy.sh</code> also calls automatically.</footer>
+</body>
+</html>
