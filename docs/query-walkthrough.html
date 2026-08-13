@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>insurance_rag — how a query works</title>
+<style>
+  :root {
+    --bg: #EEF2F6;
+    --surface: #FFFFFF;
+    --surface-2: #E3E9EF;
+    --ink: #15212C;
+    --ink-muted: #5A6C7C;
+    --ink-faint: #8695A3;
+    --border: #D2DAE2;
+    --spine: #B6C2CD;
+    --accent: #C05A2A;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #F4E2D6;
+    --server: #24796B;
+    --server-soft: #DCEEEA;
+    --external: #6858A8;
+    --external-soft: #E7E3F5;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12181E;
+      --surface: #1A2229;
+      --surface-2: #212B33;
+      --ink: #E7ECF0;
+      --ink-muted: #96A5B2;
+      --ink-faint: #6B7A87;
+      --border: #2B3740;
+      --spine: #3A4750;
+      --accent: #E08152;
+      --accent-ink: #171008;
+      --accent-soft: #3A2A20;
+      --server: #4FAF9C;
+      --server-soft: #1C332F;
+      --external: #9C8FDA;
+      --external-soft: #2A2640;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12181E;
+    --surface: #1A2229;
+    --surface-2: #212B33;
+    --ink: #E7ECF0;
+    --ink-muted: #96A5B2;
+    --ink-faint: #6B7A87;
+    --border: #2B3740;
+    --spine: #3A4750;
+    --accent: #E08152;
+    --accent-ink: #171008;
+    --accent-soft: #3A2A20;
+    --server: #4FAF9C;
+    --server-soft: #1C332F;
+    --external: #9C8FDA;
+    --external-soft: #2A2640;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    padding: 0 0 80px;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 28px 0;
+  }
+
+  /* ---------- Header / pitch ---------- */
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-size: 30px;
+    line-height: 1.15;
+    margin: 0 0 14px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .pitch {
+    font-size: 16.5px;
+    line-height: 1.6;
+    color: var(--ink-muted);
+    max-width: 65ch;
+    margin: 0 0 8px;
+  }
+  .pitch strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Legend ---------- */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 18px;
+    margin: 28px 0 40px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 7px; }
+  .legend-swatch {
+    width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0;
+  }
+  .legend-swatch.function { background: var(--surface-2); border: 1.5px solid var(--ink-faint); }
+  .legend-swatch.server { background: var(--server-soft); border: 1.5px solid var(--server); }
+  .legend-swatch.external { background: var(--external-soft); border: 1.5px solid var(--external); }
+
+  /* ---------- Infra band ---------- */
+  h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-weight: 700;
+    color: var(--ink-faint);
+    margin: 0 0 16px;
+  }
+  .infra-note {
+    font-size: 13.5px;
+    color: var(--ink-muted);
+    line-height: 1.55;
+    max-width: 65ch;
+    margin: 0 0 18px;
+  }
+  .infra-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 52px;
+  }
+  @media (max-width: 640px) {
+    .infra-row { grid-template-columns: 1fr; }
+  }
+  .infra-card {
+    background: var(--server-soft);
+    border: 1.5px solid var(--server);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .infra-card .name {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--server);
+    margin: 0 0 6px;
+  }
+  .infra-card .desc {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+
+  /* ---------- Timeline ---------- */
+  .timeline { position: relative; }
+  .step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 0 18px;
+    padding-bottom: 6px;
+  }
+  .step-rail {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+  .step-rail::before {
+    content: "";
+    position: absolute;
+    top: 0; bottom: -6px;
+    width: 2px;
+    background: var(--spine);
+  }
+  .step:last-child .step-rail::before { display: none; }
+  .step-num {
+    position: relative;
+    z-index: 1;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--ink-faint);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-muted);
+    margin-top: 2px;
+  }
+  .step.marker-server .step-num { border-color: var(--server); color: var(--server); }
+  .step.marker-external .step-num { border-color: var(--external); color: var(--external); }
+
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px 18px;
+    margin-bottom: 22px;
+  }
+  .step-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .step-title {
+    font-size: 15.5px;
+    font-weight: 700;
+  }
+  .step-file {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+  .step-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+  .step.marker-server .step-tag { background: var(--server-soft); color: var(--server); }
+  .step.marker-external .step-tag { background: var(--external-soft); color: var(--external); }
+  .step.marker-function .step-tag { background: var(--surface-2); color: var(--ink-muted); }
+
+  .iop {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr 1fr;
+    gap: 14px;
+    margin-top: 10px;
+  }
+  @media (max-width: 640px) {
+    .iop { grid-template-columns: 1fr; }
+  }
+  .iop > div {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .iop .label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+  }
+  .iop .input { color: var(--ink-muted); }
+  .iop .process { color: var(--ink); }
+  .iop .output { color: var(--ink-muted); }
+  .iop .process code, .iop .input code, .iop .output code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--surface-2);
+    padding: 1px 4px;
+    border-radius: 4px;
+  }
+
+  /* ---------- STAR callout ---------- */
+  .star {
+    margin-top: 56px;
+    background: var(--accent-soft);
+    border: 1.5px solid var(--accent);
+    border-radius: 14px;
+    padding: 22px 26px 24px;
+  }
+  .star .eyebrow { margin-bottom: 8px; }
+  .star h3 {
+    font-size: 17px;
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+  .star dl {
+    display: grid;
+    grid-template-columns: 88px 1fr;
+    gap: 8px 14px;
+    margin: 0;
+  }
+  .star dt {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding-top: 2px;
+  }
+  .star dd {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .star .result strong { color: var(--accent); }
+
+  footer {
+    max-width: 880px;
+    margin: 40px auto 0;
+    padding: 0 28px;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="eyebrow">insurance_rag — query-time walkthrough</p>
+  <h1>What happens between a user typing an answer and getting a ranked recommendation</h1>
+  <p class="pitch">
+    A RAG system for Indian term life insurance: it ingests 7 LIC policy documents into
+    structured JSON + a vector index, then walks a user through a short Q&amp;A and returns
+    <strong>3 real, ranked, grounded recommendations</strong> — never an invented product,
+    with a real interpolated premium estimate for each. Everything below is the second
+    half: what happens on the backend for <strong>one</strong> query, in the order it
+    actually happens, traced against the real code.
+  </p>
+
+  <div class="legend">
+    <span class="legend-item"><span class="legend-swatch function"></span>Python function call (in-process)</span>
+    <span class="legend-item"><span class="legend-swatch server"></span>Hits a persistent server</span>
+    <span class="legend-item"><span class="legend-swatch external"></span>Live call to a third-party API</span>
+  </div>
+
+  <h2>Always-on, before any query ever arrives</h2>
+  <p class="infra-note">
+    Three separate processes run continuously on one Oracle Cloud VM. A query never starts
+    any of these — it only ever talks to them.
+  </p>
+  <div class="infra-row">
+    <div class="infra-card">
+      <p class="name">n8n</p>
+      <p class="desc">Public webhook / chat-trigger entry point. Deliberately a thin relay only — it forwards the request to the Python service and returns whatever comes back, never re-implements any pipeline logic itself.</p>
+    </div>
+    <div class="infra-card">
+      <p class="name">service/main.py</p>
+      <p class="desc">FastAPI app, systemd service. Loads all 7 policies' Layer 1/2 JSON and the precomputed rerank table into memory <em>once at startup</em> — a query never re-reads a file. Also holds each chat session's in-progress answers, in memory, keyed by session_id.</p>
+    </div>
+    <div class="infra-card">
+      <p class="name">Qdrant</p>
+      <p class="desc">Vector database, bound to localhost only. Holds one collection of policy-document text chunks, embedded once at ingestion time — a query only ever searches it, never writes to it.</p>
+    </div>
+  </div>
+
+  <h2>One query, step by step</h2>
+
+  <div class="timeline">
+
+    <div class="step marker-server">
+      <div class="step-rail"><div class="step-num">0</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">User answers a question</span><span class="step-file">index.html → n8n → main.py</span></div>
+        <span class="step-tag">server</span>
+        <div class="iop">
+          <div><div class="label">Input</div><div class="input">whatever the user typed or clicked (age, cover amount, a concern checkbox, …)</div></div>
+          <div><div class="label">Process</div><div class="process">frontend POSTs <code>{session_id, message}</code> to n8n's webhook, which relays it unchanged to FastAPI's <code>POST /chat</code></div></div>
+          <div><div class="label">Output</div><div class="output">one HTTP request, now inside the Python service</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step marker-function">
+      <div class="step-rail"><div class="step-num">1</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Session handler</span><span class="step-file">chat_session.fill_next_field()</span></div>
+        <span class="step-tag">function</span>
+        <div class="iop">
+          <div><div class="label">Input</div><div class="input">this session's profile so far + the new answer</div></div>
+          <div><div class="label">Process</div><div class="process">parses the answer for whichever field was pending, validates term / payment-option against what's <em>actually</em> servable right now (calls <code>available_terms()</code>), builds the next question's widget</div></div>
+          <div><div class="label">Output</div><div class="output">either the next question (loop back to step 0) — or a complete profile, which triggers everything below</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step marker-function">
+      <div class="step-rail"><div class="step-num">2</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Eligibility filter</span><span class="step-file">eligibility_filter.apply_fallback()</span></div>
+        <span class="step-tag">function</span>
+        <div class="iop">
+          <div><div class="label">Input</div><div class="input">completed profile — age, cover, term, budget, stated concerns</div></div>
+          <div><div class="label">Process</div><div class="process">checks all 7 policies' hard bounds (age/cover/term) + requires at least one concern-tag overlap; if fewer than 3 policies survive, relaxes bounds in two tiers</div></div>
+          <div><div class="label">Output</div><div class="output">a short list of eligible candidate policies</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step marker-function">
+      <div class="step-rail"><div class="step-num">3</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Premium + budget filter</span><span class="step-file">premium_interpolation.filter_by_budget()</span></div>
+        <span class="step-tag">function</span>
+        <div class="iop">
+          <div><div class="label">Input</div><div class="input">eligible candidates + the user's age/cover/term/budget</div></div>
+          <div><div class="label">Process</div><div class="process">for each candidate, estimates a real premium — a precomputed bilinear age×term grid + a rebate-table formula for 5 policies, a same-family-derived grid for 2 more, else an older linear fallback — then drops anyone over budget</div></div>
+          <div><div class="label">Output</div><div class="output">survivors, each with a real premium attached</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step marker-function">
+      <div class="step-rail"><div class="step-num">4</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Relevance lookup</span><span class="step-file">precomputed_relevance.lookup_relevance_by_policy()</span></div>
+        <span class="step-tag">function</span>
+        <div class="iop">
+          <div><div class="label">Input</div><div class="input">the user's concern tags + surviving policy_ids</div></div>
+          <div><div class="label">Process</div><div class="process">pure in-memory JSON lookup into a table precomputed offline (504 rows, every policy × every one of 8 fixed concerns) — no network call on the hot path</div></div>
+          <div><div class="label">Output</div><div class="output">a relevance score per policy (a live Voyage rerank call only fires as a rare fallback, for a policy that's somehow missing from the table)</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step marker-function">
+      <div class="step-rail"><div class="step-num">5</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Rank + sort</span><span class="step-file">rerank_and_sort.rank_candidates()</span></div>
+        <span class="step-tag">function</span>
+        <div class="iop">
+          <div><div class="label">Input</div><div class="input">survivors + their relevance scores</div></div>
+          <div><div class="label">Process</div><div class="process">sorts by concern-match count first, then relevance tier, then premium ascending — three explainable keys, never one blended score</div></div>
+          <div><div class="label">Output</div><div class="output">a fully ranked list, sliced to the top 3</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step marker-external">
+      <div class="step-rail"><div class="step-num">6</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Grounding retrieval</span><span class="step-file">narrative_retrieval.retrieve_narrative_chunks()</span></div>
+        <span class="step-tag">external</span>
+        <div class="iop">
+          <div><div class="label">Input</div><div class="input">the user's concern tags + one top-3 policy_id (called once per candidate)</div></div>
+          <div><div class="label">Process</div><div class="process">embeds the concern text live via Voyage (<code>voyage-law-2</code>), searches Qdrant's chunk collection filtered to that one policy</div></div>
+          <div><div class="label">Output</div><div class="output">~9 real source-document excerpts per candidate — the only text the next step is allowed to state facts from</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step marker-external">
+      <div class="step-rail"><div class="step-num">7</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Narrative generation</span><span class="step-file">narrative_generation.generate_narrative()</span></div>
+        <span class="step-tag">external</span>
+        <div class="iop">
+          <div><div class="label">Input</div><div class="input">profile + top 3 candidates + their grounding excerpts</div></div>
+          <div><div class="label">Process</div><div class="process">one Gemini flash-lite call, prompted to use <em>only</em> the excerpts — then the reply's headings are deterministically rewritten to "Rank N — real plan name" rather than trusted from the model's own output</div></div>
+          <div><div class="label">Output</div><div class="output">final pros/cons narrative, one paragraph per candidate</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step marker-server">
+      <div class="step-rail"><div class="step-num">8</div></div>
+      <div class="step-card">
+        <div class="step-head"><span class="step-title">Response returns</span><span class="step-file">main.py → n8n → index.html</span></div>
+        <span class="step-tag">server</span>
+        <div class="iop">
+          <div><div class="label">Input</div><div class="input">the narrative + the ranked top 3, with each one's premium</div></div>
+          <div><div class="label">Process</div><div class="process">packaged as one JSON object, returned through n8n unchanged, back to whichever frontend asked</div></div>
+          <div><div class="label">Output</div><div class="output">chat bubble with the narrative, plus a "Rank 1 / 2 / 3" candidates list underneath</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="star">
+    <p class="eyebrow" style="margin-bottom:2px;">If they ask for a real debugging story</p>
+    <h3>The premium-lookup key mismatch</h3>
+    <dl>
+      <dt>Situation</dt>
+      <dd>A user tried a completely standard profile — 31 years old, ₹1 crore cover, 30-year term — and got back only 1 candidate to compare, with the system claiming that term/payment-option combination "wasn't available."</dd>
+      <dt>Task</dt>
+      <dd>Figure out why two of the seven policies' real premium data never surfaced, rather than just accepting the corpus was thin.</dd>
+      <dt>Action</dt>
+      <dd>Traced the actual dispatch function and found the precomputed lookup file was keyed by a short build-config label ("954"), but the code that reads it looks a policy up by its <em>real</em> extracted policy_id — a LIC UIN for those two policies, not "954". The dictionary lookup missed silently, every time, with zero error — it just fell back to a much weaker interpolation. Fixed at the build step, not the read site. A second, related bug surfaced in the same pass: the live availability check was reading Layer 1's sparse brochure table instead of the rich precomputed one.</dd>
+      <dt class="result">Result</dt>
+      <dd class="result">Same exact query went from <strong>1 candidate to 3 real ones</strong>, verified against the live deployed service the same day, redeployed within the hour.</dd>
+    </dl>
+  </div>
+</div>
+<footer>Built from the real query pipeline, traced against service/main.py, service/chat_session.py, and query/*.py directly — not the architecture doc's description of them.</footer>
+</body>
+</html>
