@@ -126,7 +126,7 @@
 <body>
 <div class="wrap">
   <h1>insurance_rag — pipeline flow</h1>
-  <p class="source-note">Source of truth: <code>README.md</code>, <code>docs/ingestion_architecture.md</code>, <code>docs/query_architecture.md</code>, <code>docs/evaluation_architecture.md</code>. Edit the <code>steps</code> arrays in the script below when a step ships or architecture changes — layout regenerates automatically.</p>
+  <p class="source-note">Source of truth: <code>README.md</code>, <code>docs/ingestion_architecture.md</code>, <code>docs/query_architecture.md</code>, <code>docs/evaluation_architecture.md</code>, <code>docs/schema.md</code>. Edit the <code>steps</code> arrays in the script below when a step ships or architecture changes — layout regenerates automatically.</p>
 
   <section>
     <h2>Ingestion pipeline — one-time / admin-triggered</h2>
@@ -140,6 +140,17 @@
       <span class="legend-item"><span class="swatch dashed"></span>Not built</span>
     </div>
     <div class="row" id="ingestion-row"></div>
+  </section>
+
+  <section>
+    <h2>Premium lookup build — one-time / per-policy, supplementary to ingestion</h2>
+    <p class="source-note" style="margin-bottom: 14px;">Not run for every policy — only where premium accuracy was worth the scraping effort (5 of 7 term-assurance policies built from a real scrape, 2 more derived from a same-family sibling instead of a second full scrape). Feeds query step 5's precomputed lookup — everything not covered here still falls back to the original, less accurate linear-in-SA formula. See <code>docs/schema.md</code>'s premium-lookup artifact section.</p>
+    <div class="legend">
+      <span class="legend-item"><span class="dot you"></span>You</span>
+      <span class="legend-item"><span class="dot system"></span>System</span>
+      <span class="legend-item"><span class="swatch"></span>Built</span>
+    </div>
+    <div class="row" id="premium-row"></div>
   </section>
 
   <section>
@@ -195,6 +206,12 @@ const queryOtherSteps = [
   { title: '10. BYOK check', subtitle: 'governs key use in steps 5 & 8', example: 'no user key → falls back to stored n8n Gemini credential', actor: 'system', built: false },
 ];
 
+const premiumLookupSteps = [
+  { title: '1. Scrape ground truth premiums', subtitle: 'real quotes from LIC\'s live calculator, full valid (age, term) domain per policy', example: '954: 48 real points, age 18-65 × term 10-40 (one DOB-specific gap the site wouldn\'t allow, filled by age-axis interpolation instead)', actor: 'you', built: true },
+  { title: '2. Build lookup', subtitle: 'bilinear age × term grid + SA-scaling formula parsed straight from the rebate table — zero scraping needed for that axis', example: 'premium_lookup.json: 7 policies — 5 built from a real scrape, 2 derived from a same-family sibling (877←878, 955←954) instead of a second full scrape', actor: 'system', built: true },
+  { title: '3. Validate', subtitle: 'leave-one-out for built policies, out-of-sample spot-check for derived ones', example: '954: median 1.47% (worst 20.13%, its thinnest term); 877/955 derived grids: 0.31-3.46% on points outside their own calibration anchors', actor: 'system', built: true },
+];
+
 const evalSteps = [
   { title: 'Golden set', subtitle: '15-30 hand-verified pairs', actor: 'you', built: false },
   { title: 'Trace log', subtitle: 'from query step 9', actor: 'system', built: false },
@@ -237,6 +254,7 @@ function renderRow(containerId, steps) {
 }
 
 renderRow('ingestion-row', ingestionSteps);
+renderRow('premium-row', premiumLookupSteps);
 renderRow('query-row', queryOtherSteps);
 renderRow('eval-row', evalSteps);
 </script>
