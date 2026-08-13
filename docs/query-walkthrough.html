@@ -273,41 +273,64 @@
     border-radius: 4px;
   }
 
-  /* ---------- STAR callout ---------- */
-  .star {
-    margin-top: 56px;
-    background: var(--accent-soft);
-    border: 1.5px solid var(--accent);
-    border-radius: 14px;
-    padding: 22px 26px 24px;
+  /* ---------- Running example banner ---------- */
+  .example-banner {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 8px;
+    margin: 0 0 40px;
+    padding: 13px 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
   }
-  .star .eyebrow { margin-bottom: 8px; }
-  .star h3 {
-    font-size: 17px;
-    margin: 0 0 12px;
-    font-weight: 700;
-  }
-  .star dl {
-    display: grid;
-    grid-template-columns: 88px 1fr;
-    gap: 8px 14px;
-    margin: 0;
-  }
-  .star dt {
+  .example-banner .ex-label {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 10.5px;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--accent);
-    padding-top: 2px;
+    color: var(--ink-faint);
+    margin-right: 4px;
   }
-  .star dd {
-    margin: 0;
-    font-size: 13.5px;
+  .example-banner .ex-chip {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+  }
+
+  /* ---------- Inline Q&A callout, attached to a specific step ---------- */
+  .callout {
+    margin-top: 14px;
+    padding: 12px 16px 13px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+  }
+  .callout .q {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 5px;
+    font-weight: 600;
+  }
+  .callout .a {
+    font-size: 13px;
     line-height: 1.55;
     color: var(--ink);
+    margin: 0;
   }
-  .star .result strong { color: var(--accent); }
+  .callout .a code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--surface);
+    padding: 1px 4px;
+    border-radius: 4px;
+  }
+  .callout .a + .a { margin-top: 8px; }
 
   footer {
     max-width: 880px;
@@ -337,6 +360,16 @@
     <span class="legend-item"><span class="legend-swatch external"></span>Live call to a third-party API</span>
   </div>
 
+  <div class="example-banner">
+    <span class="ex-label">Running example, used at every step below</span>
+    <span class="ex-chip">age 31</span>
+    <span class="ex-chip">₹1,00,00,000 cover</span>
+    <span class="ex-chip">30-year term</span>
+    <span class="ex-chip">regular premium</span>
+    <span class="ex-chip">concern: replacing income for my family</span>
+    <span class="ex-chip">budget ₹20,000/yr</span>
+  </div>
+
   <h2>Always-on, before any query ever arrives</h2>
   <p class="infra-note">
     Three separate processes run continuously on one Oracle Cloud VM. A query never starts
@@ -350,6 +383,10 @@
     <div class="infra-card">
       <p class="name">service/main.py</p>
       <p class="desc">FastAPI app, systemd service. Loads all 7 policies' Layer 1/2 JSON and the precomputed rerank table into memory <em>once at startup</em> — a query never re-reads a file. Also holds each chat session's in-progress answers, in memory, keyed by session_id.</p>
+      <div class="callout" style="margin-top:12px;">
+        <p class="q">Q — what is FastAPI, and why does it matter?</p>
+        <p class="a">A Python web framework for building APIs. It's the thin layer that turns the existing <code>query/</code> Python modules into HTTP endpoints (<code>/chat</code>, <code>/query</code>) — with almost no boilerplate, and it validates every incoming request's shape automatically before any pipeline code runs. The pipeline logic itself (eligibility, premium math, ranking) is plain Python either way; FastAPI is just how the outside world gets to call it over HTTP.</p>
+      </div>
     </div>
     <div class="infra-card">
       <p class="name">Qdrant</p>
@@ -367,9 +404,13 @@
         <div class="step-head"><span class="step-title">User answers a question</span><span class="step-file">index.html → n8n → main.py</span></div>
         <span class="step-tag">server</span>
         <div class="iop">
-          <div><div class="label">Input</div><div class="input">whatever the user typed or clicked (age, cover amount, a concern checkbox, …)</div></div>
+          <div><div class="label">Input</div><div class="input">e.g. the user typed <code>10000000</code> for cover amount, or clicked a term button</div></div>
           <div><div class="label">Process</div><div class="process">frontend POSTs <code>{session_id, message}</code> to n8n's webhook, which relays it unchanged to FastAPI's <code>POST /chat</code></div></div>
           <div><div class="label">Output</div><div class="output">one HTTP request, now inside the Python service</div></div>
+        </div>
+        <div class="callout">
+          <p class="q">Q — why go through n8n at all? why not call the service directly?</p>
+          <p class="a">The FastAPI service has <strong>zero built-in authentication</strong> and is deliberately firewalled to only accept traffic from the VM's own internal Docker network — not the public internet. n8n already had a public HTTPS domain with a reverse proxy set up for other automations, so reusing it as the one public entry point meant not opening a new port or building auth from scratch. It also decouples the frontend from the backend: two different frontends (an n8n chat widget, and a separate static page) both call the exact same <code>/chat</code> endpoint through their own n8n workflow, with zero backend changes.</p>
         </div>
       </div>
     </div>
@@ -381,8 +422,13 @@
         <span class="step-tag">function</span>
         <div class="iop">
           <div><div class="label">Input</div><div class="input">this session's profile so far + the new answer</div></div>
-          <div><div class="label">Process</div><div class="process">parses the answer for whichever field was pending, validates term / payment-option against what's <em>actually</em> servable right now (calls <code>available_terms()</code>), builds the next question's widget</div></div>
+          <div><div class="label">Process</div><div class="process">parses the answer for whichever field was pending, validates term / payment-option against what's <em>actually</em> servable right now, builds the next question's widget</div></div>
           <div><div class="label">Output</div><div class="output">either the next question (loop back to step 0) — or a complete profile, which triggers everything below</div></div>
+        </div>
+        <div class="callout">
+          <p class="q">Q — what is available_terms() doing? what if it didn't exist?</p>
+          <p class="a">For this exact age/cover/concern, it calls <code>interpolate_premium()</code> — the real step-5 pricing function — against every candidate term, and keeps only the ones that actually return a real price. For our example it returns <code>[10, 15, 20, 25, 30, 35, 40]</code>; then once term=30 is picked, a second call narrows payment options to just <code>['regular', 'limited_ppt_10']</code> for that specific term — "single" or "limited over 5/15 years" get rejected immediately.</p>
+          <p class="a">Without it, the chat would accept any answer that merely <em>parses</em> (e.g. term=45), and the user would answer every remaining question only to discover at step 3 — after budget, after concerns, after everything — that no policy has that data at all. Worse, before this validation existed, an empty result at the very end briefly led the narrative-generation step to <em>hallucinate</em> a fake product to fill the gap rather than admit there was nothing to show.</p>
         </div>
       </div>
     </div>
@@ -393,9 +439,9 @@
         <div class="step-head"><span class="step-title">Eligibility filter</span><span class="step-file">eligibility_filter.apply_fallback()</span></div>
         <span class="step-tag">function</span>
         <div class="iop">
-          <div><div class="label">Input</div><div class="input">completed profile — age, cover, term, budget, stated concerns</div></div>
+          <div><div class="label">Input</div><div class="input">completed profile — age 31, ₹1Cr, term 30, concern: income_replacement</div></div>
           <div><div class="label">Process</div><div class="process">checks all 7 policies' hard bounds (age/cover/term) + requires at least one concern-tag overlap; if fewer than 3 policies survive, relaxes bounds in two tiers</div></div>
-          <div><div class="label">Output</div><div class="output">a short list of eligible candidate policies</div></div>
+          <div><div class="label">Output</div><div class="output"><strong>tier 0, no relaxing needed</strong> — 5 policies pass cleanly: 875, 876, 877, 954, 955, each matching 1 concern</div></div>
         </div>
       </div>
     </div>
@@ -406,9 +452,13 @@
         <div class="step-head"><span class="step-title">Premium + budget filter</span><span class="step-file">premium_interpolation.filter_by_budget()</span></div>
         <span class="step-tag">function</span>
         <div class="iop">
-          <div><div class="label">Input</div><div class="input">eligible candidates + the user's age/cover/term/budget</div></div>
+          <div><div class="label">Input</div><div class="input">the 5 eligible candidates + budget ₹20,000/yr</div></div>
           <div><div class="label">Process</div><div class="process">for each candidate, estimates a real premium — a precomputed bilinear age×term grid + a rebate-table formula for 5 policies, a same-family-derived grid for 2 more, else an older linear fallback — then drops anyone over budget</div></div>
-          <div><div class="label">Output</div><div class="output">survivors, each with a real premium attached</div></div>
+          <div><div class="label">Output</div><div class="output"><strong>3 survive</strong>: 876 ₹11,508 · 954 ₹13,563.60 · 875 ₹14,481.60. <strong>2 dropped</strong>: 955 (₹23,207.63, over budget) · 877 (no data at term=30/regular at all)</div></div>
+        </div>
+        <div class="callout">
+          <p class="q">Q — if premium &gt; budget, do you drop it completely?</p>
+          <p class="a">Yes — a policy over budget never reaches ranking or the final narrative, full stop. But it's not silently discarded: the exclusion and its exact reason are logged and returned in the response's own <code>excluded</code> list. Real example: <code>{"policy_id": "955", "reason": "estimated premium 23207.63 exceeds budget 20000"}</code> — so the "why isn't policy X showing up" question always has a real, inspectable answer, not just a missing entry.</p>
         </div>
       </div>
     </div>
@@ -419,9 +469,14 @@
         <div class="step-head"><span class="step-title">Relevance lookup</span><span class="step-file">precomputed_relevance.lookup_relevance_by_policy()</span></div>
         <span class="step-tag">function</span>
         <div class="iop">
-          <div><div class="label">Input</div><div class="input">the user's concern tags + surviving policy_ids</div></div>
-          <div><div class="label">Process</div><div class="process">pure in-memory JSON lookup into a table precomputed offline (504 rows, every policy × every one of 8 fixed concerns) — no network call on the hot path</div></div>
-          <div><div class="label">Output</div><div class="output">a relevance score per policy (a live Voyage rerank call only fires as a rare fallback, for a policy that's somehow missing from the table)</div></div>
+          <div><div class="label">Input</div><div class="input">concern tag <code>income_replacement</code> + the 3 surviving policy_ids</div></div>
+          <div><div class="label">Process</div><div class="process">pure in-memory JSON lookup into a table precomputed offline — no network call on the hot path</div></div>
+          <div><div class="label">Output</div><div class="output">876 → <strong>0.500</strong> · 954 → <strong>0.5234</strong> · 875 → <strong>0.5039</strong></div></div>
+        </div>
+        <div class="callout">
+          <p class="q">Q — what exactly is happening? what are the 504 rows? how is relevance calculated?</p>
+          <p class="a">At <em>ingestion</em> time (once, offline, not per query): every one of this corpus's 63 real document chunks (all 7 policies combined) gets scored by Voyage's reranker against each of 8 fixed "concern" phrases — 63 × 8 = <strong>504 precomputed (concern, chunk) scores</strong>, saved to one JSON file.</p>
+          <p class="a">At query time, this step does zero API calls — for each candidate policy, it just takes the <strong>max score among that policy's own chunks</strong> against whichever concern(s) the user picked. One concern picked here (income_replacement), so it's a straight lookup: the highest-scoring chunk each of 876/954/875 has for that one phrase.</p>
         </div>
       </div>
     </div>
@@ -432,9 +487,14 @@
         <div class="step-head"><span class="step-title">Rank + sort</span><span class="step-file">rerank_and_sort.rank_candidates()</span></div>
         <span class="step-tag">function</span>
         <div class="iop">
-          <div><div class="label">Input</div><div class="input">survivors + their relevance scores</div></div>
+          <div><div class="label">Input</div><div class="input">876/954/875 with their scores from step 4 and premiums from step 3</div></div>
           <div><div class="label">Process</div><div class="process">sorts by concern-match count first, then relevance tier, then premium ascending — three explainable keys, never one blended score</div></div>
-          <div><div class="label">Output</div><div class="output">a fully ranked list, sliced to the top 3</div></div>
+          <div><div class="label">Output</div><div class="output">Rank 1: <strong>876</strong> (₹11,508) → Rank 2: <strong>954</strong> (₹13,563.60) → Rank 3: <strong>875</strong> (₹14,481.60)</div></div>
+        </div>
+        <div class="callout">
+          <p class="q">Q — are you just sorting? or is there something more to it?</p>
+          <p class="a">Three keys, checked in order, never blended into one number: (1) <strong>concern_match_count</strong> descending — how many of the user's stated concerns a policy actually covers; (2) <strong>relevance tier</strong> — any two scores within 0.05 of each other count as tied, so ranking isn't jumping around on statistical noise; (3) <strong>premium</strong> ascending, only as the tiebreaker inside a tier.</p>
+          <p class="a">Real example: all 3 tie on concern_match_count (each = 1) and land in the same tier — 0.500 / 0.5234 / 0.5039 is a spread of just 0.023, well inside the 0.05 band. So this particular query reduces almost entirely to key 3: cheapest first.</p>
         </div>
       </div>
     </div>
@@ -445,9 +505,9 @@
         <div class="step-head"><span class="step-title">Grounding retrieval</span><span class="step-file">narrative_retrieval.retrieve_narrative_chunks()</span></div>
         <span class="step-tag">external</span>
         <div class="iop">
-          <div><div class="label">Input</div><div class="input">the user's concern tags + one top-3 policy_id (called once per candidate)</div></div>
+          <div><div class="label">Input</div><div class="input"><code>income_replacement</code> + policy_id <code>876</code> (called once per top-3 candidate — 3 times total)</div></div>
           <div><div class="label">Process</div><div class="process">embeds the concern text live via Voyage (<code>voyage-law-2</code>), searches Qdrant's chunk collection filtered to that one policy</div></div>
-          <div><div class="label">Output</div><div class="output">~9 real source-document excerpts per candidate — the only text the next step is allowed to state facts from</div></div>
+          <div><div class="label">Output</div><div class="output">9 real excerpts for 876, e.g. <code>PART_D: "1. Proof of Age: The Premium payable under the Base Policy and Premium for Optional…"</code> — verbatim policy-document text, nothing AI-written yet</div></div>
         </div>
       </div>
     </div>
@@ -458,9 +518,14 @@
         <div class="step-head"><span class="step-title">Narrative generation</span><span class="step-file">narrative_generation.generate_narrative()</span></div>
         <span class="step-tag">external</span>
         <div class="iop">
-          <div><div class="label">Input</div><div class="input">profile + top 3 candidates + their grounding excerpts</div></div>
+          <div><div class="label">Input</div><div class="input">profile + all 3 ranked candidates + their 9-excerpt sets from step 6</div></div>
           <div><div class="label">Process</div><div class="process">one Gemini flash-lite call, prompted to use <em>only</em> the excerpts — then the reply's headings are deterministically rewritten to "Rank N — real plan name" rather than trusted from the model's own output</div></div>
-          <div><div class="label">Output</div><div class="output">final pros/cons narrative, one paragraph per candidate</div></div>
+          <div><div class="label">Output</div><div class="output">"### Rank 1 — LIC's Digi Term<br>LIC's Digi Term is a pure protection plan designed to help with your income replacement concerns… estimated annual premium of Rs. 11,508.0…"</div></div>
+        </div>
+        <div class="callout">
+          <p class="q">Q — what's the actual difference between grounding retrieval and narrative generation?</p>
+          <p class="a">Step 6 is a pure <strong>search</strong> — it fetches real, verbatim sentences that already exist in the policy's own document. No AI writes anything in step 6; it's the same as a paralegal pulling relevant clauses out of a contract and handing over the actual pages.</p>
+          <p class="a">Step 7 is the <strong>only</strong> place in the whole pipeline an LLM generates new text. Gemini reads the excerpts step 6 pulled and turns them into a plain-language pros/cons paragraph — explicitly instructed to state nothing that isn't in those excerpts. Same analogy: step 7 is the lawyer explaining those clauses to a client in plain English, not allowed to cite anything the paralegal didn't actually hand them.</p>
         </div>
       </div>
     </div>
@@ -471,28 +536,13 @@
         <div class="step-head"><span class="step-title">Response returns</span><span class="step-file">main.py → n8n → index.html</span></div>
         <span class="step-tag">server</span>
         <div class="iop">
-          <div><div class="label">Input</div><div class="input">the narrative + the ranked top 3, with each one's premium</div></div>
+          <div><div class="label">Input</div><div class="input">the narrative text + the 3 ranked candidates, each with rank/name/premium</div></div>
           <div><div class="label">Process</div><div class="process">packaged as one JSON object, returned through n8n unchanged, back to whichever frontend asked</div></div>
-          <div><div class="label">Output</div><div class="output">chat bubble with the narrative, plus a "Rank 1 / 2 / 3" candidates list underneath</div></div>
+          <div><div class="label">Output</div><div class="output">chat bubble with the narrative, plus: Rank 1 — LIC's Digi Term — ₹11,508/yr · Rank 2 — LIC's New Tech-Term — ₹13,564/yr · Rank 3 — LIC's Yuva Term — ₹14,482/yr</div></div>
         </div>
       </div>
     </div>
 
-  </div>
-
-  <div class="star">
-    <p class="eyebrow" style="margin-bottom:2px;">If they ask for a real debugging story</p>
-    <h3>The premium-lookup key mismatch</h3>
-    <dl>
-      <dt>Situation</dt>
-      <dd>A user tried a completely standard profile — 31 years old, ₹1 crore cover, 30-year term — and got back only 1 candidate to compare, with the system claiming that term/payment-option combination "wasn't available."</dd>
-      <dt>Task</dt>
-      <dd>Figure out why two of the seven policies' real premium data never surfaced, rather than just accepting the corpus was thin.</dd>
-      <dt>Action</dt>
-      <dd>Traced the actual dispatch function and found the precomputed lookup file was keyed by a short build-config label ("954"), but the code that reads it looks a policy up by its <em>real</em> extracted policy_id — a LIC UIN for those two policies, not "954". The dictionary lookup missed silently, every time, with zero error — it just fell back to a much weaker interpolation. Fixed at the build step, not the read site. A second, related bug surfaced in the same pass: the live availability check was reading Layer 1's sparse brochure table instead of the rich precomputed one.</dd>
-      <dt class="result">Result</dt>
-      <dd class="result">Same exact query went from <strong>1 candidate to 3 real ones</strong>, verified against the live deployed service the same day, redeployed within the hour.</dd>
-    </dl>
   </div>
 </div>
 <footer>Built from the real query pipeline, traced against service/main.py, service/chat_session.py, and query/*.py directly — not the architecture doc's description of them.</footer>
