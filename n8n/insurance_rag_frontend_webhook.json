@@ -34,7 +34,7 @@
     },
     {
       "parameters": {
-        "respondWith": "allIncomingItems",
+        "respondWith": "firstIncomingItem",
         "options": {}
       },
       "id": "respond-1",
