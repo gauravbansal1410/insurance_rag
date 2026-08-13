@@ -49,44 +49,100 @@ def _policy_matches(l2, age, sum_assured, term, concern_tags):
     return True
 
 
+# Fixed enum of every premium_payment_option service/chat_session.py's QUESTIONS can ever
+# produce (its "single"/"regular"/"5"/"10"/"15" mapping) - the candidate set
+# available_terms()/available_payment_options_for_term() probe below, since neither
+# function knows the user's eventual answer in advance.
+_ALL_PAYMENT_OPTIONS = ["single", "regular", "limited_ppt_5", "limited_ppt_10", "limited_ppt_15"]
+
+
+def _candidate_terms(layer1_records):
+    """Union of every term that could conceivably have real data anywhere - both Layer 1's
+    sparse brochure sample tables (usually just one term per policy) and every precomputed
+    premium_lookup.json grid's own term axis (typically a much wider real range - see
+    docs/schema.md's premium-lookup artifact section). Cheap, fixed candidate set; the real
+    yes/no per (policy, term, option) still goes through interpolate_premium() itself
+    below, this only bounds what gets probed."""
+    terms = set()
+    for record in layer1_records.values():
+        for row in record["layer1"]["sample_illustrative_premiums"]:
+            terms.add(row["term"])
+    for entry in _premium_lookup_table.values():
+        for p in entry["age_term_grid"]:
+            terms.add(p["term"])
+    return terms
+
+
 def available_terms(layer1_records, layer2_records=None, age=None, sum_assured=None, concern_tags=None):
-    """All terms with at least one sample_illustrative_premiums row - used by the chat
-    slot-filling step (service/chat_session.py) to reject an unsupported term immediately,
-    rather than silently accepting it and discovering the problem only after every other
-    question has been answered (confirmed 2026-08-01 that silently proceeding led to an
-    empty candidate set and a hallucinated result).
+    """Every term interpolate_premium() can actually serve (for at least one payment
+    option, on at least one eligible policy) - used by the chat slot-filling step
+    (service/chat_session.py) to reject an unsupported term immediately, rather than
+    silently accepting it and discovering the problem only after every other question has
+    been answered (confirmed 2026-08-01 that silently proceeding led to an empty candidate
+    set and a hallucinated result).
+
+    **Routes through interpolate_premium() itself - the real step-5 dispatch, including the
+    precomputed lookup - rather than re-scanning Layer 1's sample_illustrative_premiums
+    directly, as an earlier version of this function did.** Confirmed 2026-08-13 that the
+    sample-table-only version had drifted out of sync with what interpolate_premium() could
+    actually serve: real regular-premium data out to term=40 on 876/875/954 (via
+    premium_lookup.json) was invisible to it, since Layer 1's own brochure table only ever
+    samples one or two terms. One source of truth for "is this available", not two that can
+    silently disagree.
 
     If `layer2_records`/`age`/`sum_assured` are given, restricts to policies actually
     eligible for this age/sum_assured/concern (via `_policy_matches()`) before checking
     table availability - confirmed 2026-08-01 that a term can have real data corpus-wide
     but only on a policy the user doesn't qualify for by cover amount or concern, which
-    isn't a real answer for them and would otherwise still lead to a dead end later."""
+    isn't a real answer for them and would otherwise still lead to a dead end later.
+    age/sum_assured are required for the real interpolate_premium() check below - if either
+    is missing, falls back to the raw candidate universe (shouldn't happen via chat_session,
+    whose FIELD_ORDER always supplies both before term is asked)."""
+    if age is None or sum_assured is None:
+        return _candidate_terms(layer1_records)
+
     terms = set()
     for policy_id, record in layer1_records.items():
-        for row in record["layer1"]["sample_illustrative_premiums"]:
-            term = row["term"]
-            if layer2_records is not None and age is not None and sum_assured is not None:
-                l2 = layer2_records.get(policy_id)
-                if l2 is None or not _policy_matches(l2, age, sum_assured, term, concern_tags):
-                    continue
-            terms.add(term)
+        if layer2_records is not None:
+            l2 = layer2_records.get(policy_id)
+            if l2 is None:
+                continue
+        for term in _candidate_terms(layer1_records):
+            if layer2_records is not None and not _policy_matches(l2, age, sum_assured, term, concern_tags):
+                continue
+            for option in _ALL_PAYMENT_OPTIONS:
+                profile = {"age": age, "sum_assured": sum_assured, "term": term, "premium_payment_option": option}
+                if not interpolate_premium(profile, record)["excluded"]:
+                    terms.add(term)
+                    break
     return terms
 
 
 def available_payment_options_for_term(layer1_records, term, layer2_records=None, age=None,
                                         sum_assured=None, concern_tags=None):
-    """Payment options with at least one row at this specific term - a term can have data
-    for some payment options but not others. Same eligibility-narrowing as available_terms()
-    when layer2_records/age/sum_assured (and optionally concern_tags) are given."""
+    """Every payment option interpolate_premium() can actually serve at this specific term -
+    a term can be servable under some options but not others. Same real-dispatch routing
+    and eligibility-narrowing as available_terms() above, same 2026-08-13 fix (this used to
+    scan Layer 1's sample table directly too, missing premium_lookup.json's real coverage
+    the same way)."""
+    if age is None or sum_assured is None:
+        options = set()
+        for record in layer1_records.values():
+            for row in record["layer1"]["sample_illustrative_premiums"]:
+                if row["term"] == term:
+                    options.add(row["premium_payment_option"])
+        return options
+
     options = set()
     for policy_id, record in layer1_records.items():
-        if layer2_records is not None and age is not None and sum_assured is not None:
+        if layer2_records is not None:
             l2 = layer2_records.get(policy_id)
             if l2 is None or not _policy_matches(l2, age, sum_assured, term, concern_tags):
                 continue
-        for row in record["layer1"]["sample_illustrative_premiums"]:
-            if row["term"] == term:
-                options.add(row["premium_payment_option"])
+        for option in _ALL_PAYMENT_OPTIONS:
+            profile = {"age": age, "sum_assured": sum_assured, "term": term, "premium_payment_option": option}
+            if not interpolate_premium(profile, record)["excluded"]:
+                options.add(option)
     return options
 
 
