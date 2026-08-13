@@ -515,8 +515,8 @@ def build_derived_age_term_grid(source_grid, anchor_rows, cfg):
     return sorted(grid.values(), key=lambda p: (p["age"], p["term"])), scale, ratios
 
 
-def build_derived_policy_entry(cfg, built_entries):
-    source_entry = built_entries[cfg["derive_age_term_from"]]
+def build_derived_policy_entry(cfg, built_entries, source_key):
+    source_entry = built_entries[source_key]
     # Only reference-SA rows calibrate the age x term scale factor - any cross-SA QA
     # rows (none exist for 877 yet) would otherwise skew the ratio, since they aren't
     # comparable to the source grid's own reference-SA points.
@@ -567,26 +567,54 @@ def _print_sa_scaling(policy_id, sa_scaling):
     return mismatches
 
 
+def _canonical_policy_id(cfg):
+    """The real policy_id premium_interpolation.py's interpolate_premium() looks an entry
+    up by - layer1_record["policy_id"], NOT cfg["policy_id"] (this build script's
+    short/filename-based label, e.g. "954"). These differ for any policy whose real Plan
+    Number wasn't printed and the UIN was used as fallback (docs/schema.md's
+    extraction-rule caveat) - 954/955's real policy_id is a LIC UIN (512N351V02/
+    512N350V02), not "954"/"955". **Confirmed 2026-08-13 this silent mismatch meant
+    interpolate_premium() never found 954/955's premium_lookup.json entry at all** -
+    the dict lookup missed silently and fell through to the much sparser two-point
+    linear interpolation every time, for every query against either policy. Keying
+    premium_lookup.json by this canonical id (not cfg["policy_id"]) is the real fix -
+    a build-side fix, not a patch in the lookup code that would leave the two ids able
+    to drift apart again."""
+    return json.loads(cfg["layer1_path"].read_text())["policy_id"]
+
+
 def main():
     out = {}
     total_mismatches = 0
+    # short cfg["policy_id"] (e.g. "954") -> real policy_id (e.g. "512N351V02") - lets
+    # DERIVED_POLICIES' derive_age_term_from (written using the short label, for
+    # readability) resolve to the right key in `out` now that `out` itself is keyed by
+    # the real id, not the short one.
+    canonical_id = {}
 
     for cfg in POLICIES:
         entry = build_policy_entry(cfg)
-        out[cfg["policy_id"]] = entry
-        print(f"{cfg['policy_id']}: {len(entry['age_term_grid'])} age/term points, "
+        real_id = _canonical_policy_id(cfg)
+        canonical_id[cfg["policy_id"]] = real_id
+        out[real_id] = entry
+        label = cfg["policy_id"] if cfg["policy_id"] == real_id else f"{cfg['policy_id']} (policy_id={real_id})"
+        print(f"{label}: {len(entry['age_term_grid'])} age/term points, "
               f"sa_scaling type={entry['sa_scaling']['type']} (zero scraping needed for this axis)")
-        total_mismatches += _print_sa_scaling(cfg["policy_id"], entry["sa_scaling"])
+        total_mismatches += _print_sa_scaling(label, entry["sa_scaling"])
 
     for cfg in DERIVED_POLICIES:
-        entry = build_derived_policy_entry(cfg, out)
-        out[cfg["policy_id"]] = entry
+        source_key = canonical_id[cfg["derive_age_term_from"]]
+        entry = build_derived_policy_entry(cfg, out, source_key)
+        real_id = _canonical_policy_id(cfg)
+        canonical_id[cfg["policy_id"]] = real_id
+        out[real_id] = entry
         bf = entry["built_from"]
-        print(f"{cfg['policy_id']}: {len(entry['age_term_grid'])} age/term points "
+        label = cfg["policy_id"] if cfg["policy_id"] == real_id else f"{cfg['policy_id']} (policy_id={real_id})"
+        print(f"{label}: {len(entry['age_term_grid'])} age/term points "
               f"({bf['anchor_points']} real anchors, rest derived from {bf['derived_age_term_from']}'s "
               f"grid x{bf['scale_factor']} - anchor ratios ranged {bf['anchor_ratio_min']}-{bf['anchor_ratio_max']}), "
               f"sa_scaling type={entry['sa_scaling']['type']} (own real rebate table, not derived)")
-        total_mismatches += _print_sa_scaling(cfg["policy_id"], entry["sa_scaling"])
+        total_mismatches += _print_sa_scaling(label, entry["sa_scaling"])
 
     OUT_PATH.write_text(json.dumps(out, indent=2) + "\n")
     print(f"\nWrote {OUT_PATH.relative_to(REPO_ROOT)}: {len(out)} polic{'y' if len(out) == 1 else 'ies'}")
