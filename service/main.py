@@ -72,10 +72,15 @@ def chat(msg: ChatMessage):
     the deterministic Q&A logic and its intended swap point for a future LLM-based
     frontend."""
     state = _sessions.setdefault(msg.session_id, new_session())
-    state, reply, complete = fill_next_field(state, msg.message, layer1_records=_layer1, layer2_records=_layer2)
+    state, reply, complete, field = fill_next_field(state, msg.message, layer1_records=_layer1, layer2_records=_layer2)
 
     if not complete:
-        return {"done": False, "reply": reply}
+        # `field` (see chat_session.py's _field_meta()) lets a frontend render a
+        # constrained widget (bounded number input, a dropdown of real currently-valid
+        # values, checkboxes) instead of free text - added 2026-08-13. n8n's Chat Trigger
+        # UI ignores this extra key entirely (it only reads `reply`), so this is additive,
+        # not a breaking change to that existing integration.
+        return {"done": False, "reply": reply, "field": field}
 
     profile = {**state["profile"], "sum_assured_type": state["sum_assured_type"]}
     del _sessions[msg.session_id]  # session finished - don't leak memory across queries
